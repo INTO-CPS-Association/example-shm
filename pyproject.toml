@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "cp-sens"
+version = "0.1.0"
+description = ""
+authors = ["prasadtalasila <prasadtalasila@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+paho-mqtt = "^2.1.0"
+matplotlib = "^3.10.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pylint = "^3.3.3"
+pytest = "^8.3.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
