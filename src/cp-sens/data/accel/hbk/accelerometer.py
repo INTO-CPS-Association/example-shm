@@ -2,8 +2,6 @@ import json
 import os
 from paho.mqtt.client import Client as MQTTClient, CallbackAPIVersion, MQTTv5  # type: ignore
 
-
-
 def load_config(config_path: str) -> dict:
     """
     Loads JSON configuration from the provided config path.
@@ -79,10 +77,13 @@ def setup_mqtt_client(config):
     mqttc.on_publish = create_on_publish_callback()
     return mqttc
 
-if __name__ == "__main__":
+def main() -> None:
     current_dir = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(current_dir, "../../config/mqtt.json")
     json_config = load_config(config_path)
     mqttc = setup_mqtt_client(json_config)
     mqttc.connect(json_config["MQTT"]["host"], json_config["MQTT"]["port"], 60)
     mqttc.loop_start()
+
+if __name__ == "__main__":
+    main()

@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import MagicMock
 
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../src/cp-sens")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../../src/cp-sens")))
 
 from data.accel.hbk.accelerometer import (
     create_on_connect_callback,
