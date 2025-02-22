@@ -1,5 +1,6 @@
 import json
 import os
+import time
 from paho.mqtt.client import Client as MQTTClient, CallbackAPIVersion, MQTTv5  # type: ignore
 
 def load_config(config_path: str) -> dict:
@@ -36,23 +37,14 @@ def create_on_connect_callback(topics, qos):
     return on_connect
 
 def create_on_subscribe_callback():
-    def on_subscribe(client, userdata, mid, granted_qos):
-        print(f"on_subscribe: Subscription ID {mid} with QoS levels {granted_qos}")
-    return on_subscribe
-def create_on_subscribe_callback():
-    def on_subscribe(client, userdata, mid, granted_qos):
+    def on_subscribe(client, userdata, mid, granted_qos, properties=None):
         print(f"on_subscribe: Subscription ID {mid} with QoS levels {granted_qos}")
     return on_subscribe
 
 def create_on_message_callback():
     def on_message(client, userdata, msg):
         print(f"on_message: Received message on {msg.topic}")
-        print(f"Message payload: {msg.payload.decode()}")
-    return on_message
-def create_on_message_callback():
-    def on_message(client, userdata, msg):
-        print(f"on_message: Received message on {msg.topic}")
-        print(f"Message payload: {msg.payload.decode()}")
+        #print(f"Message payload: {msg.payload.decode()}")
     return on_message
 
 def create_on_publish_callback():
@@ -84,6 +76,7 @@ def main() -> None:
     mqttc = setup_mqtt_client(json_config)
     mqttc.connect(json_config["MQTT"]["host"], json_config["MQTT"]["port"], 60)
     mqttc.loop_start()
+    time.sleep(10)
 
 if __name__ == "__main__":
     main()

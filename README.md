@@ -30,5 +30,15 @@ Write tests in the _tests_ directory. Be sure to name any new files as
 _test_*_.py_. To run all tests, with coverage:
 
 ```bash
-pytest --cov
+pytest
+```
+
+## Use
+
+Only MQTT client code is working at the moment.
+You can use it by setting the `src/cp-sens/data/config/mqtt.json`
+and executing,
+
+```bash
+python .\src\cp-sens\data\sources\mqtt.py
 ```
