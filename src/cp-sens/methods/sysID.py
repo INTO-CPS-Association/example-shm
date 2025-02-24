@@ -1,6 +1,8 @@
-import numpy as np #type: ignore
+#from methods.pyoma.gen import SingleSetup
 from pyoma2.setup.single import SingleSetup
 from pyoma2.algorithms.ssi import SSIcov
+
+import numpy as np #type: ignore
 
 def sysid(data, Params):
     """
