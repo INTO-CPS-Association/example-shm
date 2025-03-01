@@ -1,120 +1,94 @@
-
 import json
 import time
-import threading
-import  numpy as np
+import numpy as np
+import concurrent.futures
+import threading  
+from collections import deque
 from accel.accelerometer import IAccelerometer, us_multiplier
 from sources import mqtt
 
 
 class Accelerometer(IAccelerometer):
-    def __init__(self, mqtt_client, topic: str = "accelerometer/data"):
+    def __init__(self, mqtt_client, topic: str = "accelerometer/data", fifo_size: int = 10000, axis: list = ['x', 'y', 'z']):
         """
         Initializes the Accelerometer instance with a pre-configured MQTT client.
         
         Parameters:
             mqtt_client: A pre-configured and connected MQTT client.
-            topic (str): The MQTT topic to subscribe to. Defaults to "accelerometer/data"
+            topic (str): The MQTT topic to subscribe to. Defaults to "accelerometer/data".
+            fifo_size (int): The maximum number of samples to store in the FIFO buffer.
+            axis (list): List of axes to extract from incoming data. Defaults to ['x', 'y', 'z'].
         """
         self.mqtt_client = mqtt_client
         self.topic = topic
-        self._message_event = threading.Event()
-        self._message_payload = None
+        self._axis = axis
+        self._fifo = deque(maxlen=fifo_size)
+        self._lock = threading.Lock()  
 
-        # Assign the internal on_message handler.
+        # Setting the thread pool executor
+        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
+
         self.mqtt_client.on_message = self._on_message
         self.mqtt_client.subscribe(self.topic)
-        self.mqtt_client.loop_start()
-        time.sleep(1)
 
+        # First thread
+        self.executor.submit(self.mqtt_client.loop_forever)
+        time.sleep(1)  # Allow time for the connection
+
+            
     def _on_message(self, client, userdata, msg):
-        """
-        Internal handler for MQTT messages.
-        Decodes the message payload and signals data availability.
-        """
+        """Handles incoming MQTT messages asynchronously."""
+        #Second thread
+        self.executor.submit(self._process_message, msg)  
+
+    def _process_message(self, msg):
+        """Extracts accelerometer data and appends it to the FIFO buffer."""
         try:
             payload_str = msg.payload.decode("utf-8")
             data = json.loads(payload_str)
-        except Exception:
-            data = {}
-        self._message_payload = data
-        self._message_event.set()
+        except Exception as e:
+            raise ValueError(f"Invalid JSON format received: {e}")
 
-def read(self, axis: list = ['x', 'y', 'z'], samples: int = 1) -> dict:
-    """
-    Reads accelerometer data from MQTT messages.
-    
-    Parameters:
-        axis (list): List of axes to include in the result. Defaults to ['x', 'y', 'z'].
-        samples (int): Maximum number of samples to collect (capped at 500). The function returns as soon as data is available.
-    
-    Returns:
-        dict: A dictionary containing a timestamp and an 'accel' dictionary with sensor data.
-              If more than one sample is collected, the values are averaged.
-    
-    Raises:
-        TimeoutError: If no data is received within the overall timeout period.
-    """
-    max_samples = min(samples, 500)
-    collected_samples = []
-    overall_timeout = 5.0  # total seconds to try collecting samples
-    poll_interval = 0.1    # seconds between polling _message_event
-    start_time = time.time()
+        if "accel_readings" not in data:
+            raise KeyError("Missing 'accel_readings' key in MQTT message payload.")
 
-    # Attempt to collect up to max_samples within the overall timeout.
-    while (time.time() - start_time) < overall_timeout and len(collected_samples) < max_samples:
-        if self._message_event.wait(timeout=poll_interval):
-            # A sample is available; add it and clear the event for the next sample.
-            collected_samples.append(self._message_payload)
-            self._message_event.clear()
+        #Extract accelerometer data, ensuring all axes exist
+        accel_data = data["accel_readings"]
+        sample = [accel_data.get(ax, 0) for ax in self._axis]
 
-    if not collected_samples:
-        raise TimeoutError("Timed out waiting for accelerometer data")
+        # Append the sample to the FIFO buffer in a thread-safe manner
+        with self._lock:
+            self._fifo.append(sample)
 
 
-    #Average the readings. If only one sample is requested, return it directly.
-    if len(collected_samples) == 1:
-        result = collected_samples[0]
-    else:
-        avg = {}
-        for ax in axis:
-            total = sum(sample.get("accel", {}).get(ax, 0) for sample in collected_samples)
-            avg[ax] = total / len(collected_samples)
-        result = {
-            "timestamp": collected_samples[-1].get("timestamp", int(time.time() * us_multiplier)),
-            "accel": avg
-        }
-    
-    # Filter the returned axes to only those requested.
-    if axis != ['x', 'y', 'z']:
-        result["accel"] = {ax: result["accel"].get(ax, None) for ax in axis}
 
-    return result
+    def read(self, requested_samples: int) -> (int, np.ndarray):
+        """
+        Reads the latest accelerometer data from the FIFO buffer.
 
-def read_numpy(self, axis: list = ['x', 'y', 'z'], samples: int = 1) -> np.ndarray:
-    """
-    Reads accelerometer data and returns it as a NumPy array.
-    Each row corresponds to one sample, and each column corresponds to one of the specified axes.
-    
-    The `samples` parameter is treated as the maximum number of samples to collect (capped at 500).
-    The method polls for incoming samples and returns whichever samples are collected within
-    the overall timeout period.
-    """
-    max_samples = min(samples, 500)
-    collected_samples = []
-    overall_timeout = 5.0  # seconds to try collecting samples
-    poll_interval = 0.1    # seconds between polls
-    start_time = time.time()
+        Parameters:
+            requested_samples (int): The number of most recent samples desired.
 
-    while (time.time() - start_time) < overall_timeout and len(collected_samples) < max_samples:
-        if self._message_event.wait(timeout=poll_interval):
-            # Extract the accelerometer data for the requested axes.
-            sample = self._message_payload.get("accel", {})
-            collected_samples.append([sample.get(ax, 0) for ax in axis])
-            self._message_event.clear()
+        Returns:
+            Tuple[int, np.ndarray]:
+                - status: 1 if the number of samples returned equals the requested number,
+                        0 if fewer samples were available.
+                - data: A NumPy array of shape (n_samples, len(axis)), where n_samples is the number of
+                        samples returned.
 
-    if not collected_samples:
-        raise TimeoutError("Timed out waiting for accelerometer data")
+        Note:
+            The FIFO buffer is **not emptied**—only the requested latest samples are retrieved.
+        """
+        with self._lock:  # <-- Lock before reading
+            available = len(self._fifo)
+        
+            # If requested samples are more than available, return as many as possible
+            if available >= requested_samples:
+                status = 1
+                # Get the latest `requested_samples` elements (from the right)
+                ret_samples = list(self._fifo)[-requested_samples:]
+            else:
+                status = 0
+                ret_samples = list(self._fifo)  # Get all available samples
 
-    # Convert the list of samples into a NumPy array.
-    return np.array(collected_samples)
+        return status, np.array(ret_samples)

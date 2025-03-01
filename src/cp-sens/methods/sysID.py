@@ -1,8 +1,5 @@
-
 from pyoma2.setup.single import SingleSetup
-from pyoma2.algorithms.ssi import SSIcov             # Used method cov based SSI
-
-#from pyoma.ssiM import SSIcov #From the modified ssi file
+from pyoma2.algorithms.ssi import SSIcov
 import numpy as np
 
 def sysid(data, Params):
@@ -25,4 +22,8 @@ def sysid(data, Params):
     
     OUTPUT = ssi_mode_track.result.model_dump()
     return OUTPUT
+
+
+
+
 
