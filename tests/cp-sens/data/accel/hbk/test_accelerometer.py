@@ -102,3 +102,30 @@ def test_accelerometer_read_insufficient_samples(accelerometer_instance):
     assert data.shape == (50, 3)  # Only 50 samples available
 
 
+
+def test_accelerometer_appending_more_samples_than_max(accelerometer_instance):
+    """
+    Test Scenario 4: The FIFO is full and more data is incoming
+    """
+    # Simulate only 100 messages in the FIFO (full FIFO)
+    messages1 = [{"accel_readings": {"x": i, "y": i * 2, "z": i * 3}} for i in range(100)]
+    simulate_mqtt_messages(accelerometer_instance, messages1)
+    # Try to read 100 samples
+    status, data = accelerometer_instance.read(requested_samples=100)
+
+    # Verify the FIFO contains 100 data samples
+    assert status == 1  
+    assert data.shape == (100, 3)  
+
+    # Send new data to the FIFO
+    messages2 = [{"accel_readings": {"x": i+100, "y": (i+100) * 2, "z": (i+100) * 3}} for i in range(50)]
+    simulate_mqtt_messages(accelerometer_instance, messages2)
+    # Try to read 100 samples
+    status, data = accelerometer_instance.read(requested_samples=100)
+
+    # Verify the deque contains 100 data samples
+    assert status == 1  
+    assert data.shape == (100, 3)  
+    # Verify the FIFO deleted the oldest 50 dat and got the new 50 data
+    expected_x_values = np.arange(50, 150)  # X values should be [51, 52, ..., 150]
+    assert np.allclose(data[:, 0], expected_x_values)
