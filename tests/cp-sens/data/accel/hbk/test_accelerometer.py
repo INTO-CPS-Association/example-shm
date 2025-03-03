@@ -26,7 +26,7 @@ def dummy_mqtt_client():
             self.topic = topic
 
         def loop_forever(self):
-            pass  # Prevent blocking during tests
+            pass  
 
     return DummyMQTTClient()
 
@@ -62,7 +62,7 @@ def test_accelerometer_read_full_fifo(accelerometer_instance):
 
     # Verify status and shape
     assert status == 1  # Should return full requested amount
-    assert data.shape == (100, 4)  # 100 samples, 3 axes (x, y, z)
+    assert data.shape == (100, 3)  # 100 samples, 3 axes (x, y, z)
 
 
 
@@ -79,7 +79,7 @@ def test_accelerometer_read_partial_fifo(accelerometer_instance):
 
     # Verify status and shape
     assert status == 1  # Full requested amount is available
-    assert data.shape == (50, 4)  # 50 samples, 3 axes
+    assert data.shape == (50, 3)  # 50 samples, 3 axes
 
     # Verify data contains latest 50 samples (should be from index 50 to 99)
     expected_x_values = np.arange(50, 100)  # X values should be [50, 51, ..., 99]
@@ -99,7 +99,7 @@ def test_accelerometer_read_insufficient_samples(accelerometer_instance):
 
     # Verify status and shape
     assert status == 0  # Not enough samples available
-    assert data.shape == (50, 4)  # Only 50 samples available
+    assert data.shape == (50, 3)  # Only 50 samples available
 
 
 
@@ -115,7 +115,7 @@ def test_accelerometer_appending_more_samples_than_max(accelerometer_instance):
 
     # Verify the FIFO contains 100 data samples
     assert status == 1  
-    assert data.shape == (100, 4)  
+    assert data.shape == (100, 3)  
 
     # Send new data to the FIFO
     messages2 = [{"accel_readings": {"x": i+100, "y": (i+100) * 2, "z": (i+100) * 3},"timestamp": int(time.time() * 1000000) + i} for i in range(50)]
@@ -125,7 +125,7 @@ def test_accelerometer_appending_more_samples_than_max(accelerometer_instance):
 
     # Verify the deque contains 100 data samples
     assert status == 1  
-    assert data.shape == (100, 4)  
+    assert data.shape == (100, 3)  
     # Verify the FIFO deleted the oldest 50 dat and got the new 50 data
     expected_x_values = np.arange(50, 150)  # X values should be [51, 52, ..., 150]
     assert np.allclose(data[:, 0], expected_x_values)
