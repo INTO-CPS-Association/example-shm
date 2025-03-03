@@ -42,24 +42,31 @@ class Accelerometer(IAccelerometer):
         self.executor.submit(self._process_message, msg)  
 
     def _process_message(self, msg):
-        """Extracts accelerometer data and appends it to the FIFO buffer."""
+        """Extracts accelerometer data and appends it to the FIFO buffer while ensuring correct timestamp order."""
         try:
             payload_str = msg.payload.decode("utf-8")
             data = json.loads(payload_str)
         except Exception as e:
             raise ValueError(f"Invalid JSON format received: {e}")
 
-        if "accel_readings" not in data:
-            raise KeyError("Missing 'accel_readings' key in MQTT message payload.")
+        if "accel_readings" not in data or "timestamp" not in data:
+            raise KeyError("Missing 'accel_readings' or 'timestamp' key in MQTT message payload.")
 
-        #Extract accelerometer data, ensuring all axes exist
+        # Extract accelerometer data and timestamp
         accel_data = data["accel_readings"]
-        sample = [accel_data.get(ax, 0) for ax in self._axis]
+        timestamp = data["timestamp"]
+        sample = [accel_data.get(ax, 0) for ax in self._axis] + [timestamp]  # Append timestamp to sample
 
-        # Append the sample to the FIFO buffer in a thread-safe manner
         with self._lock:
-            self._fifo.append(sample)
-
+            # If FIFO is empty OR new timestamp is the latest, append normally.
+            if len(self._fifo) == 0 or timestamp >= self._fifo[-1][-1]:
+                self._fifo.append(sample)
+            else:
+                # Insert at correct position (manually maintaining order)
+                for i in range(len(self._fifo)):
+                    if timestamp < self._fifo[i][-1]:  # Compare timestamps
+                        self._fifo.insert(i, sample)
+                        break  # Stop after inserting at correct position
 
 
     def read(self, requested_samples: int) -> (int, np.ndarray):
@@ -86,9 +93,9 @@ class Accelerometer(IAccelerometer):
             if available >= requested_samples:
                 status = 1
                 # Get the latest `requested_samples` elements (from the right)
-                ret_samples = list(self._fifo)[-requested_samples:]
+                ret_samples = [sample[:3] for sample in list(self._fifo)[-requested_samples:]]
             else:
                 status = 0
-                ret_samples = list(self._fifo)  # Get all available samples
+                ret_samples = [sample[:3] for sample in list(self._fifo)]  # Get all available samples
 
         return status, np.array(ret_samples)
