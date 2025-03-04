@@ -1,5 +1,6 @@
 from pyoma2.setup.single import SingleSetup
-from pyoma2.algorithms.ssi import SSIcov
+from pyoma.ssiWrapper import SSIcov
+
 import numpy as np
 
 def sysid(data, Params):

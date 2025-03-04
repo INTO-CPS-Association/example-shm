@@ -1,30 +1,13 @@
-"""
-Stochastic Subspace Identification (SSI) Algorithm Module.
-Part of the pyOMA2 package.
-Authors:
-Dag Pasca
-Diego Margoni
-"""
-
-from __future__ import annotations
-
-import logging
 import typing
+import logging
 
 from pyoma2.algorithms.data.result import SSIResult
 from pyoma2.algorithms.data.run_params import SSIRunParams
-from pyoma2.functions import gen, plot, ssi
+from pyoma2.algorithms.base import BaseAlgorithm
+from pyoma2.functions import plot, ssi
 from pyoma2.support.sel_from_plot import SelFromPlot
+from pyoma import genWrapper as gen
 
-from .base import BaseAlgorithm
-
-logger = logging.getLogger(__name__)
-
-
-# =============================================================================
-# SINGLE SETUP
-# =============================================================================
-# (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
 class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
     """
     Data-Driven Stochastic Subspace Identification (SSI) algorithm for single setup
@@ -106,40 +89,6 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         hc_mpc_lim = hc["mpc_lim"]
         hc_mpd_lim = hc["mpd_lim"]
         hc_cov_max = hc["cov_max"]
-        # print(f'highest limit for covariance: {hc_cov_max}')
-        
-        # print(f'Fn before HC in conj: {Fns}')
-        # print(f'Xis before HC in conj: {Xis}')
-
-        # Apply HARD CRITERIA
-        # HC - presence of complex conjugate
-        # if hc_conj:
-        #     Lambds, mask1 = gen.HC_conj(Lambds)
-        #     lista = [Fns, Xis, Phis, Fn_cov, Xi_cov, Phi_cov]
-        #     Fns, Xis, Phis, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
-        #         lista, mask1, Phis.shape[2]
-        #     )
-        # print(f'Fn after HC in conj: {Fns}')
-        # print(f'Xis after HC in conj: {Xis}')
-        
-        # # HC - damping
-        # Xis, mask2 = gen.HC_damp(Xis, hc_xi_max)
-        # lista = [Fns, Lambds, Phis, Fn_cov, Xi_cov, Phi_cov]
-        # Fns, Lambds, Phis, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
-        #     lista, mask2, Phis.shape[2]
-        # )
-        # print(f'Fn after HC in damping: {Fns}')  
-        # print(f'Xis after HC in damping: {Xis}')
-        
-        # # HC - MPC and MPD
-        # mask3, mask4 = gen.HC_phi_comp(Phis, hc_mpc_lim, hc_mpd_lim)
-        # lista = [Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov]
-        # Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
-        #     lista, mask3, Phis.shape[2]
-        # )
-        # Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
-        #     lista, mask4, Phis.shape[2]
-        # )
         
         
         # Criteria regarding eigenvalue stability
@@ -157,23 +106,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         Fns, Xis, Phis, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
             lista, mask7, Phis.shape[2]
             )
-        
-        
-        # # HC - maximum covariance
-        # if Fn_cov is not None:
-        #     Fn_cov, mask5 = gen.HC_cov(Fn_cov, hc_cov_max)
-        #     lista = [Fns, Xis, Phis, Lambds, Xi_cov, Phi_cov]
-        #     Fns, Xis, Phis, Lambds, Xi_cov, Phi_cov = gen.applymask(
-        #         lista, mask5, Phis.shape[2]
-        #     )
-        
-        # print(f'Fn after HC in maximum covariance: {Fns}')  
-        # print(f'Xis after HC in maximum covariance: {Xis}')    
-            
-        # print(f'err_fn for stability: {sc["err_fn"]}')   
-        # print(f'err_xi for stability: {sc["err_xi"]}')  
-        # print(f'err_phi for stability: {sc["err_phi"]}')  
-
+       
       
         # Get the labels of the poles
         Lab = gen.SC_apply(
@@ -438,9 +371,14 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         return fig, ax
 
 
-# ------------------------------------------------------------------------------
-# (REF)COVARIANCE-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
-# FIXME ADD REFERENCE
+
+
+
+
+
+
+
+
 class SSIcov(SSIdat):
     """
     Implements the Covariance-driven Stochastic Subspace Identification (SSI) algorithm
@@ -466,155 +404,6 @@ class SSIcov(SSIdat):
     method: typing.Literal["cov_R", "cov_mm"] = "cov_mm"
 
 
-# =============================================================================
-# MULTISETUP
-# =============================================================================
-# (REF)DATA-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
-class SSIdat_MS(SSIdat[SSIRunParams, SSIResult, typing.Iterable[dict]]):
-    """
-    Implements the Data-Driven Stochastic Subspace Identification (SSI) algorithm for multi-setup
-    experiments.
-
-    This class extends the SSIdat class to handle data from multiple experimental setups, with
-    moving and reference sensors.
-
-    Inherits all attributes and methods from SSIdat, with focus on multi-setup data handling.
-
-    Attributes
-    ----------
-    Inherits all attributes from SSIdat.
-
-    Methods
-    -------
-    Inherits other methods from SSIdat, applicable to multi-setup scenarios.
-    """
-
-    def run(self) -> SSIResult:
-        """
-        Executes the SSI algorithm for multiple setups and returns the results.
-
-        Processes the input data from multiple setups using the Data-Driven Stochastic Subspace
-        Identification method. It builds Hankel matrices for each setup and computes the state and
-        output matrices, along with frequency poles.
-
-        Returns
-        -------
-        SSIResult
-            An object containing the system matrices, poles, damping ratios, and mode shapes across
-            multiple setups.
-        """
-
-        Y = self.data
-        br = self.run_params.br
-        method_hank = self.run_params.method or self.method
-        ordmin = self.run_params.ordmin
-        ordmax = self.run_params.ordmax
-        step = self.run_params.step
-        sc = self.run_params.sc
-        hc = self.run_params.hc
-
-        # Build Hankel matrix and Get observability matrix, state matrix and output matrix
-        Obs, A, C = ssi.SSI_multi_setup(
-            Y, self.fs, br, ordmax, step=1, method_hank=method_hank
-        )
-
-        # Get frequency poles (and damping and mode shapes)
-        Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov = ssi.SSI_poles(
-            Obs, A, C, ordmax, self.dt, step=step, calc_unc=False
-        )
-
-        # VALIDATION CRITERIA FOR POLES
-        hc_conj = hc["conj"]
-        hc_xi_max = hc["xi_max"]
-        hc_mpc_lim = hc["mpc_lim"]
-        hc_mpd_lim = hc["mpd_lim"]
-        hc_cov_max = hc["cov_max"]
-
-        # Apply HARD CRITERIA
-        # HC - presence of complex conjugate
-        if hc_conj:
-            Lambds, mask1 = gen.HC_conj(Lambds)
-            lista = [Fns, Xis, Phis, Fn_cov, Xi_cov, Phi_cov]
-            Fns, Xis, Phis, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
-                lista, mask1, Phis.shape[2]
-            )
-
-        # HC - damping
-        Xis, mask2 = gen.HC_damp(Xis, hc_xi_max)
-        lista = [Fns, Lambds, Phis, Fn_cov, Xi_cov, Phi_cov]
-        Fns, Lambds, Phis, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
-            lista, mask2, Phis.shape[2]
-        )
-
-        # HC - MPC and MPD
-        mask3, mask4 = gen.HC_phi_comp(Phis, hc_mpc_lim, hc_mpd_lim)
-        lista = [Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov]
-        Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
-            lista, mask3, Phis.shape[2]
-        )
-        Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
-            lista, mask4, Phis.shape[2]
-        )
-
-        # HC - maximum covariance
-        if Fn_cov is not None:
-            Fn_cov, mask5 = gen.HC_cov(Fn_cov, hc_cov_max)
-            lista = [Fns, Xis, Phis, Lambds, Xi_cov, Phi_cov]
-            Fns, Xis, Phis, Lambds, Xi_cov, Phi_cov = gen.applymask(
-                lista, mask5, Phis.shape[2]
-            )
-
-        # Apply SOFT CRITERIA
-        # Get the labels of the poles
-        Lab = gen.SC_apply(
-            Fns,
-            Xis,
-            Phis,
-            ordmin,
-            ordmax,
-            step,
-            sc["err_fn"],
-            sc["err_xi"],
-            sc["err_phi"],
-        )
-
-        # Return results
-        return SSIResult(
-            Obs=Obs,
-            A=A,
-            C=C,
-            H=None,
-            Lambds=Lambds,
-            Fn_poles=Fns,
-            Xi_poles=Xis,
-            Phi_poles=Phis,
-            Lab=Lab,
-            Fn_poles_cov=Fn_cov,
-            Xi_poles_cov=Xi_cov,
-            Phi_poles_cov=Phi_cov,
-        )
 
 
-# ------------------------------------------------------------------------------
-# (REF)COVARIANCE-DRIVEN STOCHASTIC SUBSPACE IDENTIFICATION
-class SSIcov_MS(SSIdat_MS):
-    """
-    Implements the Covariance-Driven Stochastic Subspace Identification (SSI) algorithm
-    for multi-setup experiments.
 
-    This class extends SSIdat_MS, focusing on the covariance-driven approach to SSI
-    for multiple experimental setups.
-
-    Inherits all attributes and methods from SSIdat_MS, adapted for covariance-driven
-    analysis methods.
-
-    Attributes
-    ----------
-    Inherits all attributes from SSIdat_MS.
-
-    Methods
-    -------
-    Inherits all methods from SSIdat_MS, adapted for covariance-based analysis.
-    """
-
-    method: typing.Literal["cov_R", "cov_mm"] = "cov_mm"
