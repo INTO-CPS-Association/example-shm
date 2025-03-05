@@ -1,15 +1,14 @@
 import json
-import time
 import numpy as np
-import concurrent.futures
 import threading  
 from collections import deque
 from accel.accelerometer import IAccelerometer, us_multiplier
 from sources import mqtt
+from accel.constants import Max_fifo_size
 
 
 class Accelerometer(IAccelerometer):
-    def __init__(self, mqtt_client, topic: str = "accelerometer/data", fifo_size: int = 10000, axis: list = ['x', 'y', 'z']):
+    def __init__(self, mqtt_client, topic: str = "accelerometer/data", fifo_size= Max_fifo_size, axis: list = ['x', 'y', 'z']):
         """
         Initializes the Accelerometer instance with a pre-configured MQTT client.
         
@@ -21,25 +20,24 @@ class Accelerometer(IAccelerometer):
         """
         self.mqtt_client = mqtt_client
         self.topic = topic
-        self._axis = axis
-        self._fifo = deque(maxlen=fifo_size)
-        self._lock = threading.Lock()  
+        self._axis = axis 
+        self._fifo_size = fifo_size  
+        self._fifo = deque(maxlen=self._fifo_size)
+        self._lock = threading.Lock()
 
-        # Setting the thread pool executor
-        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
-
+        # Setting up MQTT callback
         self.mqtt_client.on_message = self._on_message
         self.mqtt_client.subscribe(self.topic)
 
-        # First thread
-        self.executor.submit(self.mqtt_client.loop_forever)
-        time.sleep(1)  # Allow time for the connection
-
-            
+        # Run MQTT loop in a separate daemon thread
+        self._mqtt_thread = threading.Thread(target=self.mqtt_client.loop_forever, args=(1.0, True), daemon=True)
+        self._mqtt_thread.start()
+        
     def _on_message(self, client, userdata, msg):
-        """Handles incoming MQTT messages asynchronously."""
-        #Second thread
-        self.executor.submit(self._process_message, msg)  
+        """Handles incoming MQTT messages."""
+        future = threading.Thread(target=self._process_message, args=(msg,), daemon=True)
+        future.start()
+        future.join()  # Ensures proper handling of message processing
 
     def _process_message(self, msg):
         """Extracts accelerometer data and appends it to the FIFO buffer while ensuring correct timestamp order."""
@@ -68,7 +66,6 @@ class Accelerometer(IAccelerometer):
                         self._fifo.insert(i, sample)
                         break  # Stop after inserting at correct position
 
-
     def read(self, requested_samples: int) -> (int, np.ndarray):
         """
         Reads the latest accelerometer data from the FIFO buffer.
@@ -86,9 +83,9 @@ class Accelerometer(IAccelerometer):
         Note:
             The FIFO buffer is **not emptied**—only the requested latest samples are retrieved.
         """
-        with self._lock:  # <-- Lock before reading
+        with self._lock:  
             available = len(self._fifo)
-        
+            
             # If requested samples are more than available, return as many as possible
             if available >= requested_samples:
                 status = 1
@@ -99,3 +96,5 @@ class Accelerometer(IAccelerometer):
                 ret_samples = [sample[:3] for sample in list(self._fifo)]  # Get all available samples
 
         return status, np.array(ret_samples)
+    
+

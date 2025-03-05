@@ -11,6 +11,7 @@ packages = [{include = "*", from="src"}]
 python = "^3.11"
 paho-mqtt = "^2.1.0"
 matplotlib = "^3.10.0"
+pyOMA-2 = "1.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "^3.3.3"

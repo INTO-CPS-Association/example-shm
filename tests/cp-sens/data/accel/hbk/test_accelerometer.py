@@ -129,3 +129,42 @@ def test_accelerometer_appending_more_samples_than_max(accelerometer_instance):
     # Verify the FIFO deleted the oldest 50 dat and got the new 50 data
     expected_x_values = np.arange(50, 150)  # X values should be [51, 52, ..., 150]
     assert np.allclose(data[:, 0], expected_x_values)
+
+
+def test_accelerometer_reordering_late_sample(accelerometer_instance):
+    """
+    Test Scenario: Ensures out-of-order samples are correctly placed based on timestamps.
+    """
+    messages = [
+        {"accel_readings": {"x": i, "y": i * 2, "z": i * 3}, "timestamp": 1000 + i} for i in range(10)
+    ]
+    
+    # Here we simulate sending all except the fourth sample
+    for i, msg_data in enumerate(messages):
+        if i != 3:  
+            msg_payload = json.dumps(msg_data).encode("utf-8")
+            dummy_msg = DummyMsg(msg_payload)
+            accelerometer_instance._on_message(None, None, dummy_msg)
+    
+    print("FIFO before inserting late sample:", list(accelerometer_instance._fifo))
+
+    # Here we simulate arrival of the fourth sample after all data has arrived
+    late_sample = messages[3]
+    msg_payload = json.dumps(late_sample).encode("utf-8")
+    dummy_msg = DummyMsg(msg_payload)
+    accelerometer_instance._on_message(None, None, dummy_msg)
+    
+    time.sleep(1)  
+    print("FIFO after inserting late sample:", list(accelerometer_instance._fifo))
+
+    # Read all 10 samples
+    status, data = accelerometer_instance.read(requested_samples=10)
+     
+    # Verify the samples are in correct order
+    expected_x_values = np.arange(10)  # X values should be [0, 1, 2, ..., 9]
+    assert np.allclose(data[:, 0], expected_x_values)
+
+    
+
+
+

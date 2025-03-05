@@ -1,4 +1,2 @@
 
-MAX_SAMPLES = 500
-OVERALL_TIMEOUT = 5.0  
-POLL_INTERVAL = 0.1    
+Max_fifo_size = 10000 # The maximum number of samples saved in FIFO 
