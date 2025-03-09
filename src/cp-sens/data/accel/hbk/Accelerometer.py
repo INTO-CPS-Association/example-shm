@@ -4,11 +4,12 @@ import threading
 from collections import deque
 from accel.accelerometer import IAccelerometer, us_multiplier
 from sources import mqtt
-from accel.constants import Max_fifo_size
-
+from accel.constants import MAX_FIFO_SIZE, MIN_LEN
+import struct
+import bisect
 
 class Accelerometer(IAccelerometer):
-    def __init__(self, mqtt_client, topic: str = "accelerometer/data", fifo_size= Max_fifo_size, axis: list = ['x', 'y', 'z']):
+    def __init__(self, mqtt_client, topic: str = "accelerometer/data", fifo_size : int = MAX_FIFO_SIZE, axis: list = ['x', 'y', 'z']):
         """
         Initializes the Accelerometer instance with a pre-configured MQTT client.
         
@@ -23,48 +24,103 @@ class Accelerometer(IAccelerometer):
         self._axis = axis 
         self._fifo_size = fifo_size  
         self._fifo = deque(maxlen=self._fifo_size)
+        self._timestamps = deque(maxlen=fifo_size)
         self._lock = threading.Lock()
 
         # Setting up MQTT callback
         self.mqtt_client.on_message = self._on_message
-        self.mqtt_client.subscribe(self.topic)
+        self.mqtt_client.subscribe(self.topic, qos=1)
 
-        # Run MQTT loop in a separate daemon thread
         self._mqtt_thread = threading.Thread(target=self.mqtt_client.loop_forever, args=(1.0, True), daemon=True)
         self._mqtt_thread.start()
+
         
     def _on_message(self, client, userdata, msg):
         """Handles incoming MQTT messages."""
-        future = threading.Thread(target=self._process_message, args=(msg,), daemon=True)
-        future.start()
-        future.join()  # Ensures proper handling of message processing
+        print(f"Received message on topic {msg.topic}: {msg.payload}")
+        def safe_process():# This ensures that an exception does not crash the entire thread
+            try:
+                self._process_message(msg)
+            except Exception as e:
+                print(f"Error processing message: {e}")
 
-    def _process_message(self, msg):
-        """Extracts accelerometer data and appends it to the FIFO buffer while ensuring correct timestamp order."""
-        try:
-            payload_str = msg.payload.decode("utf-8")
-            data = json.loads(payload_str)
-        except Exception as e:
-            raise ValueError(f"Invalid JSON format received: {e}")
+        threading.Thread(target=safe_process, daemon=True).start()
 
-        if "accel_readings" not in data or "timestamp" not in data:
-            raise KeyError("Missing 'accel_readings' or 'timestamp' key in MQTT message payload.")
 
-        # Extract accelerometer data and timestamp
-        accel_data = data["accel_readings"]
-        timestamp = data["timestamp"]
-        sample = [accel_data.get(ax, 0) for ax in self._axis] + [timestamp]  # Append timestamp to sample
 
-        with self._lock:
-            # If FIFO is empty OR new timestamp is the latest, append normally.
-            if len(self._fifo) == 0 or timestamp >= self._fifo[-1][-1]:
-                self._fifo.append(sample)
-            else:
-                # Insert at correct position (manually maintaining order)
-                for i in range(len(self._fifo)):
-                    if timestamp < self._fifo[i][-1]:  # Compare timestamps
-                        self._fifo.insert(i, sample)
-                        break  # Stop after inserting at correct position
+
+    def _process_message(self, msg):  
+            """
+            Processes incoming MQTT messages and extracts accelerometer data.
+
+            JSON-based messages containing acceleration values.
+
+            Workflow:
+            - If the message is empty, it is ignored.
+            - If the message is JSON:
+                - Extracts acceleration values from the "data" or "accel_readings" field.
+                - Extracts the timestamp from the "descriptor" field.
+                - Ensures FIFO buffer size constraints before inserting.
+                - Uses `bisect_left` to maintain sorted timestamp order.
+
+            Parameters:
+                msg (paho.mqtt.client.MQTTMessage): The incoming MQTT message.
+
+            Raises:
+                json.JSONDecodeError: If JSON parsing fails.
+            """
+            if not msg.payload or msg.payload == b'':
+                print(f" Received an empty : {msg.payload!r}, ignoring it.")
+                return
+
+            try:
+                if msg.payload.startswith(b"{"):
+                    payload_str = msg.payload.decode("utf-8").strip()
+                    data = json.loads(payload_str)
+                    
+                    # Extract values (two different format examples)
+                    if "data" in data and "values" in data["data"]:
+                        values = data["data"]["values"]
+                    elif "accel_readings" in data:
+                        accel = data["accel_readings"]
+                        values = [accel["x"], accel["y"], accel["z"]]
+                    else:
+                        print("Invalid JSON format")
+                        return
+
+                    # Validate values
+                    if len(values) < 3: # In case we do not have all x y z
+                        print(f"Insufficient values: {values}")
+                        return
+
+                    # Create standardized array
+                    data_array = np.array(values[:3], dtype=np.float64)
+
+                    # Extract timestamp
+                    timestamp = data["descriptor"]["timestamp"]
+
+                with self._lock:
+                    # Ensure we don't exceed FIFO size before inserting
+                    while len(self._fifo) >= self._fifo_size:
+                        #If FIFO is full then remove the oldest sample
+                        removed_timestamp = self._timestamps.popleft()
+                        removed_sample = self._fifo.popleft()
+                        print(f"Trimming FIFO: Removedd sample {removed_sample[0]} with timestamp {removed_timestamp}")
+
+
+                    # Convert timestamps to a sorted list for indexing
+                    ts_list = list(self._timestamps)   
+                    # Find correct position using bisect
+                    idx = bisect.bisect_left(ts_list, timestamp)
+                    # Insert in correct order
+                    self._timestamps.insert(idx, timestamp)
+                    self._fifo.insert(idx, data_array)
+
+            except json.JSONDecodeError:
+                print("JSON decoding failed")
+
+
+
 
     def read(self, requested_samples: int) -> (int, np.ndarray):
         """
@@ -84,8 +140,7 @@ class Accelerometer(IAccelerometer):
             The FIFO buffer is **not emptied**—only the requested latest samples are retrieved.
         """
         with self._lock:  
-            available = len(self._fifo)
-            
+            available = len(self._fifo)            
             # If requested samples are more than available, return as many as possible
             if available >= requested_samples:
                 status = 1
@@ -94,7 +149,7 @@ class Accelerometer(IAccelerometer):
             else:
                 status = 0
                 ret_samples = [sample[:3] for sample in list(self._fifo)]  # Get all available samples
-
         return status, np.array(ret_samples)
     
+
 

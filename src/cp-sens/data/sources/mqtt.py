@@ -39,44 +39,37 @@ def create_on_connect_callback(topics, qos):
 def create_on_subscribe_callback():
     def on_subscribe(client, userdata, mid, granted_qos, properties=None):
         print(f"on_subscribe: Subscription ID {mid} with QoS levels {granted_qos}")
+        
     return on_subscribe
 
 def create_on_message_callback():
     def on_message(client, userdata, msg):
         print(f"on_message: Received message on {msg.topic}")
-        #print(f"Message payload: {msg.payload.decode()}")
     return on_message
 
 def create_on_publish_callback():
-    def on_publish(client, userdata, mid):
+    def on_publish(client, userdata, mid, *args, **kwargs):
         print(f"on_publish: Message {mid} published.")
     return on_publish
 
 def setup_mqtt_client(config):
+    """Initialize client using a single profile (e.g., 'default')."""
     mqttc = MQTTClient(
-        client_id=config["MQTT"]["ClientID"],
+        client_id=config["ClientID"],  # Direct access to keys
         callback_api_version=CallbackAPIVersion.VERSION2,
         protocol=MQTTv5  
     )
-    if config["MQTT"]["userId"]:
-        mqttc.username_pw_set(config["MQTT"]["userId"], config["MQTT"]["password"])
-
-    # Assign callbacks.
-    mqttc.on_connect = create_on_connect_callback(config["MQTT"]["TopicsToSubscribe"],
-                                                  config["MQTT"]["QoS"])
+    
+    if config["userId"]:
+        mqttc.username_pw_set(config["userId"], config["password"])
+    
+    mqttc.on_connect = create_on_connect_callback(
+        config["TopicsToSubscribe"], 
+        config["QoS"]
+    )
     mqttc.on_subscribe = create_on_subscribe_callback()
     mqttc.on_message = create_on_message_callback()
     mqttc.on_publish = create_on_publish_callback()
+    
     return mqttc
 
-def main() -> None:
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    config_path = os.path.join(current_dir, "../../config/mqtt.json")
-    json_config = load_config(config_path)
-    mqttc = setup_mqtt_client(json_config)
-    mqttc.connect(json_config["MQTT"]["host"], json_config["MQTT"]["port"], 60)
-    mqttc.loop_start()
-    time.sleep(10)
-
-if __name__ == "__main__":
-    main()
