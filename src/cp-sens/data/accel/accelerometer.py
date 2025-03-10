@@ -5,7 +5,7 @@ us_multiplier = 1000000 # factor to convert time to microseconds
 
 class IAccelerometer(abc.ABC):
     @abc.abstractmethod
-    def read(self, requested_samples: int) -> (int, np.ndarray):
+    def read(self, requested_samples: int) -> (int, np.ndarray): # type: ignore
         """
         This method provides a single accelerometer reading.
         A sample reading is:

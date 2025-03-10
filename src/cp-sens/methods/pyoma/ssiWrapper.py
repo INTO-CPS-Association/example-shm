@@ -6,7 +6,7 @@ from pyoma2.algorithms.data.run_params import SSIRunParams
 from pyoma2.algorithms.base import BaseAlgorithm
 from pyoma2.functions import plot, ssi
 from pyoma2.support.sel_from_plot import SelFromPlot
-from pyoma import genWrapper as gen
+from ..pyoma import genWrapper as gen
 
 class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
     """

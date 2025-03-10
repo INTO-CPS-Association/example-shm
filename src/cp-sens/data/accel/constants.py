@@ -9,3 +9,4 @@ INTERVAL = 0.001 # Check every 0.1 if the samples are collected
 
 MIN_LEN = 12 # Minimum length for binary decoding
 
+MIN_SAMPLES_NEEDED = 40 # Minimum samples needed before running it to sysid

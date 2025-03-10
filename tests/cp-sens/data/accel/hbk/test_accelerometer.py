@@ -12,6 +12,8 @@ import uuid
 
 
 
+
+
 @pytest.fixture(scope="function")
 def mqtt_client():
     """
@@ -24,47 +26,65 @@ def mqtt_client():
     - Ensures the client is disconnected after the test is complete.
 
     Returns:
-        paho.mqtt.client.Client: Configured and connected MQTT client instance.
+        Tuple: (paho.mqtt.client.Client, str) Configured MQTT client instance and the selected topic.
     """
     config = load_config("src/cp-sens/config/mqtt.json")
     mqtt_config = config["MQTT"]["default"].copy()  # Extract the "default" profile
     
     # Generate unique client ID
     mqtt_config["ClientID"] = f"test_{uuid.uuid4().hex[:6]}"  
-    
-    # Pass the mqtt_config directly
-    client = setup_mqtt_client(mqtt_config)  
-    
+
+    topic_index = 0  # Set the index of the topic to subscribe to 
+
+    # Pass the mqtt_config and topic_index
+    client, selected_topic = setup_mqtt_client(mqtt_config, topic_index)  
+
     client.connect(mqtt_config["host"], mqtt_config["port"], 60)
-    yield client
-    client.disconnect()
+    yield client, selected_topic
+    client.disconnect()  # Ensure client is disconnected after each test
 
+@pytest.fixture(scope="function")
+def client_and_topic(mqtt_client):
+    client, topic = mqtt_client
+    return client, topic
 
-@pytest.fixture
-def accelerometer_instance(mqtt_client):
+@pytest.fixture(scope="function")
+def accelerometer_instance(client_and_topic):
     """
     Creates a new Accelerometer instance for testing.
 
-    - Uses the `mqtt_client` fixture to provide an initialized MQTT client.
-    - Creates an `Accelerometer` instance subscribed to the test topic.
+    - Uses the `client_and_topic` fixture to provide an initialized MQTT client.
+    - Creates an `Accelerometer` instance subscribed to the selected topic.
     - Ensures a fresh instance is provided for each test.
 
     Parameters:
-        mqtt_client (paho.mqtt.client.Client): The pre-configured MQTT client.
+        client: The pre-configured MQTT client.
 
     Returns:
         Accelerometer: A new instance of the Accelerometer class for testing.
     """
+    client, topic = client_and_topic 
     return Accelerometer(
-        mqtt_client, 
-        topic="test_topic", 
+        client, 
+        topic=topic, 
         fifo_size=100
     )
 
+@pytest.fixture(autouse=True)
+def clear_fifo(accelerometer_instance):
+    """Automatically clears the FIFO buffer before each test."""
+    with accelerometer_instance._lock:
+        accelerometer_instance._fifo.clear()
+        accelerometer_instance._timestamps.clear()
+    yield
 
-def test_accelerometer_read_full_fifo(mqtt_client, accelerometer_instance):
-    topic = "test_topic"
 
+
+
+
+
+def test_accelerometer_read_full_fifo(client_and_topic, accelerometer_instance):
+    client, topic = client_and_topic  
     # Publish 
     for i in range(100):
         payload = json.dumps({
@@ -78,11 +98,11 @@ def test_accelerometer_read_full_fifo(mqtt_client, accelerometer_instance):
                 "values": [i, i*2, i*3]
             }
         })
-        mqtt_client.publish(topic, payload)
+        client.publish(topic, payload)
 
     # Verify FIFO contents
     while len(accelerometer_instance._fifo) < 100:
-        print("wating to fill FIFO",len(accelerometer_instance._fifo))
+        print("Waiting to fill FIFO", len(accelerometer_instance._fifo))
     
     status, data = accelerometer_instance.read(100)
     assert status == 1
@@ -90,9 +110,12 @@ def test_accelerometer_read_full_fifo(mqtt_client, accelerometer_instance):
         f"Order mismatch. Here is the first 10 entries: {data[:10, 0]}"
 
 
-def test_accelerometer_read_partial_fifo(mqtt_client, accelerometer_instance):
-    topic = "test_topic"
-    
+
+
+
+
+def test_accelerometer_read_partial_fifo(client_and_topic, accelerometer_instance):
+    client, topic = client_and_topic 
     for i in range(100):
         payload = json.dumps({
             "descriptor": {
@@ -105,7 +128,7 @@ def test_accelerometer_read_partial_fifo(mqtt_client, accelerometer_instance):
                 "values": [i, i*2, i*3]
             }
         })
-        mqtt_client.publish(topic, payload)
+        client.publish(topic, payload)
 
     # Verify FIFO contents
     while len(accelerometer_instance._fifo) < 100:
@@ -117,18 +140,21 @@ def test_accelerometer_read_partial_fifo(mqtt_client, accelerometer_instance):
     assert status == 1  # Full requested amount is available
     assert data.shape == (50, 3)  # 50 samples, 3 axes
 
-    # Verify data contains latest 50 samples (should be from index 50 to 99)
+    # Verify data contains latest 50 samples 
     expected_x_values = np.arange(50, 100)  # X values should be [50, 51, ..., 99]
     assert np.allclose(data[:, 0], expected_x_values)
     
 
 
-def test_accelerometer_read_insufficient_samples(mqtt_client, accelerometer_instance):
+
+
+
+def test_accelerometer_read_insufficient_samples(client_and_topic, accelerometer_instance):
+    client, topic = client_and_topic 
     """
     Test Scenario: Read 100 samples when only 50 are available. Status should be 0.
     """
-    topic = "test_topic"
-    
+
     # Publish only 50 samples 
     for i in range(50):
         payload = json.dumps({
@@ -142,7 +168,7 @@ def test_accelerometer_read_insufficient_samples(mqtt_client, accelerometer_inst
                 "values": [i, i*2, i*3]
             }
         })
-        mqtt_client.publish(topic, payload)
+        client.publish(topic, payload)
 
     
     while len(accelerometer_instance._fifo) < 50:
@@ -167,16 +193,16 @@ def test_accelerometer_read_insufficient_samples(mqtt_client, accelerometer_inst
 
 
 
-def test_accelerometer_appending_more_samples_than_max(mqtt_client, accelerometer_instance):
-    topic = "test_topic"
-    
+def test_accelerometer_appending_more_samples_than_max(client_and_topic, accelerometer_instance):
+    client, topic = client_and_topic 
+
     # Publish 100 samples (0-99)
     for i in range(100):
         payload = json.dumps({
             "descriptor": {"timestamp": i, "length": 10, "metadata_version": 1},
             "data": {"values": [i, i*2, i*3]}
         })
-        mqtt_client.publish(topic, payload)  
+        client.publish(topic, payload)  
 
 
     while len(accelerometer_instance._fifo) < 100:
@@ -189,9 +215,9 @@ def test_accelerometer_appending_more_samples_than_max(mqtt_client, acceleromete
             "descriptor": {"timestamp": i, "length": 10, "metadata_version": 1},
             "data": {"values": [i, i*2, i*3]}
         })
-        mqtt_client.publish(topic, payload)
+        client.publish(topic, payload)
 
-    time.sleep(0.5) #Needed to remove old data and append new
+    time.sleep(0.5) # Needed to remove old data and append new
 
     # THe FIFO max size is set at 100, so now the FIFO should only contain the latest 100 samples i.e (50-149) for the X axis
 
@@ -208,15 +234,11 @@ def test_accelerometer_appending_more_samples_than_max(mqtt_client, acceleromete
 
 
 
-
-
-
-
-def test_accelerometer_reordering_late_sample(mqtt_client, accelerometer_instance):
+def test_accelerometer_reordering_late_sample(client_and_topic, accelerometer_instance):
+    client, topic = client_and_topic 
     """
     Test Scenario: Late-arriving samples are inserted in correct position
     """
-    topic = "test_topic"
 
     # Publish all samples except timestamp 3 
     for i in range(10):
@@ -233,7 +255,7 @@ def test_accelerometer_reordering_late_sample(mqtt_client, accelerometer_instanc
                 "values": [i, i*2, i*3]
             }
         })
-        mqtt_client.publish(topic, payload)
+        client.publish(topic, payload)
 
 
 
@@ -249,7 +271,7 @@ def test_accelerometer_reordering_late_sample(mqtt_client, accelerometer_instanc
             "values": [3, 6, 9]
         }
     })
-    mqtt_client.publish(topic, payload)
+    client.publish(topic, payload)
     
     # To make sure we got the latent data sample in the FIFO
     while len(accelerometer_instance._fifo) < 10 :

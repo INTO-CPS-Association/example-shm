@@ -52,8 +52,8 @@ def create_on_publish_callback():
         print(f"on_publish: Message {mid} published.")
     return on_publish
 
-def setup_mqtt_client(config):
-    """Initialize client using a single profile (e.g., 'default')."""
+def setup_mqtt_client(config, topic_index=0):
+    """Initialize client using a specific topic index from the subscription list."""
     mqttc = MQTTClient(
         client_id=config["ClientID"],  # Direct access to keys
         callback_api_version=CallbackAPIVersion.VERSION2,
@@ -63,13 +63,16 @@ def setup_mqtt_client(config):
     if config["userId"]:
         mqttc.username_pw_set(config["userId"], config["password"])
     
-    mqttc.on_connect = create_on_connect_callback(
-        config["TopicsToSubscribe"], 
-        config["QoS"]
-    )
+    # Ensure topic_index is valid
+    topics_list = config["TopicsToSubscribe"]
+    if topic_index < 0 or topic_index >= len(topics_list):
+        raise ValueError(f"Invalid topic index: {topic_index}. Available range: 0-{len(topics_list) - 1}")
+
+    selected_topic = topics_list[topic_index]
+
+    mqttc.on_connect = create_on_connect_callback([selected_topic], config["QoS"])
     mqttc.on_subscribe = create_on_subscribe_callback()
     mqttc.on_message = create_on_message_callback()
     mqttc.on_publish = create_on_publish_callback()
     
-    return mqttc
-
+    return mqttc, selected_topic

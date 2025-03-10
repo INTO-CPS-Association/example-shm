@@ -1,5 +1,5 @@
 from pyoma2.setup.single import SingleSetup
-from pyoma.ssiWrapper import SSIcov
+from .pyoma.ssiWrapper import SSIcov
 
 import numpy as np
 
