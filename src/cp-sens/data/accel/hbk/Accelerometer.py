@@ -2,9 +2,9 @@ import json
 import numpy as np
 import threading  
 from collections import deque
-from accel.accelerometer import IAccelerometer, us_multiplier
-from sources import mqtt
-from accel.constants import MAX_FIFO_SIZE, MIN_LEN
+from ...accel.accelerometer import IAccelerometer, us_multiplier # type: ignore    
+from ...sources import mqtt # type: ignore
+from ...accel.constants import MAX_FIFO_SIZE, MIN_LEN # type: ignore
 import struct
 import bisect
 
@@ -47,6 +47,14 @@ class Accelerometer(IAccelerometer):
         threading.Thread(target=safe_process, daemon=True).start()
 
 
+    def _process_metadata(self, msg):
+        """Processes metadata messages."""
+        try:
+            payload_str = msg.payload.decode("utf-8").strip()
+            self._metadata = json.loads(payload_str)  # Store metadata
+            print(f"Metadata received: {self._metadata}")
+        except json.JSONDecodeError as e:
+            print(f"Failed to decode metadata: {e}")
 
 
     def _process_message(self, msg):  
@@ -72,9 +80,10 @@ class Accelerometer(IAccelerometer):
             if not msg.payload or msg.payload == b'':
                 print(f" Received an empty : {msg.payload!r}, ignoring it.")
                 return
-
-            try:
-                if msg.payload.startswith(b"{"):
+            # Check if the payload is JSON
+            if msg.payload.startswith(b"{"):
+                print(" Processing JSON message")
+                try:
                     payload_str = msg.payload.decode("utf-8").strip()
                     data = json.loads(payload_str)
                     
@@ -99,14 +108,13 @@ class Accelerometer(IAccelerometer):
                     # Extract timestamp
                     timestamp = data["descriptor"]["timestamp"]
 
-                with self._lock:
-                    # Ensure we don't exceed FIFO size before inserting
-                    while len(self._fifo) >= self._fifo_size:
-                        #If FIFO is full then remove the oldest sample
-                        removed_timestamp = self._timestamps.popleft()
-                        removed_sample = self._fifo.popleft()
-                        print(f"Trimming FIFO: Removedd sample {removed_sample[0]} with timestamp {removed_timestamp}")
-
+                    with self._lock:
+                        # Ensure we don't exceed FIFO size before inserting
+                        while len(self._fifo) >= self._fifo_size:
+                            #If FIFO is full then remove the oldest sample
+                            removed_timestamp = self._timestamps.popleft()
+                            removed_sample = self._fifo.popleft()
+                            print(f"Trimming FIFO: Removedd sample {removed_sample[0]} with timestamp {removed_timestamp}")
 
                     # Convert timestamps to a sorted list for indexing
                     ts_list = list(self._timestamps)   
@@ -116,13 +124,76 @@ class Accelerometer(IAccelerometer):
                     self._timestamps.insert(idx, timestamp)
                     self._fifo.insert(idx, data_array)
 
-            except json.JSONDecodeError:
-                print("JSON decoding failed")
+                except json.JSONDecodeError:
+                    print("JSON decoding failed")
+
+
+        
+            elif isinstance(msg.payload, bytes) and not msg.payload.startswith(b"{"):  
+                print(" Processing binary message")
+            try:
+                raw_payload = msg.payload
+
+                # Validate payload size
+                if len(raw_payload) != 156:
+                    print(f" Invalid binary payload size: {len(raw_payload)} (expected 156 bytes)")
+                    return
+                else:
+                    print(" Payload size is valid (156 bytes)")
+
+                # Extract descriptor header
+                descriptor = struct.unpack("<HHQQQ", raw_payload[:28])
+                descriptor_length, metadata_version, seconds_since_epoch, nanoseconds, samples_from_daq_start = descriptor
+                # Extract data payload (32 floats)
+                accel_values = struct.unpack("<32f", raw_payload[28:156])
+                print(f" Extracted binary values: {accel_values}")
+                # Validate values
+                if len(accel_values) < 3:
+                    print("Insufficient binary values")
+                    return
+                else:
+                    print("Extracted 32 binary values")
+
+                # Ensure each array has exactly 3 elements
+                num_samples = len(accel_values) // 3
+                # Create standardized arrays for all 32 samples
+                data_arrays = [np.array(accel_values[i*3:(i+1)*3], dtype=np.float64) for i in range(num_samples)]
+                print(f" Data arrays: {data_arrays}")
+
+                # Calculate timestamps for each sample
+                sampling_rate = 512.0  # Based on metadata 
+                time_increment = 1.0 / sampling_rate  # Time between samples in seconds
+
+                with self._lock:
+                    for i, data_array in enumerate(data_arrays):
+                        # Calculate timestamp for this sample
+                        sample_timestamp = seconds_since_epoch + (nanoseconds / 1e9) + (i * time_increment)
+
+                        # Ensure we don't exceed FIFO size before inserting
+                        while len(self._fifo) >= self._fifo_size:
+                            # If FIFO is full then remove the oldest sample
+                            removed_timestamp = self._timestamps.popleft()
+                            removed_sample = self._fifo.popleft()
+                            print(f" Trimming FIFO: Removed sample {removed_sample[0]} with timestamp {removed_timestamp}")
+
+                        # Convert timestamps to a sorted list for indexing
+                        ts_list = list(self._timestamps)
+                        
+                        # Find correct position using bisect
+                        idx = bisect.bisect_left(ts_list, sample_timestamp)
+    
+                        # Insert in correct order
+                        self._timestamps.insert(idx, sample_timestamp)
+                        self._fifo.insert(idx, data_array)
+
+            except struct.error as e:
+                print(f"Binary decoding failed: {e}")
+    
 
 
 
-
-    def read(self, requested_samples: int) -> (int, np.ndarray):
+ 
+    def read(self, requested_samples: int) -> (int, np.ndarray): # type: ignore
         """
         Reads the latest accelerometer data from the FIFO buffer.
 
