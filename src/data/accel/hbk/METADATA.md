@@ -74,3 +74,35 @@ The **data topic** payload consists of two parts:
 }
 }
 ```
+
+
+## MQTT Configuration
+
+The acceleration measurements are streamed via MQTT broker. The following
+configuration needs to be placed in `config/mqtt.json` and
+credentials modified.
+
+```json
+{
+    "MQTT": {
+        "host": "test.mosquitto.org",
+        "port": 1883,
+        "userId": "",
+        "password": "",
+        "ClientID": "test_client_id",
+        "QoS": 1,
+        "TopicsToSubscribe": [
+            "cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/+/acc/raw/data",
+            "cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/+/acc/raw/metadata",  
+
+            "cpsens/d8-3a-dd-37-d3-08/3050-A-060_sn_106209/+/acc/raw/data",
+            "cpsens/d8-3a-dd-37-d3-08/3050-A-060_sn_106209/+/acc/raw/metadata", 
+
+            "cpsens/2c-cf-67-25-da-db/mcc172_21C2CCC/+/acc/raw/data",
+            "cpsens/2c-cf-67-25-da-db/mcc172_21C2CCC/+/acc/raw/metadata", 
+
+            "cpsens/d8-3a-dd-37-d2-7e/3160-A-042_sn_999998/+/acc/raw/data",
+            "cpsens/d8-3a-dd-37-d2-7e/3160-A-042_sn_999998/+/acc/raw/metadata"  
+        ]
+    }
+}
