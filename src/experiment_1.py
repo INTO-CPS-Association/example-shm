@@ -12,14 +12,13 @@ def main():
     config = load_config("src/config/mqtt.json")
     mqtt_config = config["MQTT"]["real_server"]
 
-    topic_index = 0  
+    topic_index = 0
     mqtt_client, selected_topic = setup_mqtt_client(mqtt_config, topic_index)
-    mqtt_client.connect(mqtt_config["host"], mqtt_config["port"], 60)  
+    mqtt_client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     mqtt_client.loop_start()
 
     # Initialize Accelerometer w
     accelerometer = Accelerometer(mqtt_client, topic=selected_topic, fifo_size=10000)
-
 
     # System Identification parameters
     Params = {
@@ -35,15 +34,14 @@ def main():
         status, data = accelerometer.read(requested_samples=2000)
         print(f"FIFO contains {data.shape[0]} samples.")
 
-
-
         if data.shape[0] < MIN_SAMPLES_NEEDED:
-              print(f" Not enough samples in FIFO ({data.shape[0]} < {MIN_SAMPLES_NEEDED}). Waiting for more data...")
-              time.sleep(0.5)
-              continue  
+            print(" Not enough samples in FIFO",
+                  f"({data.shape[0]} < {MIN_SAMPLES_NEEDED}).",
+                  "Waiting for more data...")
+            time.sleep(0.5)
+            continue
 
         print(f"Data shape before sysid: {data.shape}")
-
 
         sysid_output = sysid(data, Params)
 
@@ -60,7 +58,7 @@ def main():
         print(" cov_damping:", cov_damping)
         print("mode_shapes:", mode_shapes)
 
-        break  
+        break
 
 
 if __name__ == '__main__':

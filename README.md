@@ -17,9 +17,9 @@ source .venv/bin/activate        # On Linux
 pip install poetry               #Specifically install poetry to your system
 # If you have poetry installed globally
 poetry env activate              # shows the command to activate venv
-pylint src --rcfile=../.pylintrc # runs linting checks
-
 poetry install                   # installs all required python packages
+pylint src --rcfile=.pylintrc    # runs linting checks
+
 poetry build                     # builds cp-sens package that can be published on pip
 poetry run start                 # runs the main script
 ```
@@ -36,7 +36,7 @@ pytest
 ## Use
 
 Only MQTT client code is working at the moment.
-You can use it by setting the `src/cp-sens/data/config/mqtt.json`
+You can use it by setting the `src/config/mqtt.json`
 and executing,
 
 ```bash
