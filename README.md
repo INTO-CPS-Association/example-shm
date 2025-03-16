@@ -18,10 +18,11 @@ pip install poetry               #Specifically install poetry to your system
 # If you have poetry installed globally
 poetry env activate              # shows the command to activate venv
 poetry install                   # installs all required python packages
-pylint src --rcfile=.pylintrc    # runs linting checks
+pylint src tests --rcfile=.pylintrc    # runs linting checks
 
 poetry build                     # builds cp-sens package that can be published on pip
 poetry run start                 # runs the main script
+poetry run experiment_1          # run one experiment with real data
 ```
 
 ## Testing
@@ -31,14 +32,4 @@ _test_*_.py_. To run all tests, with coverage:
 
 ```bash
 pytest
-```
-
-## Use
-
-Only MQTT client code is working at the moment.
-You can use it by setting the `src/config/mqtt.json`
-and executing,
-
-```bash
-python .\src\cp-sens\data\sources\mqtt.py
 ```
