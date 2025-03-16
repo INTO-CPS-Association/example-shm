@@ -1,14 +1,11 @@
-from data.accel.accelerometer import IAccelerometer # type: ignore
-from data.accel.random import RandomSource # type: ignore
 import time
-from data.accel.hbk.Accelerometer import Accelerometer  # type: ignore
-from data.accel.constants import MIN_SAMPLES_NEEDED   # type: ignore
-from data.sources.mqtt import setup_mqtt_client, load_config # type: ignore
-from methods.sysID import sysid # type: ignore
 import numpy as np
-import logging
 
-
+# Project imports
+from data.accel.hbk.Accelerometer import Accelerometer  # type: ignore
+from data.accel.constants import MIN_SAMPLES_NEEDED  # type: ignore
+from data.sources.mqtt import setup_mqtt_client, load_config  # type: ignore
+from methods.sysID import sysid  # type: ignore
 
 
 def main():
@@ -27,10 +24,11 @@ def main():
     # System Identification parameters
     Params = {
         "Fs": 100,  
-        "block_shift": 30,  
-        "model_order": 20  
+        "block_shift": 15,  
+        "model_order": 10  
     }
-
+    accelerometer._fifo.clear()
+    accelerometer._timestamps.clear()
     while True:
         time.sleep(2)
 
@@ -44,15 +42,7 @@ def main():
               time.sleep(0.5)
               continue  
 
-        data = data.T
-        
-        # logging data and sysid output 
-        log_file_path = r"C:\Users\derki\Desktop\sysID_log.txt"
-        logging.basicConfig(filename=log_file_path, level=logging.INFO, format="%(asctime)s - %(message)s")
-        logging.info("data before passing them to sysID %s", data[:, :50])
-        logging.info("data shape  %s", data.shape)
-        logging.info("\n The params: %s", Params)
-
+        print(f"Data shape before sysid: {data.shape}")
 
 
         sysid_output = sysid(data, Params)
@@ -64,15 +54,10 @@ def main():
         cov_damping    = sysid_output['Xi_poles_cov']
         mode_shapes    = sysid_output['Phi_poles']
 
-        logging.info(" System Identification frequencies: %s", frequencies)
         print("System Identification frequencies:", frequencies)
-        logging.info(" System Identification cov_freq: %s", cov_freq)
         print("System Identification cov_freq:", cov_freq)
-        logging.info(" damping_ratios: %s", damping_ratios)
         print("damping_ratios:", damping_ratios)
-        logging.info("  cov_damping: %s", cov_damping)
         print(" cov_damping:", cov_damping)
-        logging.info("  mode_shapes: %s", mode_shapes)
         print("mode_shapes:", mode_shapes)
 
         break  

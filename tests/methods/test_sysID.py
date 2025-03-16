@@ -13,7 +13,15 @@ def test_sysid():
     data = np.loadtxt('tests/input_data/Acc_4DOF.txt').T
 
     # Perform system identification
-    frequencies, cov_freq, damping_ratios, cov_damping, mode_shapes, poles_label = sysid(data, oma_params)
+    sysid_output = sysid(data, oma_params)
+    
+    # Extract results using dictionary keys
+    frequencies = sysid_output['Fn_poles']
+    cov_freq = sysid_output['Fn_poles_cov']
+    damping_ratios = sysid_output['Xi_poles']
+    cov_damping = sysid_output['Xi_poles_cov']
+    mode_shapes = sysid_output['Phi_poles']
+    poles_label = sysid_output['Lab']
 
     # Load stored reference results
     stored_data = np.load('tests/input_data/expected_sysid_output.npz')
