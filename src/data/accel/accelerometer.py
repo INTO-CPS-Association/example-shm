@@ -1,6 +1,6 @@
 import abc
 import numpy as np
-# multiplier to convert time from
+
 us_multiplier = 1000000 # factor to convert time to microseconds
 
 class IAccelerometer(abc.ABC):

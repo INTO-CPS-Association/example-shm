@@ -1,22 +1,34 @@
 import numpy as np
-from methods.sysID import sysid  
-
+from src.methods.sysID import sysid  
 
 def test_sysid():
     # Define OMA parameters
     oma_params = {
-        "Fs": 100.0,  # Sampling frequency in Hz
-        "block_shift": 15,  # Block shift parameter
-        "model_order": 10  # Model order
+        "Fs": 100,  # Sampling frequency in Hz
+        "block_shift": 30,  # Block shift parameter
+        "model_order": 20  # Model order
     }
     
-    data = np.loadtxt('Acc_4DOF.txt')
-    data = data.T
+    # Load test data
+    data = np.loadtxt('tests/input_data/Acc_4DOF.txt').T
+
     # Perform system identification
-    results = sysid(data, oma_params)
-    
-    # Assertions to verify output
-    assert isinstance(results, dict), "Output should be a dictionary"
-    assert "Fn" in results, "Result should contain 'Fn' key"
-    assert "Phi" in results, "Result should contain 'Phi' key"
-    assert "Obs" in results, "Result should contain 'Obs' key"
+    frequencies, cov_freq, damping_ratios, cov_damping, mode_shapes, poles_label = sysid(data, oma_params)
+
+    # Load stored reference results
+    stored_data = np.load('tests/input_data/expected_sysid_output.npz')
+    stored_frequencies = stored_data['frequencies']
+    stored_cov_freq = stored_data['cov_freq']
+    stored_damping_ratios = stored_data['damping_ratios']
+    stored_cov_damping = stored_data['cov_damping']
+    stored_mode_shapes = stored_data['mode_shapes']
+    stored_poles_label = stored_data['poles_label']
+
+
+    tolerance = 1e-6
+    assert np.allclose(frequencies, stored_frequencies, atol=tolerance, equal_nan=True), "Frequencies do not match!"
+    assert np.allclose(cov_freq, stored_cov_freq, atol=tolerance, equal_nan=True), "Covariance frequencies do not match!"
+    assert np.allclose(damping_ratios, stored_damping_ratios, atol=tolerance, equal_nan=True), "Damping ratios do not match!"
+    assert np.allclose(cov_damping, stored_cov_damping, atol=tolerance, equal_nan=True), "Covariance damping ratios do not match!"
+    assert np.allclose(mode_shapes, stored_mode_shapes, atol=tolerance, equal_nan=True), "Mode shapes do not match!"
+    assert np.array_equal(poles_label, stored_poles_label), "Pole labels do not match!"

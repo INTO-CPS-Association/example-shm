@@ -64,25 +64,30 @@ def test_on_publish_callback(capsys):
     captured = capsys.readouterr().out
     assert "Message 99 published" in captured
 
+
 def test_setup_mqtt_client():
     dummy_config = {
-        "MQTT": {
-            "ClientID": "test_client",
-            "userId": "test_user",
-            "password": "test_pass",
-            "TopicsToSubscribe": ["test/topic1", "test/topic2"],
-            "QoS": 1,
-            "host": "localhost",
-            "port": 1883
-        }
+        "ClientID": "test_client",  # Ensure ClientID is at the correct level
+        "userId": "test_user",
+        "password": "test_pass",
+        "TopicsToSubscribe": ["test/topic1", "test/topic2"],
+        "QoS": 1,
+        "host": "localhost",
+        "port": 1883
     }
-    client = setup_mqtt_client(dummy_config)
+    
+    # Unpack the returned tuple
+    client, selected_topic = setup_mqtt_client(dummy_config)
+
     # Check that the client has the correct client_id.
     client_id = client._client_id.decode() if isinstance(client._client_id, bytes) else client._client_id
     assert client_id == "test_client"
-    
-    # Verify that all callback functions has been assigned.
+
+    # Verify that all callback functions have been assigned.
     assert client.on_connect is not None
     assert client.on_subscribe is not None
     assert client.on_message is not None
     assert client.on_publish is not None
+
+    # Optional: Ensure the correct topic is selected
+    assert selected_topic == "test/topic1"  # Since topic_index defaults to 0

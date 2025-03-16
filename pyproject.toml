@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "cp-sens"
+name = "example-shm"
 version = "0.1.0"
 description = ""
 authors = ["prasadtalasila <prasadtalasila@gmail.com>"]

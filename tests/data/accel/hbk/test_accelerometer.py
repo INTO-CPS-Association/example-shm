@@ -2,15 +2,11 @@ import time
 import json
 import pytest
 import numpy as np
-import threading
 from data.accel.hbk.Accelerometer import Accelerometer  # type: ignore
 from data.sources.mqtt import setup_mqtt_client, load_config
-from data.accel.constants import LATENT_DATA_INDEX, TIMEOUT, INTERVAL, MAX_FIFO_SIZE
+from data.accel.constants import LATENT_DATA_INDEX
 import time
 import uuid
-
-
-
 
 
 
