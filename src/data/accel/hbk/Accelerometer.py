@@ -43,7 +43,7 @@ class Accelerometer(IAccelerometer):
 
         self.mqtt_client.loop_start()
 
-    def _on_message(self, client, userdata, msg):
+    def _on_message(self, _, __, msg):
         """Handles incoming MQTT messages."""
         print(f"Received message on topic {msg.topic}: {msg.payload}")
 
@@ -131,38 +131,33 @@ class Accelerometer(IAccelerometer):
             print(" Processing binary message")
         try:
             raw_payload = msg.payload
-
-            # Validate payload size
-            if len(raw_payload) != 156:
-                print(
-                    f" Invalid binary payload size: {
-                        len(raw_payload)} (expected 156 bytes)")
-                return
-            else:
-                print(" Payload size is valid (156 bytes)")
-
+            print("\n Length of payload = ",len(raw_payload))
             # Extract descriptor header
             descriptor = struct.unpack("<HHQQQ", raw_payload[:28])
             descriptor_length, metadata_version, seconds_since_epoch, nanoseconds, samples_from_daq_start = descriptor
-            # Extract data payload (32 floats)
-            accel_values = struct.unpack("<32f", raw_payload[28:156])
+
+
+            # Calculate number of samples dynamically
+            data_payload = raw_payload[28:]  # First 28 are the descripter, rest is the data
+            num_samples = len(data_payload) // 4  # Each float is 4 bytes
+            # Extract the correct number of float values
+            accel_values = struct.unpack(f"<{num_samples}f", data_payload)
+        
+
             print(f" Extracted binary values: {accel_values}")
             # Validate values
-            if len(accel_values) < 3:
-                print("Insufficient binary values")
-                return
-            else:
-                print("Extracted 32 binary values")
+
 
             # Ensure each array has exactly 3 elements
             num_samples = len(accel_values) // 3
+
             # Create standardized arrays for all 32 samples
             data_arrays = [np.array(
                 accel_values[i * 3:(i + 1) * 3], dtype=np.float64) for i in range(num_samples)]
             print(f" Data arrays: {data_arrays}")
 
             # Calculate timestamps for each sample
-            sampling_rate = 512.0  # Based on metadata
+            sampling_rate = 512.0  
             time_increment = 1.0 / sampling_rate  # Time between samples in seconds
 
             with self._lock:
