@@ -19,23 +19,80 @@ cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/ANALYSIS/DATA_ID
 
 ### Example Topics
 
-#### Data Topic
-
-```txt
-cpsens/RPi_1234/1/1/acc/raw/data
-```
-
-This represents data coming from an accelerometer (`acc`), processed as raw data (`raw`), from channel 1 of module 1 on device `RPi_1234`.
-
 #### Metadata Topic
 
 ```txt
-cpsens/RPi_1234/1/1/acc/raw/metadata
+cpsens/d3-f2-f3-b3/cpsns_Simulator/1/acc/raw/metadata
 ```
 
-This topic contains metadata for the raw data from the same device, module, and channel.
+This represents metadata coming from an accelerometer (`acc`), processed as raw data (`raw`), from channel 1 of The cpsns_Simulator module on device `d3-f2-f3-b`.
 
-## Payload Format
+
+
+### METADATA Topic Payload
+
+#### Example METADATA Topic Payload
+
+```json
+{
+  "Descriptor": {
+    "Descriptor length": "uint16",
+    "Metadata version": "uint16",
+    "Seconds since epoch": "uint64",
+    "Nanoseconds": "uint64",
+    "Samples from DAQ start": "uint64"
+  },
+  "Data": {
+    "Type": "float",
+    "Samples": 32,
+    "Unit": "m/s^2"
+  },
+  "Sensor": {
+    "Sensing": "acceleration",
+    "Sensitivity": 100.0,
+    "Sensitivity unit": "mV/(m/s^2)",
+    "Vendor": "HBK",
+    "Type": "4507 B",
+    "S/N": "12345"
+  },
+  "DAQ": {
+    "Type": "DAQ_Simulator",
+    "MAC": "d8-3a-dd-f5-92-48",
+    "IP": ""
+  },
+  "Analysis chain": [
+    {
+      "Name": "acquisition",
+      "Output": "raw",
+      "Sampling": 512.0
+    }
+  ],
+  "Engineering": {
+    "project": "BLATIGUE-2",
+    "projectid": 42,
+    "channelgroupname": "DTU Blade",
+    "channelgroupid": 1,
+    "channelName": "156149X+",
+    "DOF": 156149,
+    "Node": 156149,
+    "Dir": 1
+  },
+  "TimeAtAquisitionStart": {
+    "Seconds": 1741618465,
+    "Nanosec": 641669098
+  }
+}
+
+
+
+#### Data Topic
+
+```txt
+cpsens/d3-f2-f3-b/cpsns_Simulator/1/acc/raw/data
+```
+
+This topic contains data for the raw data from the same device, module, and channel.
+
 
 ### Data Topic Payload
 
@@ -48,30 +105,17 @@ The **data topic** payload consists of two parts:
 
 ```json
 {
-"descriptor": {
-  "length": 10,
-  "timestamp": "1638493434",
-  "metadata_version": 1
-},
-"data": {
-  "type": "double",
-  "values": [0.5, 0.3, 0.7]
-},
-"sensor": {
-  "sensing": "acceleration",
-  "sensitivity": 100,
-  "unit": "mV/ms-2"
-},
-"DAQ_device": {
-  "IP_address": "192.168.100.101",
-  "type": "Raspberry PI"
-},
-"analysis_chain": {
-  "analysis1": {
-    "name": "raw",
-    "sampling_rate_Sa_per_s": 100
+  "descriptor": {
+    "descriptor_length": 28,
+    "metadata_version": 2,
+    "seconds_since_epoch": 1742400339,
+    "nanoseconds": 1504491492025,
+    "samples_from_daq_start": 400319264
+  },
+  "data": {
+    "type": "float",
+    "values": [3.5, 4.3, 4.7]
   }
-}
 }
 ```
 
@@ -92,17 +136,12 @@ credentials modified.
         "ClientID": "test_client_id",
         "QoS": 1,
         "TopicsToSubscribe": [
-            "cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/+/acc/raw/data",
-            "cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/+/acc/raw/metadata",  
-
-            "cpsens/d8-3a-dd-37-d3-08/3050-A-060_sn_106209/+/acc/raw/data",
-            "cpsens/d8-3a-dd-37-d3-08/3050-A-060_sn_106209/+/acc/raw/metadata", 
-
-            "cpsens/2c-cf-67-25-da-db/mcc172_21C2CCC/+/acc/raw/data",
-            "cpsens/2c-cf-67-25-da-db/mcc172_21C2CCC/+/acc/raw/metadata", 
-
-            "cpsens/d8-3a-dd-37-d2-7e/3160-A-042_sn_999998/+/acc/raw/data",
-            "cpsens/d8-3a-dd-37-d2-7e/3160-A-042_sn_999998/+/acc/raw/metadata"  
+            "cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/0/acc/raw/data",
+            "cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/0/acc/raw/metadata",    
+            "cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/1/acc/raw/data",
+            "cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/1/acc/raw/metadata",  
+            "cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/2/acc/raw/data",
+            "cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/2/acc/raw/metadata"
         ]
     }
 }
