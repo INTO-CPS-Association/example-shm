@@ -57,7 +57,7 @@ This represents metadata coming from an accelerometer (`acc`), processed as raw 
   },
   "DAQ": {
     "Type": "DAQ_Simulator",
-    "MAC": "d8-3a-dd-f5-92-48",
+    "MAC": "a1-a2-a3-a4",
     "IP": ""
   },
   "Analysis chain": [
@@ -68,11 +68,11 @@ This represents metadata coming from an accelerometer (`acc`), processed as raw 
     }
   ],
   "Engineering": {
-    "project": "BLATIGUE-2",
+    "project": "name",
     "projectid": 42,
-    "channelgroupname": "DTU Blade",
+    "channelgroupname": "Blade",
     "channelgroupid": 1,
-    "channelName": "156149X+",
+    "channelName": "SOO",
     "DOF": 156149,
     "Node": 156149,
     "Dir": 1
