@@ -7,7 +7,7 @@ import numpy as np
 
 # Project Imports
 from data.accel.accelerometer import IAccelerometer
-from data.accel.constants import MAX_FIFO_SIZE
+from data.accel.constants import MAX_MAP_SIZE
 
 
 class Accelerometer(IAccelerometer):
@@ -15,37 +15,34 @@ class Accelerometer(IAccelerometer):
         self,
         mqtt_client,
         topic: str = "accelerometer/data",
-        fifo_size: int = MAX_FIFO_SIZE,
-        axis: tuple = [
-            "x",
-            "y",
-            "z"]):
+        map_size: int = MAX_MAP_SIZE ):
+
+
         """
         Initializes the Accelerometer instance with a pre-configured MQTT client.
 
         Parameters:
             mqtt_client: A pre-configured and connected MQTT client.
             topic (str): The MQTT topic to subscribe to. Defaults to "accelerometer/data".
-            fifo_size (int): The maximum number of samples to store in the FIFO buffer.
-            axis (list): List of axes to extract from incoming data. Defaults to ['x', 'y', 'z'].
+            map_size (int): The maximum number of samples to store in the Map.
         """
         self.mqtt_client = mqtt_client
+
         self.topic = topic
-        self._axis = axis
-        self._fifo_size = fifo_size
-        self._fifo = deque(maxlen=self._fifo_size)
-        self._timestamps = deque(maxlen=fifo_size)
+        self._map_size = map_size
+ 
+        self.data_map = {}
         self._lock = threading.Lock()
 
         # Setting up MQTT callback
         self.mqtt_client.on_message = self._on_message
         self.mqtt_client.subscribe(self.topic, qos=1)
 
-        self.mqtt_client.loop_start()
+        #self.mqtt_client.loop_start()
 
     def _on_message(self, _, __, msg):
         """Handles incoming MQTT messages."""
-        print(f"Received message on topic {msg.topic}: {msg.payload}")
+        print(f"Received message on topic {msg.topic}")
 
         def safe_process():  # This ensures that an exception does not crash the entire thread
             try:
@@ -55,167 +52,111 @@ class Accelerometer(IAccelerometer):
 
         threading.Thread(target=safe_process, daemon=True).start()
 
+
+
+
+
+
     def _process_message(self, msg):
         """
-        Processes incoming MQTT messages and extracts accelerometer data.
+            Processes incoming MQTT messages, extracts accelerometer data,
+            and stores it in a dictionary of FIFO queues.
 
-        JSON-based messages containing acceleration values.
-
-        Workflow:
-        - If the message is empty, it is ignored.
-        - If the message is JSON:
-            - Extracts acceleration values from the "data" or "accel_readings" field.
-            - Extracts the timestamp from the "descriptor" field.
-            - Ensures FIFO buffer size constraints before inserting.
-            - Uses `bisect_left` to maintain sorted timestamp order.
-
-        Parameters:
-            msg (paho.mqtt.client.MQTTMessage): The incoming MQTT message.
-
-        Raises:
-            json.JSONDecodeError: If JSON parsing fails.
-        """
-        if not msg.payload or msg.payload == b'':
-            print(f" Received an empty : {msg.payload!r}, ignoring it.")
-            return
-        # Check if the payload is JSON
-        if msg.payload.startswith(b"{"):
-            print(" Processing JSON message")
-            try:
-                payload_str = msg.payload.decode("utf-8").strip()
-                data = json.loads(payload_str)
-
-                # Extract values (two different format examples)
-                if "data" in data and "values" in data["data"]:
-                    values = data["data"]["values"]
-                elif "accel_readings" in data:
-                    accel = data["accel_readings"]
-                    values = [accel["x"], accel["y"], accel["z"]]
-                else:
-                    print("Invalid JSON format")
-                    return
-
-                # Validate values
-                if len(values) < 3:  # In case we do not have all x y z
-                    print(f"Insufficient values: {values}")
-                    return
-
-                # Create standardized array
-                data_array = np.array(values[:3], dtype=np.float64)
-
-                # Extract timestamp
-                timestamp = data["descriptor"]["timestamp"]
-
-                with self._lock:
-                    # Ensure we don't exceed FIFO size before inserting
-                    while len(self._fifo) >= self._fifo_size:
-                        # If FIFO is full then remove the oldest sample
-                        removed_timestamp = self._timestamps.popleft()
-                        removed_sample = self._fifo.popleft()
-                        print(
-                            f"Trimming FIFO: Removedd sample {
-                                removed_sample[0]} with timestamp {removed_timestamp}")
-
-                # Convert timestamps to a sorted list for indexing
-                ts_list = list(self._timestamps)
-                # Find correct position using bisect
-                idx = bisect.bisect_left(ts_list, timestamp)
-                # Insert in correct order
-                self._timestamps.insert(idx, timestamp)
-                self._fifo.insert(idx, data_array)
-
-            except json.JSONDecodeError:
-                print("JSON decoding failed")
-
-        elif isinstance(msg.payload, bytes) and not msg.payload.startswith(b"{"):
-            print(" Processing binary message")
+            - Each unique `samples_from_daq_start` gets its own `deque`.
+            - If the number of keys in `self.data_map` exceeds `_map_size`, 
+            the oldest key is removed (oldest data batch is discarded).
+            """
         try:
             raw_payload = msg.payload
-            print("\n Length of payload = ",len(raw_payload))
-            # Extract descriptor header
-            descriptor = struct.unpack("<HHQQQ", raw_payload[:28])
-            descriptor_length, metadata_version, seconds_since_epoch, nanoseconds, samples_from_daq_start = descriptor
 
+            # Extract metadata
+            descriptor_length = struct.unpack("<H", raw_payload[:2])[0] # We know that the first 2 bytes tells the length of the descriptor
+            (
+                descriptor_length,
+                metadata_version,
+                seconds_since_epoch,
+                nanoseconds,
+                samples_from_daq_start,
+            ) = struct.unpack("<HHQQQ", raw_payload[:descriptor_length])
 
-            # Calculate number of samples dynamically
-            data_payload = raw_payload[28:]  # First 28 are the descripter, rest is the data
-            num_samples = len(data_payload) // 4  # Each float is 4 bytes
-            # Extract the correct number of float values
+            # Extract sensor data
+            data_payload = raw_payload[descriptor_length:]
+            num_samples = len(data_payload) // 4
             accel_values = struct.unpack(f"<{num_samples}f", data_payload)
-        
 
-            print(f" Extracted binary values: {accel_values}")
-            # Validate values
-
-
-            # Ensure each array has exactly 3 elements
-            num_samples = len(accel_values) // 3
-
-            # Create standardized arrays for all 32 samples
-            data_arrays = [np.array(
-                accel_values[i * 3:(i + 1) * 3], dtype=np.float64) for i in range(num_samples)]
-            print(f" Data arrays: {data_arrays}")
-
-            # Calculate timestamps for each sample
-            sampling_rate = 512.0  
-            time_increment = 1.0 / sampling_rate  # Time between samples in seconds
-
+            # Store each data batch (e.g 32 samples in one message) in the map where usnig samples_from_daq_start as its the key
             with self._lock:
-                for i, data_array in enumerate(data_arrays):
-                    # Calculate timestamp for this sample
-                    sample_timestamp = seconds_since_epoch + \
-                        (nanoseconds / 1e9) + (i * time_increment)
+                self.data_map[samples_from_daq_start] = deque(accel_values)  
+                #  Check if the total samples in the map exceeds the max, then remove the oldest data batch
+                while sum(len(deque) for deque in self.data_map.values()) > self._map_size:
+                    oldest_key = min(self.data_map.keys())  # Find the oldest batch
+                    del self.data_map[oldest_key]  # Remove oldest batch
+            print(f" Channel: {self.topic}  Key: {samples_from_daq_start}, Samples: {num_samples}")
 
-                    # Ensure we don't exceed FIFO size before inserting
-                    while len(self._fifo) >= self._fifo_size:
-                        # If FIFO is full then remove the oldest sample
-                        removed_timestamp = self._timestamps.popleft()
-                        removed_sample = self._fifo.popleft()
-                        print(
-                            f" Trimming FIFO: Removed sample {
-                                removed_sample[0]} with timestamp {removed_timestamp}")
+        except Exception as e:
+            print(f"Error processing message: {e}")
 
-                    # Convert timestamps to a sorted list for indexing
-                    ts_list = list(self._timestamps)
 
-                    # Find correct position using bisect
-                    idx = bisect.bisect_left(ts_list, sample_timestamp)
 
-                    # Insert in correct order
-                    self._timestamps.insert(idx, sample_timestamp)
-                    self._fifo.insert(idx, data_array)
 
-        except struct.error as e:
-            print(f"Binary decoding failed: {e}")
 
-    def read(self, requested_samples: int) -> (int, np.ndarray):  # type: ignore
+    def read(self, requested_samples: int) -> (int, np.ndarray):
         """
-        Reads the latest accelerometer data from the FIFO buffer.
+        Reads the oldest accelerometer data from the FIFO buffer and removes only the read samples.
 
         Parameters:
-            requested_samples (int): The number of most recent samples desired.
+            requested_samples (int): The number of samples desired.
 
         Returns:
             Tuple[int, np.ndarray]:
                 - status: 1 if the number of samples returned equals the requested number,
                         0 if fewer samples were available.
-                - data: A NumPy array of shape (n_samples, len(axis)), where n_samples is the number of
-                        samples returned.
-
-        Note:
-            The FIFO buffer is **not emptied**—only the requested latest samples are retrieved.
+                - data: A NumPy array of shape (n_samples,).
         """
         with self._lock:
-            available = len(self._fifo)
-            # If requested samples are more than available, return as many as
-            # possible
-            if available >= requested_samples:
-                status = 1
-                # Get the latest `requested_samples` elements (from the right)
-                ret_samples = [sample[:3]
-                               for sample in list(self._fifo)[-requested_samples:]]
-            else:
-                status = 0
-                ret_samples = [sample[:3] for sample in list(
-                    self._fifo)]  # Get all available samples
-        return status, np.array(ret_samples)
+            sorted_keys = sorted(self.data_map.keys())  
+
+            collected_samples = []
+            samples_collected = 0
+
+            for key in sorted_keys:
+                entry = self.data_map[key]  # Access the deque directly
+
+                if samples_collected + len(entry) <= requested_samples:
+                    # Take the whole entry and remove it
+                    collected_samples.extend(entry)
+                    samples_collected += len(entry)
+                    del self.data_map[key]  
+                else:
+                    # Take only the required number of samples
+                    remaining_samples = requested_samples - samples_collected
+                    collected_samples.extend(list(entry)[:remaining_samples])  # Using list here because we need to slice it in order to only take what we need
+                    for _ in range(remaining_samples):  
+                        entry.popleft()  # Remove samples from deque
+                    samples_collected += remaining_samples
+                    break  # Stop once we have enough samples
+
+
+
+            collected_samples = np.array(collected_samples, dtype=np.float64)
+            status = 1 if samples_collected == requested_samples else 0
+
+        return status, collected_samples
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
