@@ -971,17 +971,7 @@ tomlkit = ">=0.10.1"
 spelling = ["pyenchant (>=3.2,<4.0)"]
 testutils = ["gitpython (>3)"]
 
-[[package]]
-name = "pyoma-2"
-version = "1.0.0"
-description = "Python module for conducting Operational Modal Analysis"
-optional = false
-python-versions = "<3.13,>=3.8"
-groups = ["main"]
-files = [
-    {file = "pyoma_2-1.0.0-py3-none-any.whl", hash = "sha256:987c109659b8d3cccf01c289d57b1b569a67e0ca3160d2d0bed90b80ec06539a"},
-    {file = "pyoma_2-1.0.0.tar.gz", hash = "sha256:4113489683b4ba90cd0b9c15f303b0556b40cb1656c03aa64235ae7967d09584"},
-]
+
 
 [package.dependencies]
 matplotlib = ">=3.7.4"

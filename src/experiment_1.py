@@ -6,10 +6,7 @@ import logging
 from data.accel.hbk.Accelerometer import Accelerometer  # type: ignore
 from data.accel.constants import MIN_SAMPLES_NEEDED  # type: ignore
 from data.sources.mqtt import setup_mqtt_client, load_config  # type: ignore
-from methods.sysID import sysid  # type: ignore
 
-log_file_path = r"C:\Users\derki\Desktop\data3_log.txt"
-logging.basicConfig(filename=log_file_path, level=logging.INFO, format="%(asctime)s - %(message)s")
 
 
 def main():
@@ -34,11 +31,7 @@ def main():
         with accelerometer._lock:  
             for key, fifo in sorted(accelerometer.data_map.items()):
                 print(f"Key: {key} -> Data: {list(fifo)}\n")
-        status, data = accelerometer.read(requested_samples=25)
-        #logging.info(f"Collected {data.shape} samples.")
-        #logging.info(f"Data {data} .")
-
-
+        status, data = accelerometer.read(requested_samples=128)
         break  
 
     mqtt_client.loop_stop()
