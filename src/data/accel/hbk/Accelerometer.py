@@ -1,7 +1,5 @@
-import json
 import threading
 import struct
-import bisect
 from collections import deque
 import numpy as np
 
@@ -14,7 +12,7 @@ class Accelerometer(IAccelerometer):
     def __init__(
         self,
         mqtt_client,
-        topic: str = "accelerometer/data",
+        topic: str = "cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/1/acc/raw/data",
         map_size: int = MAX_MAP_SIZE ):
 
 
@@ -23,14 +21,13 @@ class Accelerometer(IAccelerometer):
 
         Parameters:
             mqtt_client: A pre-configured and connected MQTT client.
-            topic (str): The MQTT topic to subscribe to. Defaults to "accelerometer/data".
+            topic (str): The MQTT topic to subscribe to. Defaults to "channel 0 topic".
             map_size (int): The maximum number of samples to store in the Map.
         """
         self.mqtt_client = mqtt_client
 
         self.topic = topic
         self._map_size = map_size
- 
         self.data_map = {}
         self._lock = threading.Lock()
 
@@ -70,24 +67,22 @@ class Accelerometer(IAccelerometer):
             raw_payload = msg.payload
 
             # Extract metadata
-            descriptor_length = struct.unpack("<H", raw_payload[:2])[0] # We know that the first 2 bytes tells the length of the descriptor
-            (
-                descriptor_length,
-                metadata_version,
-                seconds_since_epoch,
-                nanoseconds,
-                samples_from_daq_start,
-            ) = struct.unpack("<HHQQQ", raw_payload[:descriptor_length])
+            # We know that the first 2 bytes tells the length of the descriptor
+            descriptor_length = struct.unpack("<H", raw_payload[:2])[0]
+            (descriptor_length, _, __, ___,
+             samples_from_daq_start,) = struct.unpack("<HHQQQ", raw_payload[:descriptor_length])
 
             # Extract sensor data
             data_payload = raw_payload[descriptor_length:]
             num_samples = len(data_payload) // 4
             accel_values = struct.unpack(f"<{num_samples}f", data_payload)
 
-            # Store each data batch (e.g 32 samples in one message) in the map where usnig samples_from_daq_start as its the key
+            # Store each data batch (e.g 32 samples in one message)
+            # in the map where usnig samples_from_daq_start as its the key
             with self._lock:
-                self.data_map[samples_from_daq_start] = deque(accel_values)  
-                #  Check if the total samples in the map exceeds the max, then remove the oldest data batch
+                self.data_map[samples_from_daq_start] = deque(accel_values)
+                # Check if the total samples in the map exceeds the max,
+                # then remove the oldest data batch
                 while sum(len(deque) for deque in self.data_map.values()) > self._map_size:
                     oldest_key = min(self.data_map.keys())  # Find the oldest batch
                     del self.data_map[oldest_key]  # Remove oldest batch
@@ -114,9 +109,9 @@ class Accelerometer(IAccelerometer):
                 - data: A NumPy array of shape (n_samples,).
         """
         with self._lock:
-            sorted_keys = sorted(self.data_map.keys())  
+            sorted_keys = sorted(self.data_map.keys())
 
-            collected_samples = []
+            samples = []
             samples_collected = 0
 
             for key in sorted_keys:
@@ -124,39 +119,20 @@ class Accelerometer(IAccelerometer):
 
                 if samples_collected + len(entry) <= requested_samples:
                     # Take the whole entry and remove it
-                    collected_samples.extend(entry)
+                    samples.extend(entry)
                     samples_collected += len(entry)
-                    del self.data_map[key]  
+                    del self.data_map[key]
                 else:
                     # Take only the required number of samples
                     remaining_samples = requested_samples - samples_collected
-                    collected_samples.extend(list(entry)[:remaining_samples])  # Using list here because we need to slice it in order to only take what we need
-                    for _ in range(remaining_samples):  
+                    # Using list here because we need to slice it in order to only take what we need
+                    samples.extend(list(entry)[:remaining_samples])
+                    for _ in range(remaining_samples):
                         entry.popleft()  # Remove samples from deque
                     samples_collected += remaining_samples
                     break  # Stop once we have enough samples
 
-
-
-            collected_samples = np.array(collected_samples, dtype=np.float64)
+            samples = np.array(samples, dtype=np.float64)
             status = 1 if samples_collected == requested_samples else 0
 
-        return status, collected_samples
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        return status, samples

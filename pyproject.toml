@@ -2,7 +2,7 @@
 name = "example-shm"
 version = "0.1.0"
 description = ""
-authors = ["prasadtalasila <prasadtalasila@gmail.com>"]
+authors = ["prasadtalasila <prasadtalasila@gmail.com>", mohamedabdulkarim]
 readme = "README.md"
 license = "INTO-CPS Association"
 packages = [{include = "*", from="src"}]
@@ -22,5 +22,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-start = "src.main:main"
 experiment_1 = "src.experiment_1:main"

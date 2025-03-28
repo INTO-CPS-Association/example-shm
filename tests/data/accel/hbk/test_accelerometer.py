@@ -5,15 +5,15 @@ import struct
 
 import numpy as np
 from data.accel.hbk.Accelerometer import Accelerometer  # type: ignore
-from data.accel.constants import DESCRIPTOR_LENGTH, METADATA_VERSION, SECONDS, NANOSECONDS, BATCH_SIZE
+from constants import DESCRIPTOR_LENGTH, METADATA_VERSION, SECONDS, NANOSECONDS, BATCH_SIZE
 from data.sources.mqtt import setup_mqtt_client, load_config
 import uuid
 
 
 @pytest.fixture(scope="function")
 def mqtt_client():
-    config = load_config("src/config/mqtt.json")
-    mqtt_config = config["MQTT"]["default"].copy()
+    config = load_config("config/mqtt.json")
+    mqtt_config = config["MQTT"]["test_server"].copy()
     mqtt_config["ClientID"] = f"test_{uuid.uuid4().hex[:6]}"  
 
     topic_index = 0  

@@ -1,6 +1,6 @@
 {
     "MQTT": {
-        "default": {
+        "test_server": {
             "host": "mqtt.eclipseprojects.io",
             "port": 1883,
             "userId": "",
@@ -26,7 +26,7 @@
                 "cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/3/acc/raw/metadata"
                 ]
         },
-        "PI_test": {
+        "PI_setup": {
             "host": "test.mosquitto.org",
             "port": 1883,
             "userId": "",

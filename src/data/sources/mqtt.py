@@ -1,7 +1,7 @@
 """
 MQTT Client Setup and Utility Functions.
 
-This module provides functions to set up an MQTT client, handle connections, 
+This module provides functions to set up an MQTT client, handle connections,
 subscriptions, and message publishing using the Paho MQTT library.
 """
 
@@ -30,9 +30,11 @@ def load_config(config_path: str) -> dict:
         print("JSON configuration loaded successfully.")
         return json_config
     except FileNotFoundError as exc:
-        raise FileNotFoundError(f"Error: The file {config_path} was not found.") from exc
+        raise FileNotFoundError(
+            f"Error: The file {config_path} was not found.") from exc
     except json.JSONDecodeError as exc:
-        raise ValueError(f"Error: The file {config_path} could not be decoded as JSON.") from exc
+        raise ValueError(
+            f"Error: The file {config_path} could not be decoded as JSON.") from exc
     except Exception as exc:
         raise RuntimeError(f"An unexpected error occurred: {exc}") from exc
 
@@ -40,7 +42,7 @@ def load_config(config_path: str) -> dict:
 def create_on_connect_callback(topics, qos):
     """Creates an on_connect callback function for the MQTT client."""
 
-    def on_connect(client, userdata, flags, rc, properties=None):  # noqa: ARG001
+    def on_connect(client, _, __, rc, properties=None):  # noqa: ARG001
         print(f"on_connect: Connected with response code {rc}")
         if rc == 0:  # Connection was successful
             for topic in topics:
@@ -55,8 +57,9 @@ def create_on_connect_callback(topics, qos):
 def create_on_subscribe_callback():
     """Creates an on_subscribe callback function for the MQTT client."""
 
-    def on_subscribe(client, userdata, mid, granted_qos, properties=None):  # noqa: ARG001
-        print(f"on_subscribe: Subscription ID {mid} with QoS levels {granted_qos}")
+    def on_subscribe(_, __, mid, granted_qos, properties=None):  # noqa: ARG001
+        print(
+            f"on_subscribe: Subscription ID {mid} with QoS levels {granted_qos}")
 
     return on_subscribe
 
@@ -64,7 +67,7 @@ def create_on_subscribe_callback():
 def create_on_message_callback():
     """Creates an on_message callback function for the MQTT client."""
 
-    def on_message(client, userdata, msg):  # noqa: ARG001
+    def on_message(_, __, msg):  # noqa: ARG001
         print(f"on_message: Received message on {msg.topic}")
 
     return on_message
@@ -73,7 +76,7 @@ def create_on_message_callback():
 def create_on_publish_callback():
     """Creates an on_publish callback function for the MQTT client."""
 
-    def on_publish(client, userdata, mid, *args, **kwargs):  # noqa: ARG001
+    def on_publish(_, __, mid, *args, **kwargs):  # noqa: ARG001
         print(f"on_publish: Message {mid} published.")
 
     return on_publish
@@ -107,7 +110,8 @@ def setup_mqtt_client(config, topic_index=0):
 
     selected_topic = topics_list[topic_index]
 
-    mqttc.on_connect = create_on_connect_callback([selected_topic], config["QoS"])
+    mqttc.on_connect = create_on_connect_callback(
+        [selected_topic], config["QoS"])
     mqttc.on_subscribe = create_on_subscribe_callback()
     mqttc.on_message = create_on_message_callback()
     mqttc.on_publish = create_on_publish_callback()
