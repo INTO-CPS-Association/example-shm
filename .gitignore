@@ -171,3 +171,8 @@ cython_debug/
 .pypirc
 
 .vscode
+
+
+# Ignore config files with credentials
+config/*.json
+!config/*.json.template

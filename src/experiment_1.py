@@ -7,8 +7,8 @@ from data.sources.mqtt import setup_mqtt_client, load_config  # type: ignore
 
 
 def main():
-    config = load_config("config/mqtt.json")
-    mqtt_config = config["MQTT"]["real_server"]
+    config = load_config("config/production.json")
+    mqtt_config = config["MQTT"]
 
     topic_index = 2
     mqtt_client, selected_topic = setup_mqtt_client(mqtt_config, topic_index)

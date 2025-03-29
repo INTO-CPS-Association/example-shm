@@ -1,0 +1,11 @@
+{
+    "MQTT": {
+        "host": "mqtt.eclipseprojects.io",
+        "port": 1883,
+        "userId": "",
+        "password": "",
+        "ClientID": "test_client_id",
+        "QoS": 1,
+        "TopicsToSubscribe": ["topicAA", "topicBB", "topicCC"]
+    }
+}

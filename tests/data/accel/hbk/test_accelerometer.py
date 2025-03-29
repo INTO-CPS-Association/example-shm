@@ -12,8 +12,8 @@ import uuid
 
 @pytest.fixture(scope="function")
 def mqtt_client():
-    config = load_config("config/mqtt.json")
-    mqtt_config = config["MQTT"]["test_server"].copy()
+    config = load_config("config/test.json")
+    mqtt_config = config["MQTT"].copy()
     mqtt_config["ClientID"] = f"test_{uuid.uuid4().hex[:6]}"  
 
     topic_index = 0  
