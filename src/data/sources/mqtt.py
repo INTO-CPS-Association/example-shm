@@ -42,6 +42,7 @@ def load_config(config_path: str) -> dict:
 def create_on_connect_callback(topics, qos):
     """Creates an on_connect callback function for the MQTT client."""
 
+    # pylint: disable=unused-argument
     def on_connect(client, _, __, rc, properties=None):  # noqa: ARG001
         print(f"on_connect: Connected with response code {rc}")
         if rc == 0:  # Connection was successful
@@ -57,6 +58,7 @@ def create_on_connect_callback(topics, qos):
 def create_on_subscribe_callback():
     """Creates an on_subscribe callback function for the MQTT client."""
 
+    # pylint: disable=unused-argument
     def on_subscribe(_, __, mid, granted_qos, properties=None):  # noqa: ARG001
         print(
             f"on_subscribe: Subscription ID {mid} with QoS levels {granted_qos}")
@@ -76,6 +78,7 @@ def create_on_message_callback():
 def create_on_publish_callback():
     """Creates an on_publish callback function for the MQTT client."""
 
+    # pylint: disable=unused-argument
     def on_publish(_, __, mid, *args, **kwargs):  # noqa: ARG001
         print(f"on_publish: Message {mid} published.")
 

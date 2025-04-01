@@ -1,6 +1,6 @@
 from datetime import datetime
 import random
-from .accelerometer import IAccelerometer, us_multiplier
+from .accelerometer import IAccelerometer, US_MULTIPLIER
 
 """
 A dummy accelerometer that generates
@@ -19,7 +19,8 @@ class RandomSource(IAccelerometer):
         # represents time at resolution of a microsecond
         # but depends on the underlying clock
         timestamp = datetime.timestamp(datetime.now())
-        key = round(timestamp * us_multiplier)
+        # pylint: disable=unused-variable
+        key = round(timestamp * US_MULTIPLIER)
         sample = {
             'timestamp': timestamp,
             'acceleration': accel

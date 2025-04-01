@@ -33,9 +33,6 @@ class Accelerometer(IAccelerometer):
 
         # Setting up MQTT callback
         self.mqtt_client.on_message = self._on_message
-        self.mqtt_client.subscribe(self.topic, qos=1)
-
-        #self.mqtt_client.loop_start()
 
     def _on_message(self, _, __, msg):
         """Handles incoming MQTT messages."""
@@ -136,3 +133,7 @@ class Accelerometer(IAccelerometer):
             status = 1 if samples_collected == requested_samples else 0
 
         return status, samples
+
+
+    def acquire_lock(self)->(threading.Lock):
+        return self._lock

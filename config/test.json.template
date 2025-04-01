@@ -1,6 +1,6 @@
 {
     "MQTT": {
-        "host": "mqtt.eclipseprojects.io",
+        "host": "test.mosquitto.org",
         "port": 1883,
         "userId": "",
         "password": "",
