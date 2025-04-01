@@ -1,11 +1,11 @@
 {
     "MQTT": {
         "host": "test.mosquitto.org",
-        "port": 1883, 
+        "port": 1883,
         "userId": "",
         "password": "",
         "ClientID": "test_client_id",
         "QoS": 1,
-        "TopicsToSubscribe": ["topic"]
+        "TopicsToSubscribe": ["topicAA", "topicBB", "topicCC"]
     }
 }

@@ -1,14 +1,17 @@
 [tool.poetry]
-name = "cp-sens"
+name = "example-shm"
 version = "0.1.0"
 description = ""
-authors = ["prasadtalasila <prasadtalasila@gmail.com>"]
+authors = [
+    "Mohamed Abdulkarim <202206332@post.au.dk>",
+    "Prasad Talasila <prasadtalasila@gmail.com>"
+]
 readme = "README.md"
 license = "INTO-CPS Association"
 packages = [{include = "*", from="src"}]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.10, <3.13"
 paho-mqtt = "^2.1.0"
 matplotlib = "^3.10.0"
 
@@ -22,4 +25,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-start = "src.main:main"
+experiment_1 = "src.experiment_1:main"

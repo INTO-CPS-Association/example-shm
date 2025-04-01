@@ -169,3 +169,10 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+.vscode
+
+
+# Ignore config files with credentials
+config/*.json
+!config/*.json.template
