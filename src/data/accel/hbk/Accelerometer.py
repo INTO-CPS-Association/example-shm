@@ -7,7 +7,6 @@ import numpy as np
 from data.accel.accelerometer import IAccelerometer
 from data.accel.constants import MAX_MAP_SIZE
 
-
 class Accelerometer(IAccelerometer):
     def __init__(
         self,
@@ -47,10 +46,6 @@ class Accelerometer(IAccelerometer):
         threading.Thread(target=safe_process, daemon=True).start()
 
 
-
-
-
-
     def _process_message(self, msg):
         """
             Processes incoming MQTT messages, extracts accelerometer data,
@@ -87,9 +82,6 @@ class Accelerometer(IAccelerometer):
 
         except Exception as e:
             print(f"Error processing message: {e}")
-
-
-
 
 
     def read(self, requested_samples: int) -> (int, np.ndarray):

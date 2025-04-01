@@ -2,7 +2,10 @@
 name = "example-shm"
 version = "0.1.0"
 description = ""
-authors = ["prasadtalasila <prasadtalasila@gmail.com>", mohamedabdulkarim]
+authors = [
+    "Mohamed Abdulkarim <202206332@post.au.dk>",
+    "Prasad Talasila <prasadtalasila@gmail.com>"
+]
 readme = "README.md"
 license = "INTO-CPS Association"
 packages = [{include = "*", from="src"}]

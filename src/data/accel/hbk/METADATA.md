@@ -27,8 +27,6 @@ cpsens/d3-f2-f3-b3/cpsns_Simulator/1/acc/raw/metadata
 
 This represents metadata coming from an accelerometer (`acc`), processed as raw data (`raw`), from channel 1 of The cpsns_Simulator module on device `d3-f2-f3-b`.
 
-
-
 ### METADATA Topic Payload
 
 #### Example METADATA Topic Payload
@@ -84,7 +82,6 @@ This represents metadata coming from an accelerometer (`acc`), processed as raw 
 }
 ```
 
-
 #### Data Topic
 
 ```txt
@@ -117,7 +114,6 @@ The **data topic** payload consists of two parts:
   }
 }
 ```
-
 
 ## MQTT Configuration
 

@@ -47,7 +47,6 @@ def clear_fifo(accelerometer_instance):
     yield
 
 
-
 def publish_binary_samples(client, topic, start, end):
     """Helper function to publish  32 samples per message."""
     for batch_start in range(start, end, BATCH_SIZE):  
@@ -59,13 +58,6 @@ def publish_binary_samples(client, topic, start, end):
 
         result = client.publish(topic, payload, qos=1)
         result.wait_for_publish()  
-
-
-
-
-
-
-
 
 
 def test_accelerometer_read_in_steps(client_and_topic, accelerometer_instance):
@@ -103,7 +95,6 @@ def test_accelerometer_read_in_steps(client_and_topic, accelerometer_instance):
         remaining_samples = sum(len(deque) for deque in accelerometer_instance.data_map.values())
 
     assert remaining_samples == 4, f"Expected 4 samples left, but found {remaining_samples}"
-
 
 
 def test_accelerometer_read_full_fifo(client_and_topic, accelerometer_instance):
@@ -217,10 +208,6 @@ def test_accelerometer_appending_more_samples_than_max(client_and_topic, acceler
     assert data.shape == (192,), f"Unexpected shape: {data.shape}" 
 
 
-
-
-
-
 def test_accelerometer_reordering_late_sample(client_and_topic, accelerometer_instance):
     """
     Simulates delayed delivery of the middle batch (32-63) and checks if the accelerometer correctly 
@@ -249,6 +236,3 @@ def test_accelerometer_reordering_late_sample(client_and_topic, accelerometer_in
     assert data.shape == (96,), f"Unexpected shape: {data.shape}"
     expected_data = np.arange(96)  # Expected: 0, 1, 2, ..., 95
     assert np.allclose(data, expected_data), f"Data order mismatch! Got: {data[:10]}..."
-
-
-

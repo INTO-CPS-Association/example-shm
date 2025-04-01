@@ -21,7 +21,6 @@ poetry install                   # installs all required python packages
 pylint src tests --rcfile=.pylintrc    # runs linting checks
 
 poetry build                     # builds cp-sens package that can be published on pip
-poetry run start                 # runs the main script
 poetry run experiment_1          # run one experiment with real data
 ```
 

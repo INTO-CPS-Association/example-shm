@@ -32,11 +32,12 @@ def main():
             # This print to see the dictionary
             for key, fifo in sorted(accelerometer.data_map.items()):
                 print(f"Key: {key} -> Data: {list(fifo)}\n")
-        _, data = accelerometer.read(requested_samples=64)
-        break
+        _, data = accelerometer.read(requested_samples=128)
+        print("Data requsted", data)
+        #break
 
-    mqtt_client.loop_stop()
-    print("Data requsted", data)
+    #mqtt_client.loop_stop()
+    #print("Data requsted", data)
 
 
 if __name__ == '__main__':
