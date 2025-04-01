@@ -113,7 +113,6 @@ The **data topic** payload consists of two parts:
     "samples_from_daq_start": 400319264
   },
   "data": {
-    "type": "float",
     "values": [3.5, 4.3, 4.7]
   }
 }
