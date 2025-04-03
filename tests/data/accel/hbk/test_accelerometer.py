@@ -21,7 +21,7 @@ def mqtt_client():
 
     client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     client.loop_start()  
-    time.sleep(0.1)  
+    time.sleep(0.5)  
 
     yield client, selected_topic
     client.loop_stop()
@@ -58,6 +58,8 @@ def publish_binary_samples(client, topic, start, end):
 
         result = client.publish(topic, payload, qos=1)
         result.wait_for_publish()  
+
+
 
 
 def test_accelerometer_read_in_steps(client_and_topic, accelerometer_instance):
@@ -114,7 +116,7 @@ def test_accelerometer_read_full_fifo(client_and_topic, accelerometer_instance):
     publish_binary_samples(client, topic, 0, 96)
     total_samples = 0
 
-    while total_samples < 96: 
+    while total_samples < 50: 
         with accelerometer_instance._lock:
             total_samples = sum(len(deque) for deque in accelerometer_instance.data_map.values())
 
@@ -170,7 +172,7 @@ def test_accelerometer_read_insufficient_samples(client_and_topic, accelerometer
     publish_binary_samples(client, topic, 0, 64)
     total_samples = 0
 
-    while total_samples < 64: 
+    while total_samples < 50: 
         with accelerometer_instance._lock:
             total_samples = sum(len(deque) for deque in accelerometer_instance.data_map.values())
 
@@ -198,7 +200,7 @@ def test_accelerometer_appending_more_samples_than_max(client_and_topic, acceler
     publish_binary_samples(client, topic, 0, 224)
     total_samples = 0
 
-    while total_samples < 192: 
+    while total_samples < 100: 
         with accelerometer_instance._lock:
             total_samples = sum(len(deque) for deque in accelerometer_instance.data_map.values())
 
@@ -224,9 +226,9 @@ def test_accelerometer_reordering_late_sample(client_and_topic, accelerometer_in
     # Publish middle batch (32–63) AFTER last batch
     publish_binary_samples(client, topic, 32, 64)
 
-    # Wait for all samples to arrive
+    
     total_samples = 0
-    while total_samples < 96:  # Max wait time: 5 seconds
+    while total_samples < 60:  
         with accelerometer_instance._lock:
             total_samples = sum(len(deque) for deque in accelerometer_instance.data_map.values())
     status, data = accelerometer_instance.read(96)

@@ -58,8 +58,7 @@ class Accelerometer(IAccelerometer):
         try:
             raw_payload = msg.payload
 
-            # Extract metadata
-            # We know that the first 2 bytes tells the length of the descriptor
+            # The first 2 bytes tells the length of the descriptor
             descriptor_length = struct.unpack("<H", raw_payload[:2])[0]
             (descriptor_length, _, __, ___,
              samples_from_daq_start,) = struct.unpack("<HHQQQ", raw_payload[:descriptor_length])
@@ -70,7 +69,7 @@ class Accelerometer(IAccelerometer):
             accel_values = struct.unpack(f"<{num_samples}f", data_payload)
 
             # Store each data batch (e.g 32 samples in one message)
-            # in the map where usnig samples_from_daq_start as its the key
+            # in the map samples_from_daq_start is used as the key for each batch
             with self._lock:
                 self.data_map[samples_from_daq_start] = deque(accel_values)
                 # Check if the total samples in the map exceeds the max,
