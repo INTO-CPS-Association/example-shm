@@ -175,4 +175,5 @@ cython_debug/
 
 # Ignore config files with credentials
 config/*.json
+!config/test.json
 !config/*.json.template
