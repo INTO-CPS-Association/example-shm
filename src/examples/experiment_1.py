@@ -26,7 +26,7 @@ def main():
         accelerometer.data_map.clear()
 
     while True:
-        time.sleep(2.1)
+        time.sleep(1)
 
         with accelerometer.acquire_lock():
             # This print to see the dictionary
@@ -34,10 +34,10 @@ def main():
                 print(f"Key: {key} -> Data: {list(fifo)}\n")
         _, data = accelerometer.read(requested_samples=128)
         print("Data requsted", data)
-        #break
+        break
 
-    #mqtt_client.loop_stop()
-    #print("Data requsted", data)
+    mqtt_client.loop_stop()
+    print("Data requsted", data)
 
 
 if __name__ == '__main__':

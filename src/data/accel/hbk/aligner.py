@@ -1,22 +1,20 @@
 import threading
-import time
 import numpy as np #type: ignore
 
 #project imports
 from data.accel.hbk.accelerometer import Accelerometer  # type: ignore
-from data.sources.mqtt import setup_mqtt_client, load_config  # type: ignore
 
 
 
-class Alligner:
+class Aligner:
     def __init__(self, mqtt_client, topics: list, map_size=44840, missing_value=np.nan):
         """
-        Initializes the Alligner to receive and align data from multiple MQTT topics.
+        Initializes the Aligner to receive and align data from multiple MQTT topics.
 
         Parameters:
             mqtt_client: MQTT client instance.
             topics (list): List of MQTT topics (one per channel).
-            map_size (int): Maximum number of stored keys before removing old ones.
+            map_size (int): Maximum number of stored keys for each channel.
             missing_value (float): Value to use when a sample is missing (default: NaN).
         """
         self.mqtt_client = mqtt_client
@@ -33,7 +31,7 @@ class Alligner:
             self.channels.append(acc)
             mqtt_client.subscribe(topic, qos=1)
             mqtt_client.message_callback_add(topic, lambda _, __,
-                                              msg, acc=acc: acc._process_message(msg))
+                                              msg, acc=acc: acc.process_message(msg))
 
 
 
@@ -48,7 +46,7 @@ class Alligner:
         if not self.channels:
             return None, None
 
-        # Step 1: Determine batch size (By using the length of data samples in first messages, 
+        # Step 1: Determine batch size (By using the length of data samples in first messages,
                                 # so all messages should contain the same number of data samples)
         batch_size = None
         for ch in self.channels:
@@ -86,7 +84,8 @@ class Alligner:
         Extracts a specified number of aligned samples from all channels.
 
         This method:
-            1. Uses `find_continuous_key_groups()` to determine batch size and group keys into continuous aligned blocks.
+            1. Uses `find_continuous_key_groups()` to determine batch size 
+                                    and group keys into continuous aligned blocks.
             2. Searches for the first key group that contains enough samples.
             3. Collects aligned samples across all channels.
             4. Cleans up old and used data from each channel's buffer.
@@ -95,7 +94,8 @@ class Alligner:
             requested_samples (int): The total number of samples to extract across all channels.
 
         Returns:
-            np.ndarray: A 2D NumPy array of shape (channels, requested_samples) containing aligned data.
+            np.ndarray: A 2D NumPy array of shape 
+                    (channels, requested_samples) containing aligned data.
                         Returns an empty array if alignment is not possible.
         """
         with self._lock:
@@ -108,7 +108,7 @@ class Alligner:
             for group in key_groups:
                 total_samples = len(group) * batch_size
                 if total_samples >= requested_samples:
-                    aligned_data = []
+                    aligned_data = [[] for _ in self.channels]
                     samples_collected = 0
 
                     for key in group:
@@ -116,10 +116,9 @@ class Alligner:
                         for i in range(batch_size):
                             if samples_collected >= requested_samples:
                                 break
-                            aligned_data.append([entry[i] for entry in entries])
+                            for ch_idx, channel_data in enumerate(entries):
+                                aligned_data[ch_idx].append(channel_data[i])
                             samples_collected += 1
-                        if samples_collected >= requested_samples:
-                            break
 
                     # Delete used and older data
                     for ch in self.channels:
@@ -132,11 +131,9 @@ class Alligner:
                                 if not ch.data_map[k]:
                                     del ch.data_map[k]
 
-                    aligned_array = np.array(aligned_data, dtype=np.float32).T
+                    aligned_array = np.array(aligned_data, dtype=np.float32)
                     print(f"Aligned shape: {aligned_array.shape}")
                     return aligned_array
 
             # No group had enough samples
             return np.empty((0, len(self.channels)), dtype=np.float32)
-
-

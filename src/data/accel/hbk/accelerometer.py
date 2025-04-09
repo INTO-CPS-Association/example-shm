@@ -6,6 +6,8 @@ import numpy as np
 # Project Imports
 from data.accel.accelerometer import IAccelerometer
 from data.accel.constants import MAX_MAP_SIZE
+from data.accel.metadata_constants import DESCRIPTOR_LENGTH_BYTES
+
 
 class Accelerometer(IAccelerometer):
     def __init__(
@@ -39,14 +41,14 @@ class Accelerometer(IAccelerometer):
 
         def safe_process():  # This ensures that an exception does not crash the entire thread
             try:
-                self._process_message(msg)
+                self.process_message(msg)
             except Exception as e:
                 print(f"Error processing message: {e}")
 
         threading.Thread(target=safe_process, daemon=True).start()
 
 
-    def _process_message(self, msg):
+    def process_message(self, msg):
         """
             Processes incoming MQTT messages, extracts accelerometer data,
             and stores it in a dictionary of FIFO queues.
@@ -58,8 +60,7 @@ class Accelerometer(IAccelerometer):
         try:
             raw_payload = msg.payload
 
-            # The first 2 bytes tells the length of the descriptor
-            descriptor_length = struct.unpack("<H", raw_payload[:2])[0]
+            descriptor_length = struct.unpack("<H", raw_payload[:DESCRIPTOR_LENGTH_BYTES])[0]
             (descriptor_length, _, __, ___,
              samples_from_daq_start,) = struct.unpack("<HHQQQ", raw_payload[:descriptor_length])
 

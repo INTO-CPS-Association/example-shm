@@ -1,14 +1,13 @@
 import time
 import numpy as np # pylint: disable=unused-import
-import uuid
 
 # Project imports
 from data.sources.mqtt import setup_mqtt_client, load_config  # type: ignore
-from data.accel.hbk.alligner import Alligner  # type: ignore
+from data.accel.hbk.aligner import Aligner  # type: ignore
 
 
 def main():
-    config = load_config("config/r-pi.json")
+    config = load_config("config/production.json")
     mqtt_config = config["MQTT"]
 
 
@@ -26,11 +25,11 @@ def main():
                 # so we make sure that there is enough data to allign.
 
     # pass actual topic as string
-    alligner = Alligner(mqtt_client, topics=selected_topics, map_size=2560)
+    aligner = Aligner(mqtt_client, topics=selected_topics, map_size=2560)
 
     while True:
         time.sleep(5)
-        data = alligner.extract(100)
+        data = aligner.extract(16)
         if data.shape[0] == 0:
             print("Not enough aligned data yet.")
         else:
@@ -41,7 +40,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-

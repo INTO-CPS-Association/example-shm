@@ -25,4 +25,5 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-experiment_1 = "src.experiment_1:main"
+experiment_1 = "src.examples.experiment_1:main"
+experiment_2 = "src.examples.experiment_2:main"

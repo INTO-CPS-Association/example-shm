@@ -116,7 +116,7 @@ def test_accelerometer_read_full_fifo(client_and_topic, accelerometer_instance):
     publish_binary_samples(client, topic, 0, 96)
     total_samples = 0
 
-    while total_samples < 50: 
+    while total_samples < 60: 
         with accelerometer_instance._lock:
             total_samples = sum(len(deque) for deque in accelerometer_instance.data_map.values())
 
@@ -144,7 +144,7 @@ def test_accelerometer_read_partial_fifo(client_and_topic, accelerometer_instanc
     publish_binary_samples(client, topic, 0, 64)
     total_samples = 0
 
-    while total_samples < 64: 
+    while total_samples < 60: 
         with accelerometer_instance._lock:
             total_samples = sum(len(deque) for deque in accelerometer_instance.data_map.values())
 
