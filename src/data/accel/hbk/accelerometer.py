@@ -72,12 +72,19 @@ class Accelerometer(IAccelerometer):
             # Store each data batch (e.g 32 samples in one message)
             # in the map samples_from_daq_start is used as the key for each batch
             with self._lock:
-                self.data_map[samples_from_daq_start] = deque(accel_values)
+                if samples_from_daq_start not in self.data_map:
+                    self.data_map[samples_from_daq_start] = deque(accel_values)
+
+                total_samples = sum(len(dq) for dq in self.data_map.values())
                 # Check if the total samples in the map exceeds the max,
                 # then remove the oldest data batch
-                while sum(len(deque) for deque in self.data_map.values()) > self._map_size:
+                while total_samples > self._map_size:
                     oldest_key = min(self.data_map.keys())  # Find the oldest batch
-                    del self.data_map[oldest_key]  # Remove oldest batch
+                    oldest_deque = self.data_map[oldest_key]
+                    oldest_deque.popleft() # Delete samples from the oldest deque
+                    if not oldest_deque:  # Remove the key/deque from the map if it's empty
+                        del self.data_map[oldest_key]
+                    total_samples = sum(len(dq) for dq in self.data_map.values())
             print(f" Channel: {self.topic}  Key: {samples_from_daq_start}, Samples: {num_samples}")
 
         except Exception as e:
