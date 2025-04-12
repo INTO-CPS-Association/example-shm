@@ -1,5 +1,4 @@
 import time
-import numpy as np # pylint: disable=unused-import
 
 # Project imports
 from data.sources.mqtt import setup_mqtt_client, load_config  # type: ignore
@@ -11,7 +10,7 @@ def main():
     mqtt_config = config["MQTT"]
 
 
-    topic_indexes = [0,1] # Indexes of the topics/channels to allign
+    topic_indexes = [0,1] # Indexes of the topics/channels to align
 
     # Resolve topic names from config
     all_topics = config["MQTT"]["TopicsToSubscribe"]
@@ -21,8 +20,8 @@ def main():
     mqtt_client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     mqtt_client.loop_start()
 
-    # We might need to give it some time before strating allignment,
-                # so we make sure that there is enough data to allign.
+    # We might need to give it some time before strating alignment,
+                # so we make sure that there is enough data to align.
 
     # pass actual topic as string
     aligner = Aligner(mqtt_client, topics=selected_topics, map_size=2560)

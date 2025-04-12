@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "example-shm"
-version = "0.1.0"
-description = ""
+version = "0.2.0"
+description = "Demonstration for structural health monitoring of engineering structures"
 authors = [
     "Mohamed Abdulkarim <202206332@post.au.dk>",
     "Prasad Talasila <prasadtalasila@gmail.com>"
