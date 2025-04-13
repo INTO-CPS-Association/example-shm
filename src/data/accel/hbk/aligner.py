@@ -23,14 +23,16 @@ class Aligner:
 
         self.channels = []
         self._lock = threading.Lock()
-
-        # Create one Accelerometer per topic
+        seen = set()
+        # Create one Accelerometer per uniqe topic
         for topic in topics:
-            acc = Accelerometer(mqtt_client, topic=topic, map_size=map_size)
-            self.channels.append(acc)
-            mqtt_client.subscribe(topic, qos=1)
-            mqtt_client.message_callback_add(topic, lambda _, __,
-                                              msg, acc=acc: acc.process_message(msg))
+            if topic not in seen:
+                seen.add(topic)
+                acc = Accelerometer(mqtt_client, topic=topic, map_size=map_size)
+                self.channels.append(acc)
+                mqtt_client.subscribe(topic, qos=1)
+                mqtt_client.message_callback_add(topic, lambda _, __,
+                                                msg, acc=acc: acc.process_message(msg))
 
 
     def find_continuous_key_groups(self):

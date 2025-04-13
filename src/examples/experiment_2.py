@@ -10,7 +10,7 @@ def main():
     mqtt_config = config["MQTT"]
 
 
-    topic_indexes = [0,1] # Indexes of the topics/channels to align
+    topic_indexes = [1,1,0,1,0] # Indexes of the topics/channels to align
 
     # Resolve topic names from config
     all_topics = config["MQTT"]["TopicsToSubscribe"]
@@ -20,14 +20,12 @@ def main():
     mqtt_client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     mqtt_client.loop_start()
 
-    # We might need to give it some time before strating alignment,
-                # so we make sure that there is enough data to align.
 
     # pass actual topic as string
     aligner = Aligner(mqtt_client, topics=selected_topics, map_size=2560)
 
     while True:
-        time.sleep(5)
+        time.sleep(1)
         data = aligner.extract(16)
         if data.shape[0] == 0:
             print("Not enough aligned data yet.")
