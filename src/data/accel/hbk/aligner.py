@@ -52,12 +52,10 @@ class Aligner:
             batch_size = ch.get_batch_size()
             if batch_size is not None:
                 break
-        if batch_size is None:
-            return None, None
 
         # Get common keys across all channels
         key_sets = [set(ch.get_sorted_keys()) for ch in self.channels]
-        if not key_sets:
+        if not key_sets or batch_size is None:
             return None, None
         common_keys = sorted(set.intersection(*key_sets))
 
@@ -101,21 +99,16 @@ class Aligner:
             batch_size, key_groups = self.find_continuous_key_groups()
             print("Keys", key_groups)
 
-            if batch_size is None or not key_groups:
-                return np.empty((0, len(self.channels)), dtype=np.float32)
-
             for group in key_groups:
                 total_samples = len(group) * batch_size
                 if total_samples < requested_samples:
                     continue  # Skip groups that don't have enough samples
-
                 # Proceed with aligned extraction
                 aligned_data = [[] for _ in self.channels]
                 samples_collected = 0
 
                 for key in group:
                     entries = [ch.get_samples_for_key(key) for ch in self.channels]
-
                     for i in range(batch_size):
                         if samples_collected >= requested_samples:
                             break
