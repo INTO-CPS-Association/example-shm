@@ -4,6 +4,8 @@ omit =
     */venv/*
     */.venv/*
     */__init__.py
+    */src/data/accel/random.py
+    */src/examples/*
 
 [report]
 exclude_lines =

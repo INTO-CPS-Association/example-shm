@@ -5,7 +5,6 @@ import numpy as np #type: ignore
 from data.accel.hbk.accelerometer import Accelerometer  # type: ignore
 
 
-
 class Aligner:
     def __init__(self, mqtt_client, topics: list, map_size=44840, missing_value=np.nan):
         """
@@ -32,8 +31,6 @@ class Aligner:
             mqtt_client.subscribe(topic, qos=1)
             mqtt_client.message_callback_add(topic, lambda _, __,
                                               msg, acc=acc: acc.process_message(msg))
-
-
 
 
     def find_continuous_key_groups(self):
