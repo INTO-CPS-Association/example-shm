@@ -1,5 +1,5 @@
 import threading
-import numpy as np #type: ignore
+import numpy as np
 
 #project imports
 from data.accel.hbk.accelerometer import Accelerometer  # type: ignore

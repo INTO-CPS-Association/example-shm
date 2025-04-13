@@ -11,14 +11,14 @@ license = "INTO-CPS Association"
 packages = [{include = "*", from="src"}]
 
 [tool.poetry.dependencies]
-python = ">=3.10, <3.13"
+python = ">=3.12, <3.13"
 paho-mqtt = "^2.1.0"
-matplotlib = "^3.10.0"
+numpy = "^2.2.4"
 
 [tool.poetry.group.dev.dependencies]
-pylint = "^3.3.3"
-pytest = "^8.3.4"
-pytest-cov = "^6.0.0"
+pylint = "^3.3.6"
+pytest = "^8.3.5"
+pytest-cov = "^6.1.1"
 
 [build-system]
 requires = ["poetry-core"]
