@@ -76,13 +76,6 @@ def publish_samples(client, topic, values: np.ndarray, start_key: int):
     print(f"[PUBLISH DEBUG] Topic: {topic}, Start key: {start_key}, Batch size: {len(batch_values)}")
 
 
-
-
-
-
-
-
-
 def test_aligner_continuous_block_required(mqtt_setup):
     client, topics = mqtt_setup
     aligner = Aligner(client, topics=topics, map_size=512)
@@ -103,9 +96,6 @@ def test_aligner_continuous_block_required(mqtt_setup):
     assert aligned.shape == (3, 128), f"Expected 128 aligned rows, got {aligned.shape}"
     assert np.allclose(aligned[0, :5], np.arange(5)), "Check data from channel 1"
     assert np.allclose(aligned[2, :5], np.arange(5)), "Check data from channel 3"
-
-
-# TODO: Check specifc data
 
 
 
