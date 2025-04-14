@@ -1,11 +1,10 @@
 import threading
 from typing import List, Tuple, Optional
-from datetime import datetime, timedelta
+from datetime import datetime
 import numpy as np
 
-
 #project imports
-from data.accel.hbk.accelerometer import Accelerometer  # type: ignore
+from data.accel.hbk.accelerometer import Accelerometer
 
 
 class Aligner:
@@ -103,7 +102,7 @@ class Aligner:
 
             if batch_size is None or key_groups is None:
                 return np.empty((0, len(self.channels)), dtype=np.float32)
-            
+
             for group in key_groups:
                 total_samples = len(group) * batch_size
                 if total_samples < requested_samples:

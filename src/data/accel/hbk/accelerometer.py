@@ -94,7 +94,6 @@ class Accelerometer(IAccelerometer):
             print(f"Error processing message: {e}")
 
 
-
     def get_batch_size(self) -> Optional[int]:
         """
         Returns the number of samples in the first available data batch.
@@ -105,6 +104,7 @@ class Accelerometer(IAccelerometer):
                 return None
             first_key = next(iter(self.data_map))
             return len(self.data_map[first_key])
+
 
     def get_sorted_keys(self) -> List[int]:
         """
@@ -123,6 +123,7 @@ class Accelerometer(IAccelerometer):
             if key in self.data_map:
                 return list(self.data_map[key])
             return None
+
 
     def clear_used_data(self, start_key: int, samples_to_remove: int) -> None:
         """
@@ -153,9 +154,6 @@ class Accelerometer(IAccelerometer):
                     del self.data_map[key]
 
                 remaining_to_remove -= num_to_remove
-
-
-
 
 
     def read(self, requested_samples: int) -> Tuple[(int, np.ndarray)]:
