@@ -1,5 +1,6 @@
 import threading
 from typing import List, Tuple, Optional
+from datetime import datetime, timedelta
 import numpy as np
 
 
@@ -91,9 +92,10 @@ class Aligner:
             requested_samples (int): The total number of samples to extract across all channels.
 
         Returns:
-            np.ndarray: A 2D NumPy array of shape 
-                        (channels, requested_samples) containing aligned data.
-                        Returns an empty array if alignment is not possible.
+           tuple: (aligned_data, utc_timestamp)
+                   aligned_data is a NumPy array of shape (channels, requested_samples)
+                   utc_timestamp is the UTC time of the first aligned sample.
+            Returns an empty array if alignment is not possible.
         """
         with self._lock:
             batch_size, key_groups = self.find_continuous_key_groups()
@@ -109,6 +111,8 @@ class Aligner:
                 # Proceed with aligned extraction
                 aligned_data = [[] for _ in self.channels]
                 samples_collected = 0
+                utc_time = datetime.utcnow()
+
 
                 for key in group:
                     entries = [ch.get_samples_for_key(key) for ch in self.channels]
@@ -128,6 +132,6 @@ class Aligner:
 
                 aligned_array = np.array(aligned_data, dtype=np.float32)
                 print(f"Aligned shape: {aligned_array.shape}")
-                return aligned_array
+                return aligned_array, utc_time
 
             return np.empty((0, len(self.channels)), dtype=np.float32)

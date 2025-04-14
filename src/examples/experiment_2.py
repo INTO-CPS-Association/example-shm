@@ -26,10 +26,11 @@ def main():
 
     while True:
         time.sleep(1)
-        data = aligner.extract(16)
+        data, Utime = aligner.extract(16)
         if data.shape[0] == 0:
             print("Not enough aligned data yet.")
         else:
+            print(f"Colllected this batch at:{Utime}")
             print(f"Extracted aligned data shape: {data.shape}\n{data}")
             break
         time.sleep(1)
