@@ -37,7 +37,7 @@ def test_find_continuous_key_groups(aligner_with_mock_channels):
 def test_extract_with_enough_samples(aligner_with_mock_channels):
     aligner, accelerometers = aligner_with_mock_channels
 
-    result = aligner.extract(8)
+    result, _ = aligner.extract(8)
 
     assert result.shape == (3, 8)
     expected = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
@@ -50,7 +50,7 @@ def test_extract_with_enough_samples(aligner_with_mock_channels):
 def test_extract_too_few_samples_returns_empty(aligner_with_mock_channels):
     aligner, _ = aligner_with_mock_channels
 
-    result = aligner.extract(200)  # more than available
+    result = aligner.extract(210)  # more than available it should return empty array, no timestamp
     assert result.shape == (0, 3)
 
 
@@ -107,7 +107,7 @@ def test_extract_skips_initial_and_gaps_until_valid_block(aligner_with_mock_chan
         acc.get_samples_for_key.side_effect = lambda key: [float(key + i) for i in range(batch_size)]
 
     # Extract 128 samples
-    result = aligner.extract(required_samples)
+    result, _ = aligner.extract(required_samples)
 
     # Assert correct shape
     assert result.shape == (3, 128), f"Expected (3, 128), got {result.shape}"

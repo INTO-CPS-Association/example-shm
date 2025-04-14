@@ -91,7 +91,7 @@ def test_aligner_continuous_block_required(mqtt_setup):
 
     time.sleep(1.5)  # Let messages arrive
 
-    aligned = aligner.extract(128)  # Should use keys 96, 128, 160, 192 (128 samples)
+    aligned, _ = aligner.extract(128)  # Should use keys 96, 128, 160, 192 (128 samples)
 
     assert aligned.shape == (3, 128), f"Expected 128 aligned rows, got {aligned.shape}"
     assert np.allclose(aligned[0, :5], np.arange(5)), "Check data from channel 1"
@@ -112,7 +112,7 @@ def test_aligner_extract_removes_used_and_older_data(mqtt_setup):
     time.sleep(1)
 
     # Extract 96 samples → should consume keys 0, 32, 64 (96 samples)
-    aligned = aligner.extract(96)
+    aligned, _ = aligner.extract(96)
 
     assert aligned.shape == (3, 96), "Expected 96 aligned samples"
 
@@ -139,7 +139,7 @@ def test_aligner_single_channel_extract_and_cleanup(mqtt_setup):
     time.sleep(1)
 
     # Extract 64 samples from the single channel
-    extracted = aligner.extract(64)
+    extracted, _ = aligner.extract(64)
 
     assert extracted.shape == (1, 64), f"Expected shape (64, 1), got {extracted.shape}"
     assert np.allclose(extracted.flatten()[:5], [0, 1, 2, 3, 4]), "Unexpected values in extracted data"
