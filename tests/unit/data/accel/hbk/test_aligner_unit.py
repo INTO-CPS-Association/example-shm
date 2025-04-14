@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 from unittest.mock import MagicMock, patch
 from data.accel.hbk.aligner import Aligner  # type: ignore
+pytestmark = pytest.mark.unit
 
 
 @pytest.fixture
@@ -50,7 +51,7 @@ def test_extract_with_enough_samples(aligner_with_mock_channels):
 def test_extract_too_few_samples_returns_empty(aligner_with_mock_channels):
     aligner, _ = aligner_with_mock_channels
 
-    result = aligner.extract(210)  # more than available it should return empty array, no timestamp
+    result, _ = aligner.extract(210)  # more than available it should return empty array, None
     assert result.shape == (0, 3)
 
 
@@ -58,6 +59,7 @@ def test_find_continuous_key_groups_no_channels():
     aligner = Aligner(mqtt_client=MagicMock(), topics=[])
     batch_size, key_groups = aligner.find_continuous_key_groups()
     assert batch_size is None and key_groups is None
+
 
 def test_find_continuous_key_groups_handles_last_group():
     aligner = Aligner(mqtt_client=MagicMock(), topics=["t1", "t2"])
@@ -73,6 +75,7 @@ def test_find_continuous_key_groups_handles_last_group():
     batch_size, groups = aligner.find_continuous_key_groups()
     assert groups == [[0, 4, 8]]
 
+
 def test_find_continuous_key_groups_returns_none_when_batch_size_none():
     ch = MagicMock()
     ch.get_batch_size.return_value = None
@@ -84,7 +87,6 @@ def test_find_continuous_key_groups_returns_none_when_batch_size_none():
     batch_size, key_groups = aligner.find_continuous_key_groups()
     assert batch_size is None
     assert key_groups is None
-
 
 
 def test_extract_skips_initial_and_gaps_until_valid_block(aligner_with_mock_channels):

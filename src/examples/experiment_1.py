@@ -25,7 +25,7 @@ def main():
     with accelerometer.acquire_lock():
         accelerometer.data_map.clear()
 
-    time.sleep(10)  # Allow time for data collection
+    time.sleep(1)  # Allow time for data collection
     with accelerometer.acquire_lock():
         # This print to see the dictionary
         for key, fifo in sorted(accelerometer.data_map.items()):
@@ -35,6 +35,8 @@ def main():
 
     mqtt_client.loop_stop()
     mqtt_client.disconnect()
+    time.sleep(1)
+    print("Exiting cleanly")
 
 if __name__ == '__main__':
     main()

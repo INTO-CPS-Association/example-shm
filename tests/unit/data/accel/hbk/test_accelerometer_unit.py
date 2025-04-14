@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 from data.accel.hbk.accelerometer import Accelerometer
 from data.accel.metadata_constants import DESCRIPTOR_LENGTH_BYTES
 
-
+pytestmark = pytest.mark.unit
 
 @pytest.fixture
 def mock_mqtt_client():
@@ -16,7 +16,6 @@ def mock_mqtt_client():
 @pytest.fixture
 def test_accelerometer(mock_mqtt_client):
     return Accelerometer(mock_mqtt_client, topic="test/topic", map_size=128)
-
 
 class MockMQTTMessage:
     def __init__(self, topic, payload):
@@ -53,9 +52,6 @@ def test_get_batch_size(test_accelerometer):
     assert batch_size == 32
 
 
-
-
-
 def test_clear_used_data_removes_samples_and_keys(test_accelerometer):
     # Add three batches: 0–31, 32–63, 64–95
     for i in range(3):
@@ -78,11 +74,6 @@ def test_clear_used_data_removes_samples_and_keys(test_accelerometer):
     # Batch at key 64: 32 samples
     # We removed 50 → should leave 64 - 50 = 14
     assert remaining_samples == 14
-
-
-
-
-
 
 
 def test_read_fewer_than_available(test_accelerometer):
@@ -112,10 +103,6 @@ def test_get_samples_for_nonexistent_key_returns_none(test_accelerometer):
 
 def test_get_batch_size_returns_none_when_empty(test_accelerometer):
     assert test_accelerometer.get_batch_size() is None
-
-
-
-
 
 
 def test_on_message_invokes_process_in_thread(test_accelerometer, mocker):
@@ -184,7 +171,6 @@ def test_process_message_triggers_eviction_when_map_size_exceeded():
     # Now only the two newest batches (32 and 64) should remain
     keys = acc.get_sorted_keys()
     assert keys == [32, 64], f"Eviction did not occur correctly. Remaining keys: {keys}"
-
 
 
 def test_clear_used_data_with_zero_samples_to_remove_does_nothing(test_accelerometer):

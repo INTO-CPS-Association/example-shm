@@ -1,17 +1,17 @@
 import time
 import json
+import os
 import pytest
 import struct
-
 import numpy as np
+
 from data.accel.hbk.aligner import Aligner  # type: ignore
-
-
 from constants import DESCRIPTOR_LENGTH, METADATA_VERSION, SECONDS, NANOSECONDS, BATCH_SIZE
 from data.sources.mqtt import setup_mqtt_client, load_config
 import uuid
 
-
+pytestmark = pytest.mark.integration
+connect_delay = float(os.environ.get("MQTT_CONNECT_DELAY"))
 
 @pytest.fixture(scope="function")
 def mqtt_client_and_config():
@@ -22,7 +22,7 @@ def mqtt_client_and_config():
     client, _ = setup_mqtt_client(mqtt_config, topic_index=0)
     client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     client.loop_start()
-    time.sleep(0.1)
+    time.sleep(connect_delay)
 
     yield client, mqtt_config
 
@@ -40,7 +40,7 @@ def mqtt_setup():
     client, _ = setup_mqtt_client(mqtt_config, 0)
     client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     client.loop_start()
-    time.sleep(0.1)
+    time.sleep(connect_delay)
 
     # Extract topics manually
     topics = [
@@ -98,8 +98,6 @@ def test_aligner_continuous_block_required(mqtt_setup):
     assert np.allclose(aligned[2, :5], np.arange(5)), "Check data from channel 3"
 
 
-
-
 def test_aligner_extract_removes_used_and_older_data(mqtt_setup):
     client, topics = mqtt_setup
     aligner = Aligner(client, topics=topics, map_size=512)
@@ -123,7 +121,6 @@ def test_aligner_extract_removes_used_and_older_data(mqtt_setup):
             print(f"[DEBUG] Channel {i+1} remaining keys after extract: {remaining_keys}")
             assert all(k > 64 for k in remaining_keys), \
                 f"Channel {i+1} still contains old data (keys <= 64): {remaining_keys}"
-
 
 
 def test_aligner_single_channel_extract_and_cleanup(mqtt_setup):

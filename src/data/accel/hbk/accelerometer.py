@@ -4,12 +4,10 @@ from collections import deque
 from typing import Tuple, Any, Optional, List
 import numpy as np
 import paho.mqtt.client as mqtt
-
 # Project Imports
 from data.accel.accelerometer import IAccelerometer
 from data.accel.constants import MAX_MAP_SIZE
 from data.accel.metadata_constants import DESCRIPTOR_LENGTH_BYTES
-
 
 class Accelerometer(IAccelerometer):
     def __init__(
@@ -17,8 +15,6 @@ class Accelerometer(IAccelerometer):
         mqtt_client: mqtt.Client,
         topic: str = "cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/1/acc/raw/data",
         map_size: int = MAX_MAP_SIZE ):
-
-
         """
         Initializes the Accelerometer instance with a pre-configured MQTT client.
 

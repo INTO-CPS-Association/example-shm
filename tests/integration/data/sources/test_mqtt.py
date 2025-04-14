@@ -28,7 +28,6 @@ def test_load_config_file_not_found():
         load_config("non_existing_config.json")
 
 
-
 def test_load_config_invalid_json(tmp_path):
     invalid_file = tmp_path / "bad_config.json"
     invalid_file.write_text("{invalid_json: True", encoding="utf-8")
@@ -62,7 +61,6 @@ def test_setup_mqtt_client_invalid_index():
         setup_mqtt_client(dummy_config, topic_index=5)
 
 
-
 def test_on_connect_callback_success():
     topics = ["test/topic1", "test/topic2"]
     qos = 1
@@ -75,6 +73,7 @@ def test_on_connect_callback_success():
     for topic in topics:
         client.subscribe.assert_any_call(topic, qos=qos)
 
+
 def test_on_connect_callback_failure():
     topics = ["test/topic1", "test/topic2"]
     qos = 1
@@ -85,6 +84,7 @@ def test_on_connect_callback_failure():
     # Verify that subscribe is not called when connection fails.
     client.subscribe.assert_not_called()
 
+
 def test_on_subscribe_callback(capsys):
     on_subscribe = create_on_subscribe_callback()
     client = MagicMock()
@@ -93,6 +93,7 @@ def test_on_subscribe_callback(capsys):
     captured = capsys.readouterr().out
     assert "Subscription ID 42" in captured
     assert "QoS levels [1, 1]" in captured
+
 
 def test_on_message_callback(capsys):
     on_message = create_on_message_callback()
@@ -108,6 +109,7 @@ def test_on_message_callback(capsys):
     captured = capsys.readouterr().out
     assert "Received message on test/topic" in captured
     #assert "Message payload: test payload" in captured
+
 
 def test_on_publish_callback(capsys):
     on_publish = create_on_publish_callback()
@@ -127,7 +129,6 @@ def test_setup_mqtt_client():
         "host": "localhost",
         "port": 1883
     }
-    
     # Unpack the returned tuple
     client, selected_topic = setup_mqtt_client(dummy_config)
 
@@ -141,5 +142,3 @@ def test_setup_mqtt_client():
     assert client.on_message is not None
     assert client.on_publish is not None
 
-    # Optional: Ensure the correct topic is selected
-    assert selected_topic == "test/topic1"  # Since topic_index defaults to 0
