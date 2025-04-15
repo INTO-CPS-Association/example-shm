@@ -32,5 +32,11 @@ Write tests in the _tests_ directory. Be sure to name any new files as
 _test_*_.py_. To run all tests, with coverage:
 
 ```bash
-pytest
+pytest -m unit         # run unit tests
+pytest -m integration  # run integration tests
+pytest                 # run all the tests
 ```
+
+## Use
+
+Please see [examples](src/examples/README.md) for typical usage of the package.

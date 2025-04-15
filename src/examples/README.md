@@ -42,10 +42,16 @@ There are two examples.
 * **example_2** demonstrates the use of `Aligner` class to collect and
   align accelerometer measurements from multiple MQTT data streams.
 
-A simple example is provided to run the `main()` function from `experiment_1.py`.
-
-To run this example, use:
+To run these examples, use:
 
 ```bash
-python examples/example_1.py
+python src/examples/example_1.py
+python src/examples/example_2.py
+```
+
+You can also run these examples in **poetry** environment using
+
+```bash
+poetry run example_1
+poetry run example_2
 ```

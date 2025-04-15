@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 from unittest.mock import MagicMock, patch
-from data.accel.hbk.aligner import Aligner  # type: ignore
+from data.accel.hbk.aligner import Aligner
 pytestmark = pytest.mark.unit
 
 

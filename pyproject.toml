@@ -20,6 +20,7 @@ pylint = "^3.3.6"
 pytest = "^8.3.5"
 pytest-cov = "^6.1.1"
 pytest-mock = "^3.14.0"
+pytest-env = "^1.1.5"
 
 [build-system]
 requires = ["poetry-core"]

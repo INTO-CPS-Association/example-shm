@@ -2,7 +2,7 @@ import time
 
 # Project imports
 from data.sources.mqtt import setup_mqtt_client, load_config  # type: ignore
-from data.accel.hbk.aligner import Aligner  # type: ignore
+from data.accel.hbk.aligner import Aligner
 
 
 def main():
@@ -25,7 +25,7 @@ def main():
     aligner = Aligner(mqtt_client, topics=selected_topics, map_size=2560)
 
     while True:
-        time.sleep(1)
+        time.sleep(1)  # Allow time for data collection
         data, utime = aligner.extract(16)
         if data.shape[0] == 0:
             print("Not enough aligned data yet.")

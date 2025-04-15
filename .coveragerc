@@ -4,7 +4,8 @@ omit =
     */venv/*
     */.venv/*
     */__init__.py
-    */src/data/accel/random.py
+    */src/data/accel/accelerometer.py
+    */src/data/accel/aligner.py
     */src/examples/*
 
 [report]

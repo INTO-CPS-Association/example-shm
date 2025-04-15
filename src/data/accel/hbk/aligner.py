@@ -4,10 +4,11 @@ from datetime import datetime
 import numpy as np
 
 # project imports
+from data.accel.aligner import IAligner
 from data.accel.hbk.accelerometer import Accelerometer
 
 
-class Aligner:
+class Aligner(IAligner):
     def __init__(self, mqtt_client, topics: list, map_size=44840, missing_value=np.nan):
         """
         Initializes the Aligner to receive and align data from multiple MQTT topics.
@@ -101,7 +102,7 @@ class Aligner:
         """
         aligned_data = [[] for _ in self.channels]
         samples_collected = 0
-        utc_time = datetime.utcnow()
+        utc_time = datetime.now()
 
         for key in group:
             entries = [ch.get_samples_for_key(key) for ch in self.channels]
