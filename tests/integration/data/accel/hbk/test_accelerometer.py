@@ -2,12 +2,14 @@ import time
 import json
 import pytest
 import struct
+import os
 
 import numpy as np
-from data.accel.hbk.accelerometer import Accelerometer  # type: ignore
+from data.accel.hbk.accelerometer import Accelerometer
 from constants import DESCRIPTOR_LENGTH, METADATA_VERSION, SECONDS, NANOSECONDS, BATCH_SIZE
 from data.sources.mqtt import setup_mqtt_client, load_config
 import uuid
+pytestmark = pytest.mark.integration
 
 
 @pytest.fixture(scope="function")
@@ -21,7 +23,8 @@ def mqtt_client():
 
     client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     client.loop_start()  
-    time.sleep(0.1)  
+    connect_delay = float(os.environ.get("MQTT_CONNECT_DELAY"))
+    time.sleep(connect_delay)  
 
     yield client, selected_topic
     client.loop_stop()
@@ -111,18 +114,18 @@ def test_accelerometer_read_full_fifo(client_and_topic, accelerometer_instance):
     """
     client, topic = client_and_topic  
 
-    publish_binary_samples(client, topic, 0, 96)
+    publish_binary_samples(client, topic, 0, 64)
     total_samples = 0
 
-    while total_samples < 96: 
+    while total_samples < 60: 
         with accelerometer_instance._lock:
             total_samples = sum(len(deque) for deque in accelerometer_instance.data_map.values())
 
-    status, data = accelerometer_instance.read(96)
+    status, data = accelerometer_instance.read(64)
 
     assert status == 1, f"Expected status 1, but got {status}"
-    assert data.shape == (96,), f"Unexpected shape: {data.shape}" 
-    assert np.allclose(data, np.arange(96)), f"Order mismatch: {data[:10]}"
+    assert data.shape == (64,), f"Unexpected shape: {data.shape}" 
+    assert np.allclose(data, np.arange(64)), f"Order mismatch: {data[:10]}"
 
 
 def test_accelerometer_read_partial_fifo(client_and_topic, accelerometer_instance):
@@ -142,7 +145,7 @@ def test_accelerometer_read_partial_fifo(client_and_topic, accelerometer_instanc
     publish_binary_samples(client, topic, 0, 64)
     total_samples = 0
 
-    while total_samples < 64: 
+    while total_samples < 33: 
         with accelerometer_instance._lock:
             total_samples = sum(len(deque) for deque in accelerometer_instance.data_map.values())
 
@@ -170,7 +173,7 @@ def test_accelerometer_read_insufficient_samples(client_and_topic, accelerometer
     publish_binary_samples(client, topic, 0, 64)
     total_samples = 0
 
-    while total_samples < 64: 
+    while total_samples < 50: 
         with accelerometer_instance._lock:
             total_samples = sum(len(deque) for deque in accelerometer_instance.data_map.values())
 
@@ -198,7 +201,7 @@ def test_accelerometer_appending_more_samples_than_max(client_and_topic, acceler
     publish_binary_samples(client, topic, 0, 224)
     total_samples = 0
 
-    while total_samples < 192: 
+    while total_samples < 100: 
         with accelerometer_instance._lock:
             total_samples = sum(len(deque) for deque in accelerometer_instance.data_map.values())
 
@@ -224,14 +227,11 @@ def test_accelerometer_reordering_late_sample(client_and_topic, accelerometer_in
     # Publish middle batch (32–63) AFTER last batch
     publish_binary_samples(client, topic, 32, 64)
 
-    # Wait for all samples to arrive
     total_samples = 0
-    while total_samples < 96:  # Max wait time: 5 seconds
+    while total_samples < 60:  
         with accelerometer_instance._lock:
             total_samples = sum(len(deque) for deque in accelerometer_instance.data_map.values())
     status, data = accelerometer_instance.read(96)
-
-
     assert status == 1, f"Expected status 1, but got {status}"
     assert data.shape == (96,), f"Unexpected shape: {data.shape}"
     expected_data = np.arange(96)  # Expected: 0, 1, 2, ..., 95

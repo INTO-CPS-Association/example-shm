@@ -1,20 +1,20 @@
 import threading
 import struct
 from collections import deque
+from typing import Tuple, Any, Optional, List
 import numpy as np
-
+import paho.mqtt.client as mqtt
 # Project Imports
 from data.accel.accelerometer import IAccelerometer
 from data.accel.constants import MAX_MAP_SIZE
+from data.accel.metadata_constants import DESCRIPTOR_LENGTH_BYTES
 
 class Accelerometer(IAccelerometer):
     def __init__(
         self,
-        mqtt_client,
+        mqtt_client: mqtt.Client,
         topic: str = "cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/1/acc/raw/data",
         map_size: int = MAX_MAP_SIZE ):
-
-
         """
         Initializes the Accelerometer instance with a pre-configured MQTT client.
 
@@ -33,20 +33,21 @@ class Accelerometer(IAccelerometer):
         # Setting up MQTT callback
         self.mqtt_client.on_message = self._on_message
 
-    def _on_message(self, _, __, msg):
+    # pylint: disable=unused-argument
+    def _on_message(self, client: Any, userdata: Any, msg: mqtt.MQTTMessage) -> None:
         """Handles incoming MQTT messages."""
         print(f"Received message on topic {msg.topic}")
 
         def safe_process():  # This ensures that an exception does not crash the entire thread
             try:
-                self._process_message(msg)
+                self.process_message(msg)
             except Exception as e:
                 print(f"Error processing message: {e}")
 
         threading.Thread(target=safe_process, daemon=True).start()
 
 
-    def _process_message(self, msg):
+    def process_message(self, msg: mqtt.MQTTMessage) -> None:
         """
             Processes incoming MQTT messages, extracts accelerometer data,
             and stores it in a dictionary of FIFO queues.
@@ -58,9 +59,7 @@ class Accelerometer(IAccelerometer):
         try:
             raw_payload = msg.payload
 
-            # Extract metadata
-            # We know that the first 2 bytes tells the length of the descriptor
-            descriptor_length = struct.unpack("<H", raw_payload[:2])[0]
+            descriptor_length = struct.unpack("<H", raw_payload[:DESCRIPTOR_LENGTH_BYTES])[0]
             (descriptor_length, _, __, ___,
              samples_from_daq_start,) = struct.unpack("<HHQQQ", raw_payload[:descriptor_length])
 
@@ -70,21 +69,90 @@ class Accelerometer(IAccelerometer):
             accel_values = struct.unpack(f"<{num_samples}f", data_payload)
 
             # Store each data batch (e.g 32 samples in one message)
-            # in the map where usnig samples_from_daq_start as its the key
+            # in the map samples_from_daq_start is used as the key for each batch
             with self._lock:
-                self.data_map[samples_from_daq_start] = deque(accel_values)
+                if samples_from_daq_start not in self.data_map:
+                    self.data_map[samples_from_daq_start] = deque(accel_values)
+
+                total_samples = sum(len(dq) for dq in self.data_map.values())
                 # Check if the total samples in the map exceeds the max,
                 # then remove the oldest data batch
-                while sum(len(deque) for deque in self.data_map.values()) > self._map_size:
+                while total_samples > self._map_size:
                     oldest_key = min(self.data_map.keys())  # Find the oldest batch
-                    del self.data_map[oldest_key]  # Remove oldest batch
+                    oldest_deque = self.data_map[oldest_key]
+                    oldest_deque.popleft() # Delete samples from the oldest deque
+                    if not oldest_deque:  # Remove the key/deque from the map if it's empty
+                        del self.data_map[oldest_key]
+                    total_samples = sum(len(dq) for dq in self.data_map.values())
             print(f" Channel: {self.topic}  Key: {samples_from_daq_start}, Samples: {num_samples}")
 
         except Exception as e:
             print(f"Error processing message: {e}")
 
 
-    def read(self, requested_samples: int) -> (int, np.ndarray):
+    def get_batch_size(self) -> Optional[int]:
+        """
+        Returns the number of samples in the first available data batch.
+        Useful for determining alignment batch size.
+        """
+        with self._lock:
+            if not self.data_map:
+                return None
+            first_key = next(iter(self.data_map))
+            return len(self.data_map[first_key])
+
+
+    def get_sorted_keys(self) -> List[int]:
+        """
+        Returns the sorted list of sample keys currently available.
+        """
+        with self._lock:
+            return sorted(self.data_map.keys())
+
+
+    def get_samples_for_key(self, key: int) -> Optional[List[float]]:
+        """
+        Returns a copy of the sample list for a given key,
+        or None if the key is not present.
+        """
+        with self._lock:
+            if key in self.data_map:
+                return list(self.data_map[key])
+            return None
+
+
+    def clear_used_data(self, start_key: int, samples_to_remove: int) -> None:
+        """
+        Deletes all keys older than `start_key` and consumes `samples_to_remove`
+        samples starting from `start_key`, across subsequent keys in order.
+        """
+        with self._lock:
+            # Delete older keys
+            keys_to_delete = [k for k in self.data_map if k < start_key]
+            for k in keys_to_delete:
+                del self.data_map[k]
+
+            # Remove samples from start_key and onwards until all samples used are removed
+            keys = sorted(k for k in self.data_map if k >= start_key)
+            remaining_to_remove = samples_to_remove
+
+            for key in keys:
+                if remaining_to_remove <= 0:
+                    break
+                dq = self.data_map[key]
+                num_available = len(dq)
+                num_to_remove = min(remaining_to_remove, num_available)
+
+                for _ in range(num_to_remove):
+                    dq.popleft()
+
+                if not dq:
+                    del self.data_map[key]
+
+                remaining_to_remove -= num_to_remove
+
+
+    def read(self, requested_samples: int) -> Tuple[(int, np.ndarray)]:
         """
         Reads the oldest accelerometer data from the FIFO buffer and removes only the read samples.
 
@@ -127,5 +195,5 @@ class Accelerometer(IAccelerometer):
         return status, samples
 
 
-    def acquire_lock(self)->(threading.Lock):
+    def acquire_lock(self)-> threading.Lock:
         return self._lock

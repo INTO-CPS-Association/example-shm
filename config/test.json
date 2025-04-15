@@ -1,6 +1,6 @@
 {
     "MQTT": {
-        "host": "test.mosquitto.org",
+        "host": "mqtt.eclipseprojects.io",
         "port": 1883,
         "userId": "",
         "password": "",
@@ -9,3 +9,4 @@
         "TopicsToSubscribe": ["topicAA", "topicBB", "topicCC"]
     }
 }
+

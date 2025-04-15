@@ -1,8 +1,9 @@
 import time
+import sys
 import numpy as np # pylint: disable=unused-import
 
 # Project imports
-from data.accel.hbk.accelerometer import Accelerometer  # type: ignore
+from data.accel.hbk.accelerometer import Accelerometer
 from data.sources.mqtt import setup_mqtt_client, load_config  # type: ignore
 
 
@@ -25,20 +26,18 @@ def main():
     with accelerometer.acquire_lock():
         accelerometer.data_map.clear()
 
-    while True:
-        time.sleep(2.1)
+    time.sleep(1)  # Allow time for data collection
+    with accelerometer.acquire_lock():
+        # This print to see the dictionary
+        for key, fifo in sorted(accelerometer.data_map.items()):
+            print(f"Key: {key} -> Data: {list(fifo)}\n")
+    _, data = accelerometer.read(requested_samples=256)
 
-        with accelerometer.acquire_lock():
-            # This print to see the dictionary
-            for key, fifo in sorted(accelerometer.data_map.items()):
-                print(f"Key: {key} -> Data: {list(fifo)}\n")
-        _, data = accelerometer.read(requested_samples=128)
-        print("Data requsted", data)
-        #break
+    mqtt_client.loop_stop()
+    mqtt_client.disconnect()
 
-    #mqtt_client.loop_stop()
-    #print("Data requsted", data)
-
+    print("Data requsted", data)
+    sys.stdout.flush()
 
 if __name__ == '__main__':
     main()

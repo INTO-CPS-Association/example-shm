@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "example-shm"
-version = "0.1.0"
-description = ""
+version = "0.2.0"
+description = "Demonstration for structural health monitoring of engineering structures"
 authors = [
     "Mohamed Abdulkarim <202206332@post.au.dk>",
     "Prasad Talasila <prasadtalasila@gmail.com>"
@@ -11,18 +11,21 @@ license = "INTO-CPS Association"
 packages = [{include = "*", from="src"}]
 
 [tool.poetry.dependencies]
-python = ">=3.10, <3.13"
+python = ">=3.12, <3.13"
 paho-mqtt = "^2.1.0"
-matplotlib = "^3.10.0"
+numpy = "^2.2.4"
 
 [tool.poetry.group.dev.dependencies]
-pylint = "^3.3.3"
-pytest = "^8.3.4"
-pytest-cov = "^6.0.0"
+pylint = "^3.3.6"
+pytest = "^8.3.5"
+pytest-cov = "^6.1.1"
+pytest-mock = "^3.14.0"
+pytest-env = "^1.1.5"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-experiment_1 = "src.experiment_1:main"
+experiment_1 = "src.examples.experiment_1:main"
+experiment_2 = "src.examples.experiment_2:main"
