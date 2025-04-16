@@ -6,7 +6,7 @@ from data.accel.hbk.aligner import Aligner
 
 
 def main():
-    config = load_config("config/production.json")
+    config = load_config("config/mockPT.json")
     mqtt_config = config["MQTT"]
 
 
