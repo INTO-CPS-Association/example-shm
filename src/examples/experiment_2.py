@@ -5,11 +5,8 @@ from data.sources.mqtt import setup_mqtt_client, load_config  # type: ignore
 from data.accel.hbk.aligner import Aligner
 
 
-def main():
-    config = load_config("config/mockPT.json")
+def main(config):
     mqtt_config = config["MQTT"]
-
-
     topic_indexes = [1,1,0,1,0] # Indexes of the topics/channels to align
 
     # Resolve topic names from config

@@ -7,10 +7,8 @@ from data.accel.hbk.accelerometer import Accelerometer
 from data.sources.mqtt import setup_mqtt_client, load_config  # type: ignore
 
 
-def main():
-    config = load_config("config/mockPT.json")
+def main(config):
     mqtt_config = config["MQTT"]
-
     topic_index = 0
     mqtt_client, selected_topic = setup_mqtt_client(mqtt_config, topic_index)
     mqtt_client.connect(mqtt_config["host"], mqtt_config["port"], 60)
@@ -20,7 +18,7 @@ def main():
     accelerometer = Accelerometer(
         mqtt_client,
         topic=selected_topic,
-        map_size=192)
+        map_size=1920)
 
     # Clear stored data
     with accelerometer.acquire_lock():

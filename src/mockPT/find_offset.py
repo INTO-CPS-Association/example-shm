@@ -1,4 +1,3 @@
-import os
 import time
 import json
 import board  # type: ignore
@@ -14,19 +13,18 @@ def enable_multiplexer_channel(channel):
     time.sleep(0.01)
 
 # Load configuration file (offset.json)
-current_dir = os.path.dirname(os.path.abspath(__file__))
-config_path = os.path.join(current_dir, "offset.json")
+config_path = "config/offset.json"
 try:
     with open(config_path, "r") as f:
-        config = json.load(f)
+        offset_config = json.load(f)
     print("Configuration loaded successfully.")
 except Exception as e:
     print(f"Error loading configuration: {e}")
-    config = {}
+    offset_config = {}
 
 # Ensure that SensorOffsets are set if not already defined
-if "SensorOffsets" not in config:
-    config["SensorOffsets"] = {"Sensor1": 0, "Sensor2": 0}
+if "SensorOffsets" not in offset_config:
+    offset_config["SensorOffsets"] = {"Sensor1": 0, "Sensor2": 0}
 
 def calibrate_sensor(sensor, sensor_label, duration=10):
     """
@@ -72,11 +70,11 @@ def main():
     offset2 = calibrate_sensor(sensor2, "Sensor2")
 
     # Update configuration with the new sensor offsets
-    config["SensorOffsets"]["Sensor1"] = offset1  
-    config["SensorOffsets"]["Sensor2"] = offset2  
+    offset_config["SensorOffsets"]["Sensor1"] = offset1  
+    offset_config["SensorOffsets"]["Sensor2"] = offset2  
 
     with open(config_path, "w") as f:
-        json.dump(config, f, indent=4)
+        json.dump(offset_config, f, indent=4)
     print("Calibration complete. Offsets updated in offset.json.")
 
 if __name__ == "__main__":
