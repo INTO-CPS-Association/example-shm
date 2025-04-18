@@ -6,10 +6,12 @@ import numpy as np
 # project imports
 from data.accel.aligner import IAligner
 from data.accel.hbk.accelerometer import Accelerometer
+from data.accel.constants import MAX_MAP_SIZE
+
 
 
 class Aligner(IAligner):
-    def __init__(self, mqtt_client, topics: list, map_size=44840, missing_value=np.nan):
+    def __init__(self, mqtt_client, topics: list, map_size=MAX_MAP_SIZE, missing_value=np.nan):
         """
         Initializes the Aligner to receive and align data from multiple MQTT topics.
 
@@ -110,8 +112,12 @@ class Aligner(IAligner):
                 if samples_collected >= requested_samples:
                     break
                 for ch_idx, channel_data in enumerate(entries):
-                    aligned_data[ch_idx].append(channel_data[i])
+                    if channel_data is not None:
+                            aligned_data[ch_idx].append(channel_data[i])
+                    else:
+                        print(f"Missing data for channel index {ch_idx} skipping")
                 samples_collected += 1
+                
             if samples_collected >= requested_samples:
                 break
 
