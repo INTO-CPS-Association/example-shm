@@ -45,8 +45,8 @@ There are two examples.
 To run these examples, use:
 
 ```bash
-python src/examples/example_1.py
-python src/examples/example_2.py
+python src/examples/example.py experiment-1
+python src/examples/example.py experiment-2
 ```
 
 You can also run these examples in **poetry** environment using
