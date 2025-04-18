@@ -1,30 +1,20 @@
-import argparse
-import importlib
-import sys
+import click
+from examples.experiment_1 import run_experiment_1
+from examples.experiment_2 import run_experiment_2
 
-from data.sources.mqtt import load_config  
+@click.group()
+def cli():
+    pass
 
+@cli.command()
+@click.option('--config', default="config/mockPT.json", help="Path to config file")
+def experiment_1(config):
+    run_experiment_1(config)
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="Run selected experiment.")
-    parser.add_argument("--config", required=True, help="Path to config JSON file.")
-    parser.add_argument("experiment", help="e.g., experiment_1")
-    return parser.parse_args()
-
-
-def main():
-    args = parse_args()
-    config = load_config(args.config)
-
-    try:
-        # Import from examples (sibling files)
-        experiment_module = importlib.import_module(f"examples.{ args.experiment}")
-    except ModuleNotFoundError:
-        print(f"Could not find 'examples/{ args.experiment}.py'")
-        sys.exit(1)
-
-    experiment_module.main(config)
-
+@cli.command()
+@click.option('--config', default="config/mockPT.json", help="Path to config file")
+def experiment_2(config):
+    run_experiment_2(config)
 
 if __name__ == "__main__":
-    main()
+    cli()
