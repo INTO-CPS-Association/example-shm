@@ -9,7 +9,7 @@ sys.modules["board"] = MagicMock()
 sys.modules["busio"] = MagicMock()
 sys.modules["adafruit_adxl37x"] = MagicMock()
 
-from mockpt.publish_samples import collect_samples, send_batch, Batch
+from mock_PT.publish_samples import collect_samples, send_batch, Batch
 from unit.mockPT_test.constants import FAKE_SENSOR_READING, FAKE_OFFSET, EXPECTED_COLLECTED_SAMPLES, SAMPLE_BATCH, SAMPLE_COUNTER
 
 
@@ -24,7 +24,7 @@ class TestPublishUnit(unittest.TestCase):
         self.assertEqual(samples, EXPECTED_COLLECTED_SAMPLES)
 
 
-    @patch("mockpt.publish_samples.MQTTClient.publish")
+    @patch("mock_PT.publish_samples.MQTTClient.publish")
     def test_send_batch_publishes_correct_payload(self, mock_publish):
         mock_client = MagicMock()
         batch = Batch("fake/topic", SAMPLE_BATCH, SAMPLE_COUNTER)

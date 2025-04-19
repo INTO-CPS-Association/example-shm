@@ -8,18 +8,18 @@ sys.modules["board"] = MagicMock()
 sys.modules["busio"] = MagicMock()
 sys.modules["adafruit_adxl37x"] = MagicMock()
 
-from mockpt.publish_samples import main
+from mock_PT.publish_samples import main
 from mockPT_test.constants import FAKE_SAMPLES_1, FAKE_SAMPLES_2
 
 pytestmark = pytest.mark.integration
 class TestPublishIntegration(unittest.TestCase):
 
-    @patch("mockpt.publish_samples.send_batch")
-    @patch("mockpt.publish_samples.collect_samples")
-    @patch("mockpt.publish_samples.setup_sensor")
-    @patch("mockpt.publish_samples.enable_multiplexer_channel")
-    @patch("mockpt.publish_samples.setup_mqtt_client")
-    @patch("mockpt.publish_samples.load_config")
+    @patch("mock_PT.publish_samples.send_batch")
+    @patch("mock_PT.publish_samples.collect_samples")
+    @patch("mock_PT.publish_samples.setup_sensor")
+    @patch("mock_PT.publish_samples.enable_multiplexer_channel")
+    @patch("mock_PT.publish_samples.setup_mqtt_client")
+    @patch("mock_PT.publish_samples.load_config")
     def test_main_runs_once_no_hardware(
         self,
         mock_load_config,
@@ -55,7 +55,7 @@ class TestPublishIntegration(unittest.TestCase):
         # Patch builtins.open to return a fake offset config
         fake_offset_file = '{"SensorOffsets": {"Sensor1": 1.0, "Sensor2": -2.0}}'
         with patch("builtins.open", new_callable=unittest.mock.mock_open, read_data=fake_offset_file):
-            with patch("mockpt.publish_samples.time.sleep", return_value=None):
+            with patch("mock_PT.publish_samples.time.sleep", return_value=None):
                 main(run_once=True)
 
         # Assert samples were collected and sent for both sensors
