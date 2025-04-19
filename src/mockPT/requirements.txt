@@ -1,0 +1,5 @@
+adafruit-circuitpython-busdevice
+adafruit-circuitpython-register
+adafruit-circuitpython-adxl37x
+adafruit-blinka
+paho-mqtt

@@ -1,33 +1,21 @@
-# Code Structure
+## Code Structure
 
-In the `publish_samples.py` script, the I²C interface is initialized using the `busio` and `board` libraries:
+The `mockPT` module acquires data  from two ADXL375 accelerometers over I²C and publishes their readings to an MQTT broker in a structured binary format. The system is designed for real-time integration with a Digital Twin  pipeline.
 
-```python
-i2c = busio.I2C(board.SCL, board.SDA)
-```
+### Key Features:
+- Modular design using typed dataclasses (`SensorTask`, `Batch`)
+- Offset-based calibration using a separate calibration script
+- Real-time data acquisition and MQTT publishing
 
-The active channel on the multiplexer is selected by sending a control byte to its address (`0x70`). Each bit in the control byte corresponds to one of the eight possible channels. For example, enabling channel 0 is done by setting the first bit:
+---
 
-```python
-def enable_multiplexer_channel(channel: int):
-    multiplexer_address = 0x70
-    i2c.writeto(multiplexer_address, bytes([1 << channel]))
-    time.sleep(0.01)
-```
+## Sensor Access via I²C Multiplexer
 
-After enabling a channel, the ADXL375 sensor connected to that channel is initialized by creating a new instance of the sensor driver and configuring its parameters such as data rate and measurement range:
+Each sensor is accessed by enabling its corresponding channel on the TCA9548A I²C multiplexer. This is handled by the `enable_multiplexer_channel()` function, which writes a control byte to address `0x70`. For example, enabling channel 0 sets the least significant bit.
 
-```python
-def setup_sensor():
-    sensor = adafruit_adxl37x.ADXL375(i2c)
-    sensor.data_rate = 10  # Hz
-    sensor.range = 2       # ±200g
-    time.sleep(0.1)
-    return sensor
-```
+Sensor initialization is done through the `setup_sensor()` function, which creates and configures an ADXL375 instance. Channels must be activated before sensor setup.
 
-This procedure is repeated for each sensor by first enabling the corresponding multiplexer channel and then initializing the sensor. During the main acquisition loop, these steps are also used to switch between sensors before collecting new data.
-
+---
 ## Sensor Calibration Process
 
 Each sensor is calibrated to remove inherent bias before use. The `findoffset.py` script is used for this purpose. Before running the script, the sensors are placed on a stable surface. Then the x-axis readings are collected continuously over a duration of 10 seconds for each sensor. The average of these readings is computed and treated as the offset value, which represents the deviation from the expected resting value of 0 m/s². This offset is stored in a configuration file, which is later used in the publish_samples.py script to correct raw readings.

@@ -1,9 +1,7 @@
 import time
 import sys
-import numpy as np
-
 from data.accel.hbk.accelerometer import Accelerometer
-from data.sources.mqtt import setup_mqtt_client, load_config  # type: ignore
+from data.sources.comm import setup_mqtt_client, load_config  # type: ignore
 
 def run_experiment_1(config_path):
     config = load_config(config_path)
@@ -33,10 +31,3 @@ def run_experiment_1(config_path):
 
     print("Data requested", data)
     sys.stdout.flush()
-
-
-def main(config):
-    run_experiment_1(config)
-
-if __name__ == "__main__":
-    main()

@@ -5,8 +5,8 @@ import pytest
 from unittest.mock import MagicMock
 
 
-from data.sources import mqtt
-from data.sources.mqtt import (
+from data.sources import comm
+from data.sources.comm import (
     create_on_connect_callback,
     create_on_subscribe_callback,
     create_on_message_callback,
@@ -43,7 +43,7 @@ def test_load_config_unexpected_exception(monkeypatch):
     monkeypatch.setattr("builtins.open", bad_open)
 
     with pytest.raises(RuntimeError):
-        mqtt.load_config("config.json")
+        comm.load_config("config.json")
 
 
 def test_setup_mqtt_client_invalid_index():

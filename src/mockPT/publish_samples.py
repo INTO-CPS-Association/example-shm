@@ -1,61 +1,97 @@
 import json
 import struct
 import time
-import board
-import busio
-import adafruit_adxl37x
+from typing import Tuple, List
+from dataclasses import dataclass
+import board  # type: ignore
+import busio  # type: ignore
+import adafruit_adxl37x  # pylint: disable=E0401
 from paho.mqtt.client import Client as MQTTClient
 
-from data.sources.mqtt import setup_mqtt_client, load_config  
+from data.sources.comm import load_config, setup_mqtt_client
 
-# --- MQTT Configuration ---
-config = load_config("config/R-PI.json")
-mqtt_config = config["MQTT_publish"]
-mqtt_client, _ = setup_mqtt_client(mqtt_config)
-mqtt_topic_base = "cpsens/DAQ_ID/MODULE_ID"
+@dataclass
+class SensorTask:
+    i2c: busio.I2C
+    channel: int
+    label: str
+    sensor: adafruit_adxl37x.ADXL375
+    offset: float
+    batch_size: int
+    counter: int
 
-# --- Load Offset Config ---
-offset_config_path = "config/offset.json"
-try:
-    with open(offset_config_path, "r") as f:
-        offsetdata = json.load(f)
-    offsets = offsetdata.get("SensorOffsets", {})
-    offset1 = offsets.get("Sensor1", 0.0)
-    offset2 = offsets.get("Sensor2", 0.0)
-    print(f"Loaded offsets → Sensor1: {offset1}, Sensor2: {offset2}")
-except Exception as e:
-    print(f"Failed to load offset config: {e}")
-    offset1 = 0.0
-    offset2 = 0.0
+@dataclass
+class Batch:
+    topic: str
+    samples: List[float]
+    sample_counter: int
 
-# --- I2C and Sensor Setup ---
-i2c = busio.I2C(board.SCL, board.SDA)
 
-def enable_multiplexer_channel(channel: int) -> None:
-    """Enables the specified channel (0–7) on the I2C multiplexer."""
+def load_offsets(path: str) -> Tuple[float, float]:
+    """
+    Loads x-axis offsets for Sensor1 and Sensor2 from a JSON configuration file.
+
+    Args:
+        path (str): Path to the offset configuration file.
+
+    Returns:
+        Tuple[float, float]: A tuple containing the offset values for Sensor1 and Sensor2.
+    """
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            offsetdata = json.load(f)
+        offsets = offsetdata.get("SensorOffsets", {})
+        offset1 = offsets.get("Sensor1", 0.0)
+        offset2 = offsets.get("Sensor2", 0.0)
+        print(f"Loaded offsets → Sensor1: {offset1}, Sensor2: {offset2}")
+        return offset1, offset2
+    except Exception as e:
+        print(f"Failed to load offset config: {e}")
+        return 0.0, 0.0
+
+
+def enable_multiplexer_channel(i2c: busio.I2C, channel: int) -> None:
+    """
+    Enables a specific channel on the I2C multiplexer.
+
+    Args:
+        i2c (busio.I2C): The I2C bus instance.
+        channel (int): The channel index to activate (0–7).
+    """
     multiplexer_address = 0x70
     i2c.writeto(multiplexer_address, bytes([1 << channel]))
     time.sleep(0.01)
 
-def setup_sensor() -> adafruit_adxl37x.ADXL375:
-    """Initializes and returns a configured ADXL375 sensor instance."""
+
+def setup_sensor(i2c: busio.I2C) -> adafruit_adxl37x.ADXL375:
+    """
+    Initializes and configures an ADXL375 sensor on the specified I2C bus.
+
+    The sensor is configured with:
+    - data_rate = 15 Hz
+    - range = ±200g
+
+    Returns:
+        Configured ADXL375 sensor instance.
+    """
     sensor = adafruit_adxl37x.ADXL375(i2c)
-    sensor.data_rate = 15  # Hz
-    sensor.range = 2       # ±200g
+    sensor.data_rate = 15
+    sensor.range = 2
     time.sleep(0.1)
     return sensor
 
-def collect_samples(sensor: adafruit_adxl37x.ADXL375, offset: float, n: int = 32) -> list[float]:
+
+def collect_samples(sensor: adafruit_adxl37x.ADXL375, offset: float, n: int = 32) -> List[float]:
     """
-    Collects `n` acceleration samples (X-axis) from a sensor, applying the given offset.
-    
+    Collects `n` x-axis acceleration samples from the given sensor, applying the offset to each.
+
     Args:
-        sensor: The ADXL375 sensor instance.
-        offset: Offset to subtract from each X reading.
-        n: Number of samples to collect.
-    
+        sensor: ADXL375 sensor instance.
+        offset: Offset to subtract from each raw reading.
+        n: Number of samples to collect (default 32).
+
     Returns:
-        A list of float values representing corrected acceleration data.
+        List of float values (corrected acceleration in m/s²).
     """
     samples = []
     for _ in range(n):
@@ -63,15 +99,22 @@ def collect_samples(sensor: adafruit_adxl37x.ADXL375, offset: float, n: int = 32
         samples.append(x)
     return samples
 
-def send_batch(mqttc: MQTTClient, topic: str, samples: list[float], sample_counter: int) -> None:
+
+def send_batch(mqttc: MQTTClient, batch: Batch) -> None:
     """
     Constructs and sends a binary message over MQTT with sensor data.
 
+    Each message contains a binary descriptor and payload of 32-bit floats (acceleration in m/s²).
+    The descriptor includes:
+    - descriptor_length (uint16)
+    - metadata_version (uint16)
+    - seconds_since_epoch (uint64, set to 0)
+    - nanoseconds (uint64, set to 0)
+    - samples_from_daq_start (uint64)
+
     Args:
-        mqttc: The MQTT client.
-        topic: Topic to publish to.
-        samples: List of acceleration samples.
-        sample_counter: Total number of samples collected so far.
+        mqttc (MQTTClient): The MQTT client.
+        batch (Batch): A Batch object containing topic, samples, and sample counter.
     """
     descriptor_format = "<HHQQQ"
     descriptor_length = struct.calcsize(descriptor_format)
@@ -80,51 +123,91 @@ def send_batch(mqttc: MQTTClient, topic: str, samples: list[float], sample_count
         descriptor_length,
         1,  # metadata version
         0, 0,  # no timestamp
-        sample_counter
+        batch.sample_counter
     )
-    data_payload = struct.pack(f"<{len(samples)}f", *samples)
+    data_payload = struct.pack(f"<{len(batch.samples)}f", *batch.samples)
     payload = descriptor + data_payload
-    mqttc.publish(topic, payload, qos=1, retain=False)
 
-    avg_val = sum(samples) / len(samples)
-    print(f"\nPublishing to: {topic}")
-    print(f"Sample Counter: {sample_counter}")
-    print(f"Batch Size: {len(samples)}")
-    print(f"Samples: {samples}")
+    mqttc.publish(batch.topic, payload, qos=1, retain=False)
 
-def main() -> None:
-    """Main execution function: sets up sensors, collects data, and publishes to MQTT."""
-    mqtt_client.connect(mqtt_config["Host"], mqtt_config["Port"], 60)
+    print(f"\nPublishing to: {batch.topic}")
+    print(f"Sample Counter: {batch.sample_counter}")
+    print(f"Batch Size: {len(batch.samples)}")
+    print(f"Samples: {batch.samples}")
+
+
+def process_sensor(task: SensorTask, mqtt_client: MQTTClient, mqtt_topic_base: str) -> int:
+    """
+    Processes one cycle of data acquisition and publishing for a given sensor task.
+
+    This includes:
+    - Enabling the sensor's multiplexer channel
+    - Collecting a batch of x-axis acceleration data
+    - Sending the batch to an MQTT topic
+
+    Args:
+        task (SensorTask): The task configuration for the sensor.
+        mqtt_client (MQTTClient): The active MQTT client.
+        mqtt_topic_base (str): The base MQTT topic path.
+
+    Returns:
+        int: The updated sample counter after the batch is published.
+    """
+    enable_multiplexer_channel(task.i2c, task.channel)
+    samples = collect_samples(task.sensor, task.offset, task.batch_size)
+    topic = f"{mqtt_topic_base}/{task.label}/acc/raw/data"
+    send_batch(mqtt_client, Batch(topic, samples, task.counter))
+    return task.counter + task.batch_size
+
+
+def initialize_sensor(i2c: busio.I2C, channel: int, label: str) -> adafruit_adxl37x.ADXL375:
+    """
+    Initializes and returns a configured sensor instance on the specified I2C multiplexer channel.
+
+    Args:
+        i2c (busio.I2C): The I2C bus.
+        channel (int): The channel index to enable.
+        label (str): Label for logging/debug output.
+
+    Returns:
+        adafruit_adxl37x.ADXL375: The configured sensor instance.
+    """
+    print(f"Initializing {label} on channel {channel}...")
+    enable_multiplexer_channel(i2c, channel)
+    return setup_sensor(i2c)
+
+
+def main(config_path: str = "config/R-PI.json", offset_path: str = "config/offset.json"
+                                                        , run_once: bool = False) -> None:
+    config = load_config(config_path)
+    mqtt_config = config["MQTT"]
+    mqtt_client, _ = setup_mqtt_client(mqtt_config)
+
+    mqtt_client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     mqtt_client.loop_start()
 
-    print("Initializing Sensor1 on channel 0...")
-    enable_multiplexer_channel(0)
-    sensor1 = setup_sensor()
+    offset1, offset2 = load_offsets(offset_path)
 
-    print("Initializing Sensor2 on channel 1...")
-    enable_multiplexer_channel(1)
-    sensor2 = setup_sensor()
-
-    counter1 = 0
-    counter2 = 0
+    i2c = busio.I2C(board.SCL, board.SDA)
+    sensors = {"Sensor1": initialize_sensor(i2c, 0, "Sensor1"), "Sensor2": initialize_sensor(i2c, 1, "Sensor2")}
+    counters = {"Sensor1": 0, "Sensor2": 0}
     batch_size = 32
+    mqtt_topic_base = "cpsens/DAQ_ID/MODULE_ID"
+
 
     while True:
-        # Sensor 1
-        enable_multiplexer_channel(0)
-        samples1 = collect_samples(sensor1, offset1, batch_size)
-        topic1 = f"{mqtt_topic_base}/Sensor1/acc/raw/data"
-        send_batch(mqtt_client, topic1, samples1, counter1)
-        counter1 += batch_size
+        task1 = SensorTask(i2c=i2c, channel=0, label="Sensor1", sensor=sensors["Sensor1"],
+                        offset=offset1, batch_size=batch_size, counter=counters["Sensor1"])
+        counters["Sensor1"] = process_sensor(task1, mqtt_client, mqtt_topic_base)
 
-        # Sensor 2
-        enable_multiplexer_channel(1)
-        samples2 = collect_samples(sensor2, offset2, batch_size)
-        topic2 = f"{mqtt_topic_base}/Sensor2/acc/raw/data"
-        send_batch(mqtt_client, topic2, samples2, counter2)
-        counter2 += batch_size
+        task2 = SensorTask(i2c=i2c, channel=1, label="Sensor2", sensor=sensors["Sensor2"],
+                        offset=offset2, batch_size=batch_size, counter=counters["Sensor2"] )
+        counters["Sensor2"] = process_sensor(task2, mqtt_client, mqtt_topic_base)
 
+        if run_once:
+            break
         time.sleep(0.02)
+
 
 if __name__ == "__main__":
     main()

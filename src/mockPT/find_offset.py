@@ -1,83 +1,114 @@
 import time
 import json
-import board  # type: ignore
-import busio  # type: ignore
-import adafruit_adxl37x  # type: ignore
+from typing import Any, Dict
+import busio
+import board
+import adafruit_adxl37x  # pylint: disable=E0401
+
+from data.sources.comm import load_config
 
 # Initialize I2C
-i2c = busio.I2C(board.SCL, board.SDA)
+i2c: busio.I2C = busio.I2C(board.SCL, board.SDA)
 
-def enable_multiplexer_channel(channel):
-    multiplexer_address = 0x70
+def enable_multiplexer_channel(channel: int) -> None:
+    """
+    Enables the specified channel on the I2C multiplexer (e.g., TCA9548A).
+    
+    Args:
+        channel (int): The channel index to enable (0–7).
+    """
+    multiplexer_address: int = 0x70
     i2c.writeto(multiplexer_address, bytes([1 << channel]))
     time.sleep(0.01)
 
-# Load configuration file (offset.json)
-config_path = "config/offset.json"
-try:
-    with open(config_path, "r") as f:
-        offset_config = json.load(f)
-    print("Configuration loaded successfully.")
-except Exception as e:
-    print(f"Error loading configuration: {e}")
-    offset_config = {}
 
-# Ensure that SensorOffsets are set if not already defined
-if "SensorOffsets" not in offset_config:
-    offset_config["SensorOffsets"] = {"Sensor1": 0, "Sensor2": 0}
-
-def calibrate_sensor(sensor, sensor_label, duration=10):
+def save_offset_config(path: str, config: Dict[str, Any]) -> None:
     """
-    Calibrates an ADXL375 sensor using its processed acceleration values.
-    Collects sensor.acceleration data for 'duration' seconds, computes the average
-    for the x-axis, and calculates the offset as:
-        offset = (average reading) - (expected reading for x-axis)
+    Saves the offset configuration dictionary to a JSON file.
+
+    Args:
+        path (str): File path to save the configuration.
+        config (Dict[str, Any]): The configuration data.
+    """
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=4)
+
+
+def calibrate_sensor(sensor: Any, sensor_label: str, duration: int = 10) -> float:
+    """
+    Calibrates an ADXL375 sensor by collecting acceleration values from the x-axis
+    over a specified duration and computing the average as the offset.
+
+    Args:
+        sensor (Any): An instance of the ADXL375 sensor.
+        sensor_label (str): A label for identifying the sensor during output.
+        duration (int): Duration in seconds to collect data (default is 10).
+
+    Returns:
+        float: Calculated x-axis offset.
     """
     print(f"Calibrating {sensor_label}: please hold the sensor flat for {duration} seconds...")
-    sensor.range = 2 
-    start_time = time.time()
-    samples = []
+    sensor.range = 2
+    start_time: float = time.time()
+    samples: list[float] = []
+
     while time.time() - start_time < duration:
-        reading = sensor.acceleration
-        samples.append(reading[0])  # Only use x-axis values
+        reading: tuple[float, float, float] = sensor.acceleration
+        samples.append(reading[0])  # x-axis
 
-    n = len(samples)
-    avg_x = sum(samples) / n
+    avg_x: float = sum(samples) / len(samples)
     print(f"Average acceleration for {sensor_label} (x-axis): {avg_x:.2f} m/s²")
-
-    # The expected value for the x-axis when the sensor is flat is 0 (no acceleration)
-    offset_x = avg_x
+    offset_x: float = avg_x
     print(f"Calculated offset for {sensor_label} (x-axis): {offset_x:.2f}")
 
     return offset_x
 
-def main():
+
+def calibrate_on_channel(channel: int, label: str, i2c_bus: busio.I2C, duration: int = 10) -> float:
+    """
+    Activates a multiplexer channel, initializes a sensor on that channel,
+    and performs calibration.
+
+    Args:
+        channel (int): The multiplexer channel to activate.
+        label (str): Sensor label used in output logs.
+        i2c_bus (busio.I2C): The shared I2C bus.
+        duration (int): Duration in seconds to calibrate (default is 10).
+
+    Returns:
+        float: Computed x-axis offset for the sensor.
+    """
+    enable_multiplexer_channel(channel)
+    time.sleep(0.5)
+    sensor = adafruit_adxl37x.ADXL375(i2c_bus)
+    time.sleep(0.2)
+    return calibrate_sensor(sensor, label, duration)
+
+
+def main() -> None:
+    """
+    Main routine for calibrating two ADXL375 sensors on different I2C multiplexer channels.
+    Results are saved to a JSON config file.
+    """
     print("Starting calibration for both sensors...")
+    config_path: str = "config/offset.json"
+    try:
+        config = load_config(config_path)
+    except FileNotFoundError:
+        print("Offset config not found — creating new one.")
+        config = {"SensorOffsets": {"Sensor1": 0, "Sensor2": 0}}
 
-    # Calibrate Sensor 1 on multiplexer channel 0
-    enable_multiplexer_channel(0)
-    time.sleep(0.2)
-    sensor1 = adafruit_adxl37x.ADXL375(i2c)
-    time.sleep(0.5)
-    offset1 = calibrate_sensor(sensor1, "Sensor1")
-    time.sleep(0.2)
+    if "SensorOffsets" not in config:
+        config["SensorOffsets"] = {"Sensor1": 0, "Sensor2": 0}
 
-    # Calibrate Sensor 2 on multiplexer channel 1
-    enable_multiplexer_channel(1)
-    time.sleep(0.5)
-    sensor2 = adafruit_adxl37x.ADXL375(i2c)
-    time.sleep(0.2)
-    offset2 = calibrate_sensor(sensor2, "Sensor2")
+    offset1: float = calibrate_on_channel(0, "Sensor1", i2c)
+    offset2: float = calibrate_on_channel(1, "Sensor2", i2c)
 
-    # Update configuration with the new sensor offsets
-    offset_config["SensorOffsets"]["Sensor1"] = offset1  
-    offset_config["SensorOffsets"]["Sensor2"] = offset2  
+    config["SensorOffsets"]["Sensor1"] = offset1
+    config["SensorOffsets"]["Sensor2"] = offset2
 
-    with open(config_path, "w") as f:
-        json.dump(offset_config, f, indent=4)
+    save_offset_config(config_path, config)
     print("Calibration complete. Offsets updated in offset.json.")
 
 if __name__ == "__main__":
     main()
-
-

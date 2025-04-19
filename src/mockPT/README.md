@@ -12,7 +12,7 @@ Here is a photo of the mock physical twin.
 ![Photo of the physical mock setup, including Raspberry Pi and ADXL375 sensors.](figures/physical-structure.png)
 
 and here is a system diagram illustrating the connections between components.
-![Photo of the physical mock setup, including Raspberry Pi and ADXL375 sensors.](figures/system-structure.png)
+![Photo of the physical mock setup, including Raspberry Pi and ADXL375 sensors.](figures/code-structure.png)
 
 The physical setup consists of:
 

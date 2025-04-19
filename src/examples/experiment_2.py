@@ -1,6 +1,6 @@
 import time
 
-from data.sources.mqtt import setup_mqtt_client, load_config  # type: ignore
+from data.sources.comm import setup_mqtt_client, load_config  # type: ignore
 from data.accel.hbk.aligner import Aligner
 
 
@@ -28,10 +28,3 @@ def run_experiment_2(config_path):
             print(f"Extracted aligned data shape: {data.shape}\n{data}")
             break
         time.sleep(1)
-
-
-def main(config):
-    run_experiment_2(config)
-
-if __name__ == "__main__":
-    main()

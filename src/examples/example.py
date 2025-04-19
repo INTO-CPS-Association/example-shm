@@ -1,20 +1,24 @@
+# pylint: disable=E1120
 import click
 from examples.experiment_1 import run_experiment_1
 from examples.experiment_2 import run_experiment_2
 
 @click.group()
-def cli():
-    pass
+@click.option('--config', default="config/mockpt.json", help="Path to config file")
+@click.pass_context
+def cli(ctx, config):
+    ctx.ensure_object(dict)
+    ctx.obj["CONFIG"] = config
 
 @cli.command()
-@click.option('--config', default="config/mockPT.json", help="Path to config file")
-def experiment_1(config):
-    run_experiment_1(config)
+@click.pass_context
+def experiment_1(ctx):
+    run_experiment_1(ctx.obj["CONFIG"])
 
 @cli.command()
-@click.option('--config', default="config/mockPT.json", help="Path to config file")
-def experiment_2(config):
-    run_experiment_2(config)
+@click.pass_context
+def experiment_2(ctx):
+    run_experiment_2(ctx.obj["CONFIG"])
 
 if __name__ == "__main__":
-    cli()
+    cli(obj={})
