@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import MagicMock, patch, mock_open
+from unittest.mock import MagicMock, patch
 import struct
 import sys
 import pytest
@@ -101,7 +101,7 @@ class TestPublishUnit(unittest.TestCase):
         mock_load_config.return_value = {
             "MQTT": {
                 "ClientID": "test-client",
-                "host": "localhost",
+                "host": "mqtt.eclipseprojects.io",
                 "port": 1883,
                 "userId": "",
                 "password": "",

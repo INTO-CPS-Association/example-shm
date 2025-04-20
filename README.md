@@ -37,20 +37,4 @@ pytest -m integration  # run integration tests
 pytest                 # run all the tests
 ```
 
-## Use
-To run the examples with the default config
-```bash
-python .\src\examples\example.py experiment-1
-python .\src\examples\example.py experiment-2
-```
-
-To run the examples with specified config
-```bash
-python .\src\examples\example.py --config .path_to\config.json experiment-1
-```
-Example
-```bash
-python .\src\examples\example.py --config .\config\mockpt.json experiment-1
-```
-
 Please see [examples](src/examples/README.md) for typical usage of the package.

@@ -89,7 +89,8 @@ def test_aligner_continuous_block_required(mqtt_setup):
     for key in [0, 32, 96, 128, 160, 192, 224]:
         publish_samples(client, topics[2], np.arange(32), start_key=key)
 
-    time.sleep(1.5)  # Let messages arrive
+    data_collection_time: float = float(os.environ.get("ALIGNER_DATA_COLLECTION_TIME", 50))
+    time.sleep(data_collection_time)  # Let messages arrive
 
     aligned, _ = aligner.extract(128)  # Should use keys 96, 128, 160, 192 (128 samples)
 

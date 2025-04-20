@@ -1,6 +1,6 @@
 {
     "MQTT": {
-        "host": "localhost",
+        "host": "mqtt.eclipseprojects.io",
         "port": 1883,
         "userId": "",
         "password": "",
