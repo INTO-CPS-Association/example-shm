@@ -13,7 +13,7 @@ ACCELERATION_SENSOR_2 = (2.0, 0.0, 0.0)  # Expected x = 2.0
 #------------Constants used in publish_samples test--------------------
 FAKE_SENSOR_READING = (2.0, 0.0, 0.0)
 FAKE_OFFSET = 1.0
-EXPECTED_COLLECTED_SAMPLES = [1.0, 1.0, 1.0] 
+EXPECTED_COLLECTED_SAMPLES = [1.0, 1.0, 1.0]
 
 SAMPLE_BATCH = [0.1, 0.2, 0.3]
 SAMPLE_COUNTER = 42

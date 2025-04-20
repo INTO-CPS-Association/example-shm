@@ -1,14 +1,10 @@
+# pylint: disable=import-error
 import sys
 from unittest.mock import MagicMock, patch, mock_open
 import unittest
 import json
 import os
 import pytest
-
-#  Mock hardware modules
-sys.modules["board"] = MagicMock()
-sys.modules["busio"] = MagicMock()
-sys.modules["adafruit_adxl37x"] = MagicMock()
 
 from unit.mock_pt_test.constants import (
     FAKE_START_TIME,
@@ -21,8 +17,13 @@ from mock_pt.find_offset import (
   calibrate_sensor,
   calibrate_on_channel,
   save_offset_config,
-  load_config  
+  load_config
 )
+
+#  Mock hardware modules
+sys.modules["board"] = MagicMock()
+sys.modules["busio"] = MagicMock()
+sys.modules["adafruit_adxl37x"] = MagicMock()
 
 pytestmark = pytest.mark.unit
 

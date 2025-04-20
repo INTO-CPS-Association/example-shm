@@ -1,17 +1,10 @@
-import unittest
-from unittest.mock import MagicMock, patch
+# pylint: disable=import-error
+from io import StringIO
 import struct
 import sys
+import unittest
+from unittest.mock import MagicMock, patch
 import pytest
-from io import StringIO
-
-# Mock hardware before imports
-sys.modules["board"] = MagicMock()
-sys.modules["busio"] = MagicMock()
-sys.modules["adafruit_adxl37x"] = MagicMock()
-
-from mock_pt.publish_samples import collect_samples, send_batch, Batch, load_offsets, main
-from mock_pt.constants import DEFAULT_OFFSET
 
 from unit.mock_pt_test.constants import (
     FAKE_SENSOR_READING,
@@ -20,6 +13,14 @@ from unit.mock_pt_test.constants import (
     SAMPLE_BATCH,
     SAMPLE_COUNTER,
 )
+
+from mock_pt.publish_samples import collect_samples, send_batch, Batch, load_offsets, main
+from mock_pt.constants import DEFAULT_OFFSET
+
+# Mock hardware before imports
+sys.modules["board"] = MagicMock()
+sys.modules["busio"] = MagicMock()
+sys.modules["adafruit_adxl37x"] = MagicMock()
 
 pytestmark = pytest.mark.unit
 
@@ -96,7 +97,8 @@ class TestPublishUnit(unittest.TestCase):
     @patch("mock_pt.publish_samples.load_config")
     @patch("mock_pt.publish_samples.adafruit_adxl37x.ADXL375")
     @patch("mock_pt.publish_samples.time.sleep", return_value=None)
-    def test_main_executes_sensor_loop_once(self, mock_sleep, mock_adxl, mock_load_config, mock_send_batch):
+    def test_main_executes_sensor_loop_once(self, mock_sleep, mock_adxl,
+                                            mock_load_config, mock_send_batch):
         # Provide correct config structure
         mock_load_config.return_value = {
             "MQTT": {
@@ -114,7 +116,8 @@ class TestPublishUnit(unittest.TestCase):
         mock_sensor.acceleration = (1.0, 0.0, 0.0)
         mock_adxl.return_value = mock_sensor
 
-        with patch("builtins.open", new_callable=unittest.mock.mock_open, read_data='{"SensorOffsets": {"Sensor1": 0.0, "Sensor2": 0.0}}'):
+        with patch("builtins.open", new_callable=unittest.mock.mock_open,
+                   read_data='{"SensorOffsets": {"Sensor1": 0.0, "Sensor2": 0.0}}'):
             main(config_path="config/test.json", run_once=True)
 
         self.assertEqual(mock_send_batch.call_count, 2)

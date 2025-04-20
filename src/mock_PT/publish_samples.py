@@ -10,7 +10,12 @@ import adafruit_adxl37x  # type: ignore
 from paho.mqtt.client import Client as MQTTClient
 
 from data.comm.mqtt import load_config, setup_mqtt_client
-from mock_pt.constants import SAMPLES_PER_MESSAGE, SENSOR_REFRESH_RATE, SENSOR_RANGE, DEFAULT_OFFSET 
+from mock_pt.constants import (
+    SAMPLES_PER_MESSAGE,
+    SENSOR_REFRESH_RATE,
+    SENSOR_RANGE,
+    DEFAULT_OFFSET,
+)
 
 
 @dataclass
