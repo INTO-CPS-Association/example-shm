@@ -1,3 +1,4 @@
+# pylint: disable=import-error
 import json
 import struct
 import time
@@ -5,10 +6,10 @@ from typing import Tuple, List
 from dataclasses import dataclass
 import board  # type: ignore
 import busio  # type: ignore
-import adafruit_adxl37x  # pylint: disable=E0401
+import adafruit_adxl37x  # type: ignore
 from paho.mqtt.client import Client as MQTTClient
 
-from data.sources.comm import load_config, setup_mqtt_client
+from data.comm.mqtt import load_config, setup_mqtt_client
 
 @dataclass
 class SensorTask:
@@ -81,9 +82,11 @@ def setup_sensor(i2c: busio.I2C) -> adafruit_adxl37x.ADXL375:
     return sensor
 
 
-def collect_samples(sensor: adafruit_adxl37x.ADXL375, offset: float, n: int = 32) -> List[float]:
+def collect_samples(sensor: adafruit_adxl37x.ADXL375, offset: float,
+                    n: int = 32) -> List[float]:
     """
-    Collects `n` x-axis acceleration samples from the given sensor, applying the offset to each.
+    Collects `n` x-axis acceleration samples from the given sensor,
+    applying the offset to each.
 
     Args:
         sensor: ADXL375 sensor instance.
@@ -104,7 +107,8 @@ def send_batch(mqttc: MQTTClient, batch: Batch) -> None:
     """
     Constructs and sends a binary message over MQTT with sensor data.
 
-    Each message contains a binary descriptor and payload of 32-bit floats (acceleration in m/s²).
+    Each message contains a binary descriptor and payload of 32-bit floats
+    (acceleration in m/s²).
     The descriptor includes:
     - descriptor_length (uint16)
     - metadata_version (uint16)
@@ -136,9 +140,11 @@ def send_batch(mqttc: MQTTClient, batch: Batch) -> None:
     print(f"Samples: {batch.samples}")
 
 
-def process_sensor(task: SensorTask, mqtt_client: MQTTClient, mqtt_topic_base: str) -> int:
+def process_sensor(task: SensorTask, mqtt_client: MQTTClient,
+                   mqtt_topic_base: str) -> int:
     """
-    Processes one cycle of data acquisition and publishing for a given sensor task.
+    Processes one cycle of data acquisition and publishing for
+    a given sensor task.
 
     This includes:
     - Enabling the sensor's multiplexer channel
@@ -160,9 +166,11 @@ def process_sensor(task: SensorTask, mqtt_client: MQTTClient, mqtt_topic_base: s
     return task.counter + task.batch_size
 
 
-def initialize_sensor(i2c: busio.I2C, channel: int, label: str) -> adafruit_adxl37x.ADXL375:
+def initialize_sensor(i2c: busio.I2C, channel: int,
+                      label: str) -> adafruit_adxl37x.ADXL375:
     """
-    Initializes and returns a configured sensor instance on the specified I2C multiplexer channel.
+    Initializes and returns a configured sensor instance on the specified
+    I2C multiplexer channel.
 
     Args:
         i2c (busio.I2C): The I2C bus.
@@ -177,8 +185,9 @@ def initialize_sensor(i2c: busio.I2C, channel: int, label: str) -> adafruit_adxl
     return setup_sensor(i2c)
 
 
-def main(config_path: str = "config/R-PI.json", offset_path: str = "config/offset.json"
-                                                        , run_once: bool = False) -> None:
+def main(config_path: str = "config/R-PI.json",
+         offset_path: str = "config/offset.json",
+         run_once: bool = False) -> None:
     config = load_config(config_path)
     mqtt_config = config["MQTT"]
     mqtt_client, _ = setup_mqtt_client(mqtt_config)
@@ -189,20 +198,26 @@ def main(config_path: str = "config/R-PI.json", offset_path: str = "config/offse
     offset1, offset2 = load_offsets(offset_path)
 
     i2c = busio.I2C(board.SCL, board.SDA)
-    sensors = {"Sensor1": initialize_sensor(i2c, 0, "Sensor1"), "Sensor2": initialize_sensor(i2c, 1, "Sensor2")}
+    sensors = {
+        "Sensor1": initialize_sensor(i2c, 0, "Sensor1"),
+        "Sensor2": initialize_sensor(i2c, 1, "Sensor2"),
+    }
     counters = {"Sensor1": 0, "Sensor2": 0}
     batch_size = 32
     mqtt_topic_base = "cpsens/DAQ_ID/MODULE_ID"
 
-
     while True:
-        task1 = SensorTask(i2c=i2c, channel=0, label="Sensor1", sensor=sensors["Sensor1"],
-                        offset=offset1, batch_size=batch_size, counter=counters["Sensor1"])
-        counters["Sensor1"] = process_sensor(task1, mqtt_client, mqtt_topic_base)
+        task1 = SensorTask(i2c=i2c, channel=0, label="Sensor1",
+                           sensor=sensors["Sensor1"], offset=offset1,
+                           batch_size=batch_size, counter=counters["Sensor1"])
+        counters["Sensor1"] = process_sensor(task1, mqtt_client,
+                                             mqtt_topic_base)
 
-        task2 = SensorTask(i2c=i2c, channel=1, label="Sensor2", sensor=sensors["Sensor2"],
-                        offset=offset2, batch_size=batch_size, counter=counters["Sensor2"] )
-        counters["Sensor2"] = process_sensor(task2, mqtt_client, mqtt_topic_base)
+        task2 = SensorTask(i2c=i2c, channel=1, label="Sensor2",
+                           sensor=sensors["Sensor2"], offset=offset2,
+                           batch_size=batch_size, counter=counters["Sensor2"])
+        counters["Sensor2"] = process_sensor(task2, mqtt_client,
+                                             mqtt_topic_base)
 
         if run_once:
             break

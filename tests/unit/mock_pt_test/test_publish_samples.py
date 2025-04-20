@@ -2,18 +2,25 @@ import unittest
 from unittest.mock import MagicMock, patch
 import struct
 import sys
-import pytest 
+import pytest
 
 # Mock hardware before imports
 sys.modules["board"] = MagicMock()
 sys.modules["busio"] = MagicMock()
 sys.modules["adafruit_adxl37x"] = MagicMock()
 
-from mock_PT.publish_samples import collect_samples, send_batch, Batch
-from unit.mockPT_test.constants import FAKE_SENSOR_READING, FAKE_OFFSET, EXPECTED_COLLECTED_SAMPLES, SAMPLE_BATCH, SAMPLE_COUNTER
+from mock_pt.publish_samples import collect_samples, send_batch, Batch
+from unit.mock_pt_test.constants import (
+    FAKE_SENSOR_READING,
+    FAKE_OFFSET,
+    EXPECTED_COLLECTED_SAMPLES,
+    SAMPLE_BATCH,
+    SAMPLE_COUNTER,
+)
+
+pytestmark = pytest.mark.unit
 
 
-pytestmark = pytest.mark.integration
 class TestPublishUnit(unittest.TestCase):
 
     def test_collect_samples_applies_offset(self):
@@ -24,7 +31,7 @@ class TestPublishUnit(unittest.TestCase):
         self.assertEqual(samples, EXPECTED_COLLECTED_SAMPLES)
 
 
-    @patch("mock_PT.publish_samples.MQTTClient.publish")
+    @patch("mock_pt.publish_samples.MQTTClient.publish")
     def test_send_batch_publishes_correct_payload(self, mock_publish):
         mock_client = MagicMock()
         batch = Batch("fake/topic", SAMPLE_BATCH, SAMPLE_COUNTER)

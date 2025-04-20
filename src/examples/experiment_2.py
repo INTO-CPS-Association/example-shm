@@ -1,6 +1,6 @@
 import time
 
-from data.sources.comm import setup_mqtt_client, load_config  # type: ignore
+from data.comm.mqtt import setup_mqtt_client, load_config  # type: ignore
 from data.accel.hbk.aligner import Aligner
 
 

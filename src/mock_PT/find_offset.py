@@ -1,11 +1,11 @@
 import time
 import json
 from typing import Any, Dict
-import busio
-import board
-import adafruit_adxl37x  # pylint: disable=E0401
+import busio  # pylint: disable=import-error
+import board  # pylint: disable=import-error
+import adafruit_adxl37x  # pylint: disable=import-error
 
-from data.sources.comm import load_config
+from data.comm.mqtt import load_config
 
 # Initialize I2C
 i2c: busio.I2C = busio.I2C(board.SCL, board.SDA)
@@ -15,7 +15,7 @@ def enable_multiplexer_channel(channel: int) -> None:
     Enables the specified channel on the I2C multiplexer (e.g., TCA9548A).
     
     Args:
-        channel (int): The channel index to enable (0–7).
+        channel (int): The channel index to enable (0-7).
     """
     multiplexer_address: int = 0x70
     i2c.writeto(multiplexer_address, bytes([1 << channel]))
@@ -34,10 +34,12 @@ def save_offset_config(path: str, config: Dict[str, Any]) -> None:
         json.dump(config, f, indent=4)
 
 
-def calibrate_sensor(sensor: Any, sensor_label: str, duration: int = 10) -> float:
+def calibrate_sensor(sensor: Any, sensor_label: str,
+                     duration: int = 10) -> float:
     """
-    Calibrates an ADXL375 sensor by collecting acceleration values from the x-axis
-    over a specified duration and computing the average as the offset.
+    Calibrates an ADXL375 sensor by collecting acceleration values from
+    the x-axis over a specified duration and computing the average
+    as the offset.
 
     Args:
         sensor (Any): An instance of the ADXL375 sensor.
@@ -47,7 +49,8 @@ def calibrate_sensor(sensor: Any, sensor_label: str, duration: int = 10) -> floa
     Returns:
         float: Calculated x-axis offset.
     """
-    print(f"Calibrating {sensor_label}: please hold the sensor flat for {duration} seconds...")
+    print(f"Calibrating {sensor_label}: please hold the sensor flat "
+          f"for {duration} seconds...")
     sensor.range = 2
     start_time: float = time.time()
     samples: list[float] = []
@@ -57,14 +60,17 @@ def calibrate_sensor(sensor: Any, sensor_label: str, duration: int = 10) -> floa
         samples.append(reading[0])  # x-axis
 
     avg_x: float = sum(samples) / len(samples)
-    print(f"Average acceleration for {sensor_label} (x-axis): {avg_x:.2f} m/s²")
+    print(f"Average acceleration for {sensor_label} (x-axis): "
+          f"{avg_x:.2f} m/s²")
     offset_x: float = avg_x
-    print(f"Calculated offset for {sensor_label} (x-axis): {offset_x:.2f}")
+    print(f"Calculated offset for {sensor_label} (x-axis): "
+          f"{offset_x:.2f} m/s²")
 
     return offset_x
 
 
-def calibrate_on_channel(channel: int, label: str, i2c_bus: busio.I2C, duration: int = 10) -> float:
+def calibrate_on_channel(channel: int, label: str, i2c_bus: busio.I2C,
+                         duration: int = 10) -> float:
     """
     Activates a multiplexer channel, initializes a sensor on that channel,
     and performs calibration.
@@ -87,7 +93,8 @@ def calibrate_on_channel(channel: int, label: str, i2c_bus: busio.I2C, duration:
 
 def main() -> None:
     """
-    Main routine for calibrating two ADXL375 sensors on different I2C multiplexer channels.
+    Main routine for calibrating two ADXL375 sensors on different
+    I2C multiplexer channels.
     Results are saved to a JSON config file.
     """
     print("Starting calibration for both sensors...")

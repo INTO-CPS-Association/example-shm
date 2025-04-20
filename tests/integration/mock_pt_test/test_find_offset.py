@@ -8,17 +8,24 @@ sys.modules["board"] = MagicMock()
 sys.modules["busio"] = MagicMock()
 sys.modules["adafruit_adxl37x"] = MagicMock()
 
-from mockPT_test.constants import FAKE_START_TIME, TIME_STEP, NUM_FAKE_TIME_CALLS, ACCELERATION_SENSOR_1, ACCELERATION_SENSOR_2
-from mock_PT.find_offset import main
+from integration.mock_pt_test.constants import (
+    FAKE_START_TIME,
+    TIME_STEP,
+    NUM_FAKE_TIME_CALLS,
+    ACCELERATION_SENSOR_1,
+    ACCELERATION_SENSOR_2,
+)
+from mock_pt.find_offset import main
 
 pytestmark = pytest.mark.integration
 
+
 class TestCalibrationIntegration(unittest.TestCase):
-    @patch("mock_PT.find_offset.save_offset_config")
-    @patch("mock_PT.find_offset.load_config")
-    @patch("mock_PT.find_offset.enable_multiplexer_channel")
-    @patch("mock_PT.find_offset.adafruit_adxl37x.ADXL375")
-    @patch("mock_PT.find_offset.time.sleep", return_value=None)
+    @patch("mock_pt.find_offset.save_offset_config")
+    @patch("mock_pt.find_offset.load_config")
+    @patch("mock_pt.find_offset.enable_multiplexer_channel")
+    @patch("mock_pt.find_offset.adafruit_adxl37x.ADXL375")
+    @patch("mock_pt.find_offset.time.sleep", return_value=None)
     def test_main_runs_without_hardware(
         self,
         mock_sleep,
@@ -37,7 +44,7 @@ class TestCalibrationIntegration(unittest.TestCase):
 
         mock_adxl_class.side_effect = [mock_sensor1, mock_sensor2]
 
-        with patch("mock_PT.find_offset.time.time") as mock_time:
+        with patch("mock_pt.find_offset.time.time") as mock_time:
             mock_time.side_effect = [FAKE_START_TIME + i * TIME_STEP for i in range(NUM_FAKE_TIME_CALLS)]
             main()
 

@@ -41,7 +41,7 @@ The system diagram illustrating the connections between components is,
 
 ## Install and Use
 
-The code in `src/mock_PT` directory can only be run on Raspberry Pi
+The code in `src/mock_pt` directory can only be run on Raspberry Pi
 having the pysical setup described above.
 
 ```bash
