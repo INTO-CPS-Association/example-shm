@@ -1,5 +1,5 @@
 import sys
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, mock_open
 import unittest
 import json
 import os
@@ -20,7 +20,8 @@ from unit.mock_pt_test.constants import (
 from mock_pt.find_offset import (
   calibrate_sensor,
   calibrate_on_channel,
-  save_offset_config
+  save_offset_config,
+  load_config  
 )
 
 pytestmark = pytest.mark.unit
@@ -33,7 +34,6 @@ class TestCalibrationUnit(unittest.TestCase):
         mock_sensor = MagicMock()
         mock_sensor.acceleration = ACCELERATION_SENSOR_1
         mock_sensor.range = 2
-
         mock_time.side_effect = iter(FAKE_START_TIME +
                                      i * TIME_STEP for i in range(NUM_FAKE_TIME_CALLS))
         result = calibrate_sensor(mock_sensor, "TestSensor", duration=10)
@@ -46,7 +46,6 @@ class TestCalibrationUnit(unittest.TestCase):
         mock_sensor = MagicMock()
         mock_sensor.acceleration = ACCELERATION_SENSOR_2
         mock_adxl.return_value = mock_sensor
-
         with patch("mock_pt.find_offset.time.time") as mock_time:
             mock_time.side_effect = (
                 FAKE_START_TIME +
@@ -68,5 +67,39 @@ class TestCalibrationUnit(unittest.TestCase):
         os.remove(path)
 
 
+    @patch("mock_pt.find_offset.time.time")
+    def test_calibrate_sensor_zero_samples(self, mock_time):
+        mock_sensor = MagicMock()
+        mock_sensor.acceleration = ACCELERATION_SENSOR_1
+
+        # Simulate start and end times being the same
+        mock_time.side_effect = [1000, 1000]
+
+        with self.assertRaises(ZeroDivisionError):
+            calibrate_sensor(mock_sensor, "SensorZero", duration=0)
+
+
+    @patch("builtins.open", new_callable=mock_open, read_data='{"MQTT": {"host": "localhost"}}')
+    def test_load_config_success(self, mock_file):
+        result = load_config("dummy/path.json")
+        self.assertIn("MQTT", result)
+
+
+    @patch("builtins.open", side_effect=FileNotFoundError)
+    def test_load_config_file_not_found(self, mock_file):
+        with self.assertRaises(FileNotFoundError):
+            load_config("nonexistent.json")
+
+
+    @patch("builtins.open", new_callable=mock_open, read_data="not-json")
+    def test_load_config_json_error(self, mock_file):
+        with self.assertRaises(ValueError):
+            load_config("corrupted.json")
+
+
+    @patch("builtins.open", side_effect=Exception("weird crash"))
+    def test_load_config_unexpected_exception(self, mock_file):
+        with self.assertRaises(RuntimeError):
+            load_config("unknown.json")
 if __name__ == "__main__":
     unittest.main()

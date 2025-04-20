@@ -10,6 +10,8 @@ import adafruit_adxl37x  # type: ignore
 from paho.mqtt.client import Client as MQTTClient
 
 from data.comm.mqtt import load_config, setup_mqtt_client
+from mock_pt.constants import SAMPLES_PER_MESSAGE, SENSOR_REFRESH_RATE, SENSOR_RANGE, DEFAULT_OFFSET 
+
 
 @dataclass
 class SensorTask:
@@ -42,13 +44,13 @@ def load_offsets(path: str) -> Tuple[float, float]:
         with open(path, "r", encoding="utf-8") as f:
             offsetdata = json.load(f)
         offsets = offsetdata.get("SensorOffsets", {})
-        offset1 = offsets.get("Sensor1", 0.0)
-        offset2 = offsets.get("Sensor2", 0.0)
+        offset1 = offsets.get("Sensor1", DEFAULT_OFFSET)
+        offset2 = offsets.get("Sensor2", DEFAULT_OFFSET)
         print(f"Loaded offsets → Sensor1: {offset1}, Sensor2: {offset2}")
         return offset1, offset2
     except Exception as e:
         print(f"Failed to load offset config: {e}")
-        return 0.0, 0.0
+        return DEFAULT_OFFSET, DEFAULT_OFFSET
 
 
 def enable_multiplexer_channel(i2c: busio.I2C, channel: int) -> None:
@@ -76,14 +78,14 @@ def setup_sensor(i2c: busio.I2C) -> adafruit_adxl37x.ADXL375:
         Configured ADXL375 sensor instance.
     """
     sensor = adafruit_adxl37x.ADXL375(i2c)
-    sensor.data_rate = 15
-    sensor.range = 2
+    sensor.data_rate = SENSOR_REFRESH_RATE
+    sensor.range = SENSOR_RANGE
     time.sleep(0.1)
     return sensor
 
 
 def collect_samples(sensor: adafruit_adxl37x.ADXL375, offset: float,
-                    n: int = 32) -> List[float]:
+                    n: int = SAMPLES_PER_MESSAGE) -> List[float]:
     """
     Collects `n` x-axis acceleration samples from the given sensor,
     applying the offset to each.
@@ -91,7 +93,7 @@ def collect_samples(sensor: adafruit_adxl37x.ADXL375, offset: float,
     Args:
         sensor: ADXL375 sensor instance.
         offset: Offset to subtract from each raw reading.
-        n: Number of samples to collect (default 32).
+        n: Number of samples to collect (default 16).
 
     Returns:
         List of float values (corrected acceleration in m/s²).
@@ -203,19 +205,18 @@ def main(config_path: str = "config/R-PI.json",
         "Sensor2": initialize_sensor(i2c, 1, "Sensor2"),
     }
     counters = {"Sensor1": 0, "Sensor2": 0}
-    batch_size = 32
     mqtt_topic_base = "cpsens/DAQ_ID/MODULE_ID"
 
     while True:
         task1 = SensorTask(i2c=i2c, channel=0, label="Sensor1",
                            sensor=sensors["Sensor1"], offset=offset1,
-                           batch_size=batch_size, counter=counters["Sensor1"])
+                           batch_size=SAMPLES_PER_MESSAGE, counter=counters["Sensor1"])
         counters["Sensor1"] = process_sensor(task1, mqtt_client,
                                              mqtt_topic_base)
 
         task2 = SensorTask(i2c=i2c, channel=1, label="Sensor2",
                            sensor=sensors["Sensor2"], offset=offset2,
-                           batch_size=batch_size, counter=counters["Sensor2"])
+                           batch_size=SAMPLES_PER_MESSAGE, counter=counters["Sensor2"])
         counters["Sensor2"] = process_sensor(task2, mqtt_client,
                                              mqtt_topic_base)
 

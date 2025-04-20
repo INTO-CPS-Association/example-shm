@@ -6,7 +6,7 @@ import board  # pylint: disable=import-error
 import adafruit_adxl37x  # pylint: disable=import-error
 
 from data.comm.mqtt import load_config
-
+from mock_pt.constants import CALIBRATION_TIME, SENSOR_RANGE, DEFAULT_OFFSET
 # Initialize I2C
 i2c: busio.I2C = busio.I2C(board.SCL, board.SDA)
 
@@ -35,7 +35,7 @@ def save_offset_config(path: str, config: Dict[str, Any]) -> None:
 
 
 def calibrate_sensor(sensor: Any, sensor_label: str,
-                     duration: int = 10) -> float:
+                     duration: int = CALIBRATION_TIME) -> float:
     """
     Calibrates an ADXL375 sensor by collecting acceleration values from
     the x-axis over a specified duration and computing the average
@@ -51,7 +51,7 @@ def calibrate_sensor(sensor: Any, sensor_label: str,
     """
     print(f"Calibrating {sensor_label}: please hold the sensor flat "
           f"for {duration} seconds...")
-    sensor.range = 2
+    sensor.range = SENSOR_RANGE
     start_time: float = time.time()
     samples: list[float] = []
 
@@ -103,10 +103,10 @@ def main() -> None:
         config = load_config(config_path)
     except FileNotFoundError:
         print("Offset config not found — creating new one.")
-        config = {"SensorOffsets": {"Sensor1": 0, "Sensor2": 0}}
+        config = {"SensorOffsets": {"Sensor1": DEFAULT_OFFSET, "Sensor2": DEFAULT_OFFSET}}
 
     if "SensorOffsets" not in config:
-        config["SensorOffsets"] = {"Sensor1": 0, "Sensor2": 0}
+        config["SensorOffsets"] = {"Sensor1": DEFAULT_OFFSET, "Sensor2": DEFAULT_OFFSET}
 
     offset1: float = calibrate_on_channel(0, "Sensor1", i2c)
     offset2: float = calibrate_on_channel(1, "Sensor2", i2c)
