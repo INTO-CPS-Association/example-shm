@@ -1,11 +1,11 @@
 {
     "MQTT": {
-        "host": "test.mosquitto.org",
+        "host": "mqtt.eclipseprojects.io",
         "port": 1883,
         "userId": "",
         "password": "",
-        "ClientID": "test_client_id",
+        "ClientID": "tessss.3m23.2_23_te_33",
         "QoS": 1,
-        "TopicsToSubscribe": ["cpsens/DAQ_ID/MODULE_ID/Sensor1/acc/raw/data"]
+        "TopicsToSubscribe": ["cpsens/DAQ_ID/MODULE_ID/Sensor1/acc/raw/data","cpsens/DAQ_ID/MODULE_ID/Sensor2/acc/raw/data"]
     }
 }

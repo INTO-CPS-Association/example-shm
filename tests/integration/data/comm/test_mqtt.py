@@ -4,9 +4,8 @@ import json
 import pytest
 from unittest.mock import MagicMock
 
-
-from data.sources import mqtt
-from data.sources.mqtt import (
+from data.comm import mqtt
+from data.comm.mqtt import (
     create_on_connect_callback,
     create_on_subscribe_callback,
     create_on_message_callback,
@@ -14,6 +13,8 @@ from data.sources.mqtt import (
     setup_mqtt_client,
     load_config
 )
+
+
 def test_load_config_success(tmp_path):
     config_data = {"key": "value"}
     config_file = tmp_path / "config.json"
@@ -141,4 +142,3 @@ def test_setup_mqtt_client():
     assert client.on_subscribe is not None
     assert client.on_message is not None
     assert client.on_publish is not None
-
