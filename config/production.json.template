@@ -10,9 +10,16 @@
             "cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/1/acc/raw/data",
             "cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/1/acc/raw/metadata",  
             "cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/2/acc/raw/data",
-            "cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/2/acc/raw/metadata",
-            "cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/3/acc/raw/data",
-            "cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/3/acc/raw/metadata"
         ]
+    },
+
+    "sysID": {
+      "host": "",
+      "port": 1883,
+      "userId": "",
+      "password": "",
+      "ClientID": "sub.232.sds.213s",
+      "QoS": 1,
+      "TopicsToSubscribe": ["cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/1_2/oma_results"]
     }
 }
