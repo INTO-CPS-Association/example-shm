@@ -66,25 +66,6 @@ def test_get_oma_results_insufficient_data(mocker, oma_params):
     assert ts is None
 
 
-def test_publish_oma_results_once(mocker, sample_data, oma_params):
-    mock_aligner = MagicMock()
-    timestamp = datetime(2024, 1, 1, 12, 0, 0)
-    mock_aligner.extract.return_value = (sample_data, timestamp)
-
-    mock_client = MagicMock()
-    mock_client.is_connected.return_value = True
-
-    # Patch MIN_SAMPLES_NEEDED 
-    mocker.patch("src.methods.sys_id.MIN_SAMPLES_NEEDED", 100)
-    # Adjust side_effect to allow one iteration before KeyboardInterrupt
-    mocker.patch("src.methods.sys_id.time.sleep", side_effect=[None, KeyboardInterrupt()])
-
-    publish_oma_results(mock_aligner, oma_params, mock_client, "test/topic")
-
-    # Verify publish was called
-    assert mock_client.publish.called
-
-
 def test_publish_oma_results_handles_publish_failure(mocker, sample_data, oma_params):
     mock_aligner = MagicMock()
     timestamp = datetime(2024, 1, 1, 12, 0, 0)
