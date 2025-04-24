@@ -1,4 +1,4 @@
-MAX_MAP_SIZE = 52200  # The maximum number of samples saved in FIFO
+MAX_MAP_SIZE = 350100  # The maximum number of samples saved in FIFO
 
 TIMEOUT = 2  # Max wait time until enough samples are collected for the test_Accelerometer
 

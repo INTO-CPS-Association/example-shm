@@ -14,7 +14,7 @@ from methods.sys_id import (
 
 @pytest.fixture
 def sample_data():
-    data = np.random.randn(3, 600)  # 500 time steps, 3 sensors
+    data = np.random.randn(3, 600)
     return data
 
 
@@ -50,7 +50,6 @@ def test_get_oma_results_success(mocker, sample_data, oma_params):
     mock_aligner = MagicMock()
     timestamp = datetime.now()
     mock_aligner.extract.return_value = (sample_data, timestamp)
-
     result, ts = get_oma_results(mock_aligner, oma_params)
     assert result is not None
     assert ts == timestamp
@@ -60,7 +59,6 @@ def test_get_oma_results_success(mocker, sample_data, oma_params):
 def test_get_oma_results_insufficient_data(mocker, oma_params):
     mock_aligner = MagicMock()
     mock_aligner.extract.return_value = (np.empty((0, 3)), datetime.now())
-
     result, ts = get_oma_results(mock_aligner, oma_params)
     assert result is None
     assert ts is None
@@ -70,7 +68,6 @@ def test_publish_oma_results_handles_publish_failure(mocker, sample_data, oma_pa
     mock_aligner = MagicMock()
     timestamp = datetime(2024, 1, 1, 12, 0, 0)
     mock_aligner.extract.return_value = (sample_data, timestamp)
-
     mock_client = MagicMock()
     mock_client.is_connected.return_value = True
     mock_client.publish.side_effect = Exception("Simulated failure")

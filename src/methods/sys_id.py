@@ -11,10 +11,11 @@ from data.comm.mqtt import setup_mqtt_client
 from data.accel.hbk.aligner import Aligner
 
 from methods.pyoma.ssiWrapper import SSIcov
-from methods.constants import WAIT_METADATA, DEFAULT_FS, MIN_SAMPLES_NEEDED
+from methods.constants import WAIT_METADATA, DEFAULT_FS, MIN_SAMPLES_NEEDED, MODEL_ORDER, BLOCK_SHIFT
 
 
 FS = DEFAULT_FS
+
 
 def sysid(data, params):
     """
@@ -149,35 +150,45 @@ def setup_client(mqtt_config: Dict[str, Any]) -> MQTTClient:
     return data_client
 
 
-def get_oma_results(aligner: Aligner,
-                    params: Dict[str, Any]) -> Optional[Tuple[Dict[str, Any], datetime]]:
+def get_oma_results(minutes: int, aligner: Aligner) -> Optional[Tuple[Dict[str, Any], datetime]]:
     """
     Extracts aligned sensor data and runs system identification (sysID).
 
     Args:
+        minuttes: How many minutes of data to pass to sysid.
         aligner: An initialized Aligner object.
-        params: Dictionary with keys 'Fs', 'block_shift', and 'model_order'.
+        params:  'block_shift', and 'model_order'.
 
     Returns:
         A tuple (OMA_output, timestamp) if successful, or None if data is not ready.
     """
-    data, timestamp = aligner.extract(MIN_SAMPLES_NEEDED)
+
+    oma_params = {
+        "Fs": FS,
+        "block_shift": BLOCK_SHIFT, 
+        "model_order": MODEL_ORDER  
+    }
+
+
+    number_of_samples = int(minutes *60 * FS)
+    data, timestamp = aligner.extract(number_of_samples)
 
     if data.shape[0] == 0:
-        print("Not enough aligned data yet.")
+        print("Not enough aligned data yet.",data.shape[1])
         return None, None
-    if data.shape[1] < MIN_SAMPLES_NEEDED:
-        print(f"Not enough samples to run sysID ({data.shape[1]} < {MIN_SAMPLES_NEEDED})")
+    if data.shape[1] < number_of_samples:
+        print(f"Not enough samples to run sysID ({data.shape[1]} < {number_of_samples})",data.shape[1])
         return None, None
     try:
-        oma_output = sysid(data, params)
+        
+        oma_output = sysid(data, oma_params)
         return oma_output, timestamp
     except Exception as e:
         print(f"sysID failed: {e}")
         return None, None
 
 
-def publish_oma_results(aligner: Aligner, params: Dict[str, Any],
+def publish_oma_results(minutes: int,aligner: Aligner,
                         publish_client: MQTTClient, publish_topic: str) -> None:
     """
     Continuously runs system identification on incoming aligned data and publishes results.
@@ -191,7 +202,7 @@ def publish_oma_results(aligner: Aligner, params: Dict[str, Any],
     try:
         while True:
             time.sleep(0.5)
-            result = get_oma_results(aligner, params)
+            result = get_oma_results(minutes, aligner)
             if result and result[0] is not None:
                 oma_output, timestamp = result
                 # Build payload
