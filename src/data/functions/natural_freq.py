@@ -1,10 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List, Dict
 
 
-def plot_natural_frquencies(
+def plot_natural_frequencies(
     Fn_poles: np.ndarray,
     freqlim: Optional[Tuple[float, float]] = None,
     fig_ax: Optional[Tuple] = None

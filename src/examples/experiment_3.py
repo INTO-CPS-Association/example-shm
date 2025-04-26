@@ -1,16 +1,13 @@
 from methods import sys_id as sysID
 from data.comm.mqtt import load_config
 from data.accel.hbk.aligner import Aligner
-from data.functions.natural_freq import plot_natural_frquencies
+from data.functions.natural_freq import plot_natural_frequencies
 
 
 def run_experiment_3_plot(config_path):
-    number_of_minutes = 2
+    number_of_minutes = 5
     config = load_config(config_path)
     mqtt_config = config["MQTT"]
-
-    # Extracting the Sampling frequency from metadata (topix_index 1 is assumed to be metadata)
-    fs = sysID.extract_fs_from_metadata(mqtt_config)
 
     # Setting up the client
     data_client = sysID.setup_client(mqtt_config)
@@ -25,17 +22,13 @@ def run_experiment_3_plot(config_path):
         aligner_time = None
         while aligner_time is None:
             results, aligner_time = sysID.get_oma_results(number_of_minutes, aligner)
-        fig_ax = plot_natural_frquencies(results['Fn_poles'],  fig_ax)
-
+        fig_ax = plot_natural_frequencies(results['Fn_poles'],  fig_ax)
 
 
 def run_experiment_3_print(config_path):
     number_of_minutes = 2
     config = load_config(config_path)
     mqtt_config = config["MQTT"]
-
-    # Extracting the Sampling frequency from metadata (topix_index 1 is assumed to be metadata)
-    fs = sysID.extract_fs_from_metadata(mqtt_config)
 
     # Setting up the client
     data_client = sysID.setup_client(mqtt_config)
@@ -59,9 +52,6 @@ def run_experiment_3_publish(config_path):
     config = load_config(config_path)
     mqtt_config = config["MQTT"]
     publish_config = config["sysID"]
-
-    # Extracting the Sampling frequency from metadata (topix_index 1 is assumed to be metadata)
-    fs = sysID.extract_fs_from_metadata(mqtt_config)
 
     # Setting up the client for getting accelerometer data
     data_client = sysID.setup_client(mqtt_config)

@@ -11,7 +11,7 @@ from data.comm.mqtt import setup_mqtt_client
 from data.accel.hbk.aligner import Aligner
 
 from methods.pyoma.ssiWrapper import SSIcov
-from methods.constants import WAIT_METADATA, DEFAULT_FS, MIN_SAMPLES_NEEDED, MODEL_ORDER, BLOCK_SHIFT
+from methods.constants import WAIT_METADATA, DEFAULT_FS, MODEL_ORDER, BLOCK_SHIFT
 
 
 FS = DEFAULT_FS
@@ -144,6 +144,7 @@ def setup_client(mqtt_config: Dict[str, Any]) -> MQTTClient:
     Returns:
         A connected and loop-started MQTTClient instance.
     """
+    extract_fs_from_metadata(mqtt_config)
     data_client, _ = setup_mqtt_client(mqtt_config, topic_index=0)
     data_client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     data_client.loop_start()
@@ -174,13 +175,13 @@ def get_oma_results(minutes: int, aligner: Aligner) -> Optional[Tuple[Dict[str, 
     data, timestamp = aligner.extract(number_of_samples)
 
     if data.shape[0] == 0:
-        print("Not enough aligned data yet.",data.shape[1])
+        print("Not enough aligned data yet.",data.shape[0])
         return None, None
     if data.shape[1] < number_of_samples:
-        print(f"Not enough samples to run sysID ({data.shape[1]} < {number_of_samples})",data.shape[1])
+        print(f"Not enough samples to run sysID ({data.shape[1]} < {number_of_samples})",
+              data.shape[1])
         return None, None
     try:
-        
         oma_output = sysid(data, oma_params)
         return oma_output, timestamp
     except Exception as e:
