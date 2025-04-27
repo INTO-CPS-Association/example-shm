@@ -3,7 +3,7 @@ import click
 from examples.experiment_1 import run_experiment_1
 from examples.experiment_2 import run_experiment_2
 from examples.experiment_3 import run_experiment_3_plot, run_experiment_3_publish, run_experiment_3_print
-from examples.experiment_4 import run_experiment_4
+""" from examples.experiment_4 import run_experiment_4 """
 
 
 
@@ -40,11 +40,11 @@ def experiment_3_plot(ctx):
 def experiment_3_print(ctx):
     run_experiment_3_print(ctx.obj["CONFIG"])    
 
-@cli.command()
+""" @cli.command()
 @click.pass_context
 def experiment_4(ctx):
     run_experiment_4(ctx.obj["CONFIG"])
-
+ """
 
 if __name__ == "__main__":
     cli(obj={})
