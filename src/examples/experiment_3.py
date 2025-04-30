@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import sys
 from methods import sys_id as sysID
 from data.comm.mqtt import load_config
 from data.accel.hbk.aligner import Aligner
@@ -25,10 +26,11 @@ def run_experiment_3_plot(config_path):
     data_client.disconnect()
     fig_ax = plot_natural_frequencies(results['Fn_poles'],  fig_ax)
     plt.show(block=True)
+    sys.stdout.flush()
 
 
 def run_experiment_3_print(config_path):
-    number_of_minutes = 0.5
+    number_of_minutes = 0.05
     config = load_config(config_path)
     mqtt_config = config["MQTT"]
 
@@ -43,6 +45,9 @@ def run_experiment_3_print(config_path):
     aligner_time = None
     while aligner_time is None:
         results, aligner_time = sysID.get_oma_results(number_of_minutes, aligner)
+    data_client.disconnect()
+    sys.stdout.flush()
+
     print(f"\n System Frequencies \n {results['Fn_poles']}")
     print(f"\n Cov \n{results['Fn_poles_cov']}")
     print(f"\n damping_ratios  \n{results['Xi_poles']}")
@@ -50,7 +55,7 @@ def run_experiment_3_print(config_path):
 
 
 def run_experiment_3_publish(config_path):
-    number_of_minutes = 2
+    number_of_minutes = 0.02
     config = load_config(config_path)
     mqtt_config = config["MQTT"]
     publish_config = config["sysID"]
@@ -59,7 +64,7 @@ def run_experiment_3_publish(config_path):
     data_client = sysID.setup_client(mqtt_config)
 
     # Setting up the aligner
-    data_topic_indexes = [0, 2]
+    data_topic_indexes = [3, 4]
     selected_topics = [mqtt_config["TopicsToSubscribe"][i] for i in data_topic_indexes]
     aligner = Aligner(data_client, topics=selected_topics)
 
@@ -68,4 +73,8 @@ def run_experiment_3_publish(config_path):
 
     sysID.publish_oma_results(number_of_minutes, aligner, publish_client
                             , publish_config["TopicsToSubscribe"][0])
+    
     print(f"Publishing to topic: {publish_config["TopicsToSubscribe"][0]}")
+    sys.stdout.flush()
+
+    

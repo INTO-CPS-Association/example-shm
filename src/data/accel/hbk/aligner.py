@@ -112,7 +112,7 @@ class Aligner(IAligner):
                 if samples_collected >= requested_samples:
                     break
                 for ch_idx, channel_data in enumerate(entries):
-                    if channel_data is not None:
+                    if channel_data is not None and i < len(channel_data):
                         aligned_data[ch_idx].append(channel_data[i])
                     else:
                         print(f"Missing data for channel index {ch_idx} skipping")

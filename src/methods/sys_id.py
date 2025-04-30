@@ -144,7 +144,8 @@ def setup_client(mqtt_config: Dict[str, Any]) -> MQTTClient:
     Returns:
         A connected and loop-started MQTTClient instance.
     """
-    extract_fs_from_metadata(mqtt_config)
+    if len(mqtt_config.get("topics", [])) > 1:
+        extract_fs_from_metadata(mqtt_config)
     data_client, _ = setup_mqtt_client(mqtt_config, topic_index=0)
     data_client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     data_client.loop_start()
