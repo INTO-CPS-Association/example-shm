@@ -4,18 +4,14 @@ from datetime import datetime
 from typing import Any, Dict, Optional, Tuple
 import numpy as np
 from paho.mqtt.client import Client as MQTTClient
-
 from pyoma2.setup.single import SingleSetup
-
 from data.comm.mqtt import setup_mqtt_client
 from data.accel.hbk.aligner import Aligner
-
 from methods.pyoma.ssiWrapper import SSIcov
 from methods.constants import WAIT_METADATA, DEFAULT_FS, MODEL_ORDER, BLOCK_SHIFT
 
 
 FS = DEFAULT_FS
-
 
 def sysid(data, params):
     """
@@ -98,7 +94,7 @@ def _on_metadata(client: MQTTClient, userdata: Dict[str, str], message) -> None:
         payload = json.loads(message.payload.decode("utf-8"))
         fs_candidate = payload["Analysis chain"][0]["Sampling"]
         if fs_candidate:
-            global FS
+            global FS  # pylint: disable=global-statement
             FS = fs_candidate
             print(f"Extracted Fs from metadata: {FS}")
             client.unsubscribe(userdata["metadata_topic"])
@@ -176,7 +172,7 @@ def get_oma_results(minutes: int, aligner: Aligner) -> Optional[Tuple[Dict[str, 
     data, timestamp = aligner.extract(number_of_samples)
 
     if data.shape[0] == 0:
-        print("Not enough aligned data yet.",data.shape[0])
+        #print("Not enough aligned data yet.",data.shape[0])
         return None, None
     if data.shape[1] < number_of_samples:
         print(f"Not enough samples to run sysID ({data.shape[1]} < {number_of_samples})",
@@ -226,7 +222,6 @@ def publish_oma_results(minutes: int,aligner: Aligner,
 
                 except Exception as e:
                     print(f"Failed to publish OMA result: {e}")
-            
     except KeyboardInterrupt:
         print("Shutting down gracefully")
         aligner.client.loop_stop()

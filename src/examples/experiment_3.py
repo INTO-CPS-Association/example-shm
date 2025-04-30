@@ -1,5 +1,5 @@
-import matplotlib.pyplot as plt
 import sys
+import matplotlib.pyplot as plt
 from methods import sys_id as sysID
 from data.comm.mqtt import load_config
 from data.accel.hbk.aligner import Aligner
@@ -38,7 +38,7 @@ def run_experiment_3_print(config_path):
     data_client = sysID.setup_client(mqtt_config)
 
     # Setting up the aligner
-    data_topic_indexes = [3, 4]
+    data_topic_indexes = [0, 2]
     selected_topics = [mqtt_config["TopicsToSubscribe"][i] for i in data_topic_indexes]
     aligner = Aligner(data_client, topics=selected_topics)
 
@@ -73,8 +73,5 @@ def run_experiment_3_publish(config_path):
 
     sysID.publish_oma_results(number_of_minutes, aligner, publish_client
                             , publish_config["TopicsToSubscribe"][0])
-    
     print(f"Publishing to topic: {publish_config["TopicsToSubscribe"][0]}")
     sys.stdout.flush()
-
-    

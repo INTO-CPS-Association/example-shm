@@ -1,11 +1,11 @@
+from typing import Optional, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
-from typing import Optional, Tuple, List, Dict
+from matplotlib import ticker
 
 
 def plot_natural_frequencies(
-    Fn_poles: np.ndarray,
+    fn_poles: np.ndarray,
     freqlim: Optional[Tuple[float, float]] = None,
     fig_ax: Optional[Tuple] = None
 ) -> Tuple:
@@ -27,13 +27,13 @@ def plot_natural_frequencies(
         fig, ax = fig_ax
         ax.clear()
 
-    num_orders, num_modes = Fn_poles.shape
+    num_orders, num_modes = fn_poles.shape
     freqs, orders = [], []
     for i in range(num_orders):
         for j in range(num_modes):
-            freq = Fn_poles[i, j]
+            freq = fn_poles[i, j]
             if not np.isnan(freq):
-                model_order = num_orders - i  
+                model_order = num_orders - i
                 if freqlim is None or (freqlim[0] <= freq <= freqlim[1]):
                     freqs.append(freq)
                     orders.append(model_order)

@@ -42,11 +42,21 @@ There are two examples.
 * **example_2** demonstrates the use of `Aligner` class to collect and
   align accelerometer measurements from multiple MQTT data streams.
 
+* **example_3** demonstrates the use of `sys_id` with 3 cases: 
+    1. run_experiment_3_plot: plots natural frequencies.
+    2. run_experiment_3_print: prints OMA results to console.
+    3. run_experiment_3_publish: publishes OMA results via MQTT to the config given under [sysid] config.
+
 To run the examples with the default config, use:
 
 ```bash
 python .\src\examples\example.py experiment-1
 python .\src\examples\example.py experiment-2
+python .\src\examples\example.py experiment-3-print
+python .\src\examples\example.py experiment-3-plot
+python .\src\examples\example.py experiment-3-publish
+
+
 ```
 
 To run the examples with specified config, use

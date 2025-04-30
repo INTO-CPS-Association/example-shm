@@ -131,7 +131,7 @@ class Aligner(IAligner):
     def extract(self, requested_samples: int) -> Tuple[np.ndarray, Optional[datetime]]:
         with self._lock:
             batch_size, key_groups = self.find_continuous_key_groups()
-            print("Keys", key_groups)
+            #print("Keys", key_groups)
 
             if batch_size is None or key_groups is None:
                 # No data or groups to align, returun empty
