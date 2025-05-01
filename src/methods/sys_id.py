@@ -171,12 +171,8 @@ def get_oma_results(minutes: int, aligner: Aligner) -> Optional[Tuple[Dict[str, 
     number_of_samples = int(minutes *60 * FS)
     data, timestamp = aligner.extract(number_of_samples)
 
-    if data.shape[0] == 0:
-        #print("Not enough aligned data yet.",data.shape[0])
-        return None, None
-    if data.shape[1] < number_of_samples:
-        print(f"Not enough samples to run sysID ({data.shape[1]} < {number_of_samples})",
-              data.shape[1])
+    if  data.size < number_of_samples:
+        #print("Not enough aligned data yet.")
         return None, None
     try:
         oma_output = sysid(data, oma_params)

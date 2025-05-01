@@ -1,5 +1,9 @@
+import pytest
 import numpy as np
-from methods.sys_id import sysid  
+from datetime import datetime
+from unittest.mock import MagicMock
+
+from methods import sys_id
 
 def test_sysid():
     # Define OMA parameters
@@ -13,7 +17,7 @@ def test_sysid():
     data = np.loadtxt('tests/integration/input_data/Acc_4DOF.txt').T
 
     # Perform system identification
-    sysid_output = sysid(data, oma_params)
+    sysid_output = sys_id.sysid(data, oma_params)
     
     # Extract results using dictionary keys
     frequencies = sysid_output['Fn_poles']
@@ -40,3 +44,63 @@ def test_sysid():
     assert np.allclose(cov_damping, stored_cov_damping, atol=tolerance, equal_nan=True), "Covariance damping ratios do not match!"
     assert np.allclose(mode_shapes, stored_mode_shapes, atol=tolerance, equal_nan=True), "Mode shapes do not match!"
     assert np.array_equal(poles_label, stored_poles_label), "Pole labels do not match!"
+
+
+def test_sysid_full_flow_success():
+    """
+    Simulates full OMA flow: aligned data → sysid → conversion to JSON-safe format.
+    """
+    # Simulate 600 samples, 3 channels (e.g., 1 min * 10 Hz)
+    data = np.random.randn(3, 600)
+
+    oma_params = {
+        "Fs": 10.0,
+        "block_shift": 5,
+        "model_order": 6
+    }
+
+    oma_result = sys_id.sysid(data, oma_params)
+
+    # Check output structure
+    assert isinstance(oma_result, dict)
+    for key in ["Fn_poles", "Xi_poles", "Phi_poles"]:
+        assert key in oma_result
+        assert isinstance(oma_result[key], list) or isinstance(oma_result[key], np.ndarray)
+
+    # Convert to JSON-safe structure
+    converted = sys_id.convert_numpy_to_list(oma_result)
+    assert isinstance(converted, dict)
+    assert isinstance(converted["Fn_poles"], list)
+
+
+def test_get_oma_results_integration(mocker):
+    mocker.patch("methods.sys_id.FS", 100)
+    mock_aligner = MagicMock()
+    
+    samples = 100 * 60 * 0.1  # 600 samples
+    mock_data = np.random.randn(int(samples), 3)
+    mock_timestamp = datetime.now()
+
+    mock_aligner.extract.return_value = (mock_data, mock_timestamp)
+
+    oma_output, timestamp = sys_id.get_oma_results(0.1, mock_aligner)
+
+    assert isinstance(oma_output, dict)
+    assert "Fn_poles" in oma_output
+    assert timestamp == mock_timestamp
+
+
+def test_sysid_raises_on_empty_data():
+    """
+    SSI should raise an error if data is empty (simulating a low-data scenario).
+    """
+    data = np.empty((0, 3))  # No samples
+
+    oma_params = {
+        "Fs": 10.0,
+        "block_shift": 5,
+        "model_order": 6
+    }
+
+    with pytest.raises(Exception):
+        sys_id.sysid(data, oma_params)
