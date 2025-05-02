@@ -74,16 +74,21 @@ def test_sysid_full_flow_success():
 
 
 def test_get_oma_results_integration(mocker):
-    mocker.patch("methods.sys_id.FS", 100)
+    from datetime import datetime
+    import numpy as np
+    from methods import sys_id
+
+    fs = 100  # sampling frequency
     mock_aligner = MagicMock()
-    
-    samples = 100 * 60 * 0.1  # 600 samples
-    mock_data = np.random.randn(int(samples), 3)
+
+    number_of_minutes = 0.1
+    samples = int(fs * 60 * number_of_minutes)  # 600 samples
+    mock_data = np.random.randn(samples, 3)
     mock_timestamp = datetime.now()
 
     mock_aligner.extract.return_value = (mock_data, mock_timestamp)
 
-    oma_output, timestamp = sys_id.get_oma_results(0.1, mock_aligner)
+    oma_output, timestamp = sys_id.get_oma_results(number_of_minutes, mock_aligner, fs)
 
     assert isinstance(oma_output, dict)
     assert "Fn_poles" in oma_output

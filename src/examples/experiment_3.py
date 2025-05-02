@@ -11,8 +11,8 @@ def run_experiment_3_plot(config_path):
     config = load_config(config_path)
     mqtt_config = config["MQTT"]
 
-    # Setting up the client
-    data_client = sysID.setup_client(mqtt_config)
+    # Setting up the client and extracting Fs
+    data_client, fs = sysID.setup_client(mqtt_config)
 
     # Setting up the aligner
     data_topic_indexes = [0, 2]
@@ -22,7 +22,7 @@ def run_experiment_3_plot(config_path):
     fig_ax = None
     aligner_time = None
     while aligner_time is None:
-        results, aligner_time = sysID.get_oma_results(number_of_minutes, aligner)
+        results, aligner_time = sysID.get_oma_results(number_of_minutes, aligner, fs)
     data_client.disconnect()
     fig_ax = plot_natural_frequencies(results['Fn_poles'], freqlim=(0, 75), fig_ax=fig_ax)
     plt.show(block=True)
@@ -34,8 +34,8 @@ def run_experiment_3_print(config_path):
     config = load_config(config_path)
     mqtt_config = config["MQTT"]
 
-    # Setting up the client
-    data_client = sysID.setup_client(mqtt_config)
+    # Setting up the client and extracting Fs
+    data_client, fs = sysID.setup_client(mqtt_config)
 
     # Setting up the aligner
     data_topic_indexes = [0, 2]
@@ -44,7 +44,7 @@ def run_experiment_3_print(config_path):
 
     aligner_time = None
     while aligner_time is None:
-        results, aligner_time = sysID.get_oma_results(number_of_minutes, aligner)
+        results, aligner_time = sysID.get_oma_results(number_of_minutes, aligner, fs)
     data_client.disconnect()
     sys.stdout.flush()
 
@@ -61,7 +61,7 @@ def run_experiment_3_publish(config_path):
     publish_config = config["sysID"]
 
     # Setting up the client for getting accelerometer data
-    data_client = sysID.setup_client(mqtt_config)
+    data_client, fs = sysID.setup_client(mqtt_config)
 
     # Setting up the aligner
     data_topic_indexes = [0, 2]
@@ -69,9 +69,15 @@ def run_experiment_3_publish(config_path):
     aligner = Aligner(data_client, topics=selected_topics)
 
     # Setting up the client for publishing OMA results
-    publish_client = sysID.setup_client(publish_config)
+    publish_client, _ = sysID.setup_client(publish_config)  # fs not needed here
 
-    sysID.publish_oma_results(number_of_minutes, aligner, publish_client
-                            , publish_config["TopicsToSubscribe"][0])
-    print(f"Publishing to topic: {publish_config["TopicsToSubscribe"][0]}")
+    sysID.publish_oma_results(
+        number_of_minutes,
+        aligner,
+        publish_client,
+        publish_config["TopicsToSubscribe"][0],
+        fs
+    )
+
+    print(f"Publishing to topic: {publish_config['TopicsToSubscribe'][0]}")
     sys.stdout.flush()

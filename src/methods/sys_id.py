@@ -9,10 +9,9 @@ from data.accel.metadata import extract_fs_from_metadata
 from data.comm.mqtt import setup_mqtt_client
 from data.accel.hbk.aligner import Aligner
 from methods.pyoma.ssiWrapper import SSIcov
-from methods.constants import DEFAULT_FS, MODEL_ORDER, BLOCK_SHIFT
+from methods.constants import MODEL_ORDER, BLOCK_SHIFT, DEFAULT_FS
 
 
-FS = DEFAULT_FS
 
 def sysid(data, params):
     """
@@ -59,26 +58,30 @@ def sysid(data, params):
     }
 
 
-def setup_client(mqtt_config: Dict[str, Any]) -> MQTTClient:
+def setup_client(mqtt_config: Dict[str, Any]) -> Tuple[MQTTClient, float]:
     """
     Sets up and starts the MQTT client for subscribing to sensor data.
+    Also extracts sampling frequency from metadata if available.
 
     Args:
         mqtt_config: Configuration dictionary for the MQTT client.
 
     Returns:
-        A connected and loop-started MQTTClient instance.
+        A tuple of the connected MQTTClient instance and the extracted sampling frequency.
     """
     if len(mqtt_config.get("topics", [])) > 1:
-        extract_fs_from_metadata(mqtt_config)
+        fs = extract_fs_from_metadata(mqtt_config)
+    else:
+        fs = DEFAULT_FS
+
     data_client, _ = setup_mqtt_client(mqtt_config, topic_index=0)
     data_client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     data_client.loop_start()
-    return data_client
+    return data_client, fs
 
 
 def get_oma_results(
-        sampling_period: int, aligner: Aligner
+        sampling_period: int, aligner: Aligner, fs: float
         ) -> Optional[Tuple[Dict[str, Any], datetime]]:
     """
     Extracts aligned sensor data and runs system identification (sysID).
@@ -86,25 +89,23 @@ def get_oma_results(
     Args:
         sampling_period: How many minutes of data to pass to sysid.
         aligner: An initialized Aligner object.
-        params:  'block_shift', and 'model_order'.
+        fs: Sampling frequency to use in the OMA algorithm.
 
     Returns:
         A tuple (OMA_output, timestamp) if successful, or None if data is not ready.
     """
-
     oma_params = {
-        "Fs": FS,
+        "Fs": fs,
         "block_shift": BLOCK_SHIFT, 
         "model_order": MODEL_ORDER  
     }
 
-
-    number_of_samples = int(sampling_period *60 * FS)
+    number_of_samples = int(sampling_period * 60 * fs)
     data, timestamp = aligner.extract(number_of_samples)
 
-    if  data.size < number_of_samples:
-        #print("Not enough aligned data yet.")
+    if data.size < number_of_samples:
         return None, None
+
     try:
         oma_output = sysid(data, oma_params)
         return oma_output, timestamp
@@ -114,22 +115,22 @@ def get_oma_results(
 
 
 def publish_oma_results(sampling_period: int, aligner: Aligner,
-                        publish_client: MQTTClient, publish_topic: str) -> None:
+                        publish_client: MQTTClient, publish_topic: str,
+                        fs: float) -> None:
     """
     Repeatedly tries to get aligned data and publish OMA results once.
-
-    Keeps looping until a successful OMA result is published.
 
     Args:
         sampling_period: Duration (in minutes) of data to extract.
         aligner: Aligner object that provides synchronized sensor data.
         publish_client: MQTT client used for publishing results.
         publish_topic: The MQTT topic to publish results to.
+        fs: Sampling frequency.
     """
     while True:
         try:
-            time.sleep(0.5) 
-            oma_output, timestamp = get_oma_results(sampling_period, aligner)
+            time.sleep(0.5)
+            oma_output, timestamp = get_oma_results(sampling_period, aligner, fs)
             print(f"OMA result: {oma_output}")
             print(f"Timestamp: {timestamp}")
 
@@ -147,7 +148,7 @@ def publish_oma_results(sampling_period: int, aligner: Aligner,
 
                     publish_client.publish(publish_topic, message, qos=1)
                     print(f"[{timestamp.isoformat()}] Published OMA result to {publish_topic}")
-                    break  # exit after first successful publish
+                    break
 
                 except Exception as e:
                     print(f"Failed to publish OMA result: {e}")
