@@ -148,12 +148,14 @@ def setup_client(mqtt_config: Dict[str, Any]) -> MQTTClient:
     return data_client
 
 
-def get_oma_results(minutes: int, aligner: Aligner) -> Optional[Tuple[Dict[str, Any], datetime]]:
+def get_oma_results(
+        sampling_period: int, aligner: Aligner
+        ) -> Optional[Tuple[Dict[str, Any], datetime]]:
     """
     Extracts aligned sensor data and runs system identification (sysID).
 
     Args:
-        minuttes: How many minutes of data to pass to sysid.
+        sampling_period: How many minutes of data to pass to sysid.
         aligner: An initialized Aligner object.
         params:  'block_shift', and 'model_order'.
 
@@ -168,7 +170,7 @@ def get_oma_results(minutes: int, aligner: Aligner) -> Optional[Tuple[Dict[str, 
     }
 
 
-    number_of_samples = int(minutes *60 * FS)
+    number_of_samples = int(sampling_period *60 * FS)
     data, timestamp = aligner.extract(number_of_samples)
 
     if  data.size < number_of_samples:
@@ -182,7 +184,7 @@ def get_oma_results(minutes: int, aligner: Aligner) -> Optional[Tuple[Dict[str, 
         return None, None
 
 
-def publish_oma_results(minutes: int,aligner: Aligner,
+def publish_oma_results(sampling_period: int, aligner: Aligner,
                         publish_client: MQTTClient, publish_topic: str) -> None:
     """
     Continuously runs system identification on incoming aligned data and publishes results.
@@ -196,7 +198,7 @@ def publish_oma_results(minutes: int,aligner: Aligner,
     try:
         while True:
             time.sleep(0.5)
-            result = get_oma_results(minutes, aligner)
+            result = get_oma_results(sampling_period, aligner)
             if result and result[0] is not None:
                 oma_output, timestamp = result
                 # Build payload

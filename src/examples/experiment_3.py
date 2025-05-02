@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from methods import sys_id as sysID
 from data.comm.mqtt import load_config
 from data.accel.hbk.aligner import Aligner
-from data.functions.natural_freq import plot_natural_frequencies
+from functions.natural_freq import plot_natural_frequencies
 
 
 def run_experiment_3_plot(config_path):
