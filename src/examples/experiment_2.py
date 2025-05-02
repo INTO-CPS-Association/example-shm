@@ -7,7 +7,7 @@ from data.accel.hbk.aligner import Aligner
 def run_experiment_2(config_path):
     config = load_config(config_path)
     mqtt_config = config["MQTT"]
-    topic_indexes = [0,1]
+    topic_indexes = [0,2]
 
     all_topics = mqtt_config["TopicsToSubscribe"]
     selected_topics = [all_topics[i] for i in topic_indexes]

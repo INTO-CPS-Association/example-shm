@@ -2,13 +2,14 @@ import time
 import json
 from datetime import datetime
 from typing import Any, Dict, Optional, Tuple
-import numpy as np
 from paho.mqtt.client import Client as MQTTClient
 from pyoma2.setup.single import SingleSetup
+from functions.util import convert_numpy_to_list
+from data.accel.metadata import extract_fs_from_metadata
 from data.comm.mqtt import setup_mqtt_client
 from data.accel.hbk.aligner import Aligner
 from methods.pyoma.ssiWrapper import SSIcov
-from methods.constants import WAIT_METADATA, DEFAULT_FS, MODEL_ORDER, BLOCK_SHIFT
+from methods.constants import DEFAULT_FS, MODEL_ORDER, BLOCK_SHIFT
 
 
 FS = DEFAULT_FS
@@ -56,78 +57,6 @@ def sysid(data, params):
         'Phi_poles': output['Phi_poles'],
         'Lab': output['Lab']
     }
-
-
-def convert_numpy_to_list(obj: Any) -> Any:
-    """
-    Recursively convert NumPy arrays and complex numbers to JSON-safe types.
-
-    Args:
-        obj: Any data type.
-
-    Returns:
-        A fully JSON-serializable version of the input.
-    """
-    if isinstance(obj, dict):
-        return {k: convert_numpy_to_list(v) for k, v in obj.items()}
-    if isinstance(obj, list):
-        return [convert_numpy_to_list(item) for item in obj]
-    if isinstance(obj, np.ndarray):
-        return convert_numpy_to_list(obj.tolist())
-    if isinstance(obj, complex):
-        return {"real": obj.real, "imag": obj.imag}
-    if isinstance(obj, (np.integer, np.floating)):
-        return obj.item()
-    return obj
-
-
-def _on_metadata(client: MQTTClient, userdata: Dict[str, str], message) -> None:
-    """
-    MQTT callback to extract sampling frequency from incoming metadata.
-
-    Args:
-        client: MQTT client instance.
-        userdata: Dictionary containing metadata topic.
-        message: Incoming MQTT message.
-    """
-    try:
-        payload = json.loads(message.payload.decode("utf-8"))
-        fs_candidate = payload["Analysis chain"][0]["Sampling"]
-        if fs_candidate:
-            global FS  # pylint: disable=global-statement
-            FS = fs_candidate
-            print(f"Extracted Fs from metadata: {FS}")
-            client.unsubscribe(userdata["metadata_topic"])
-    except Exception as e:
-        print(f"Failed to extract Fs: {e}")
-
-
-def extract_fs_from_metadata(mqtt_config: Dict[str, Any]) -> int:
-    """
-    Connects to MQTT broker and waits for metadata to extract sampling frequency.
-
-    Args:
-        mqtt_config: MQTT connection configuration.
-    """
-    metadata_topic = mqtt_config["TopicsToSubscribe"][1]
-    metadata_client, _ = setup_mqtt_client(mqtt_config, topic_index=1)
-    metadata_client.user_data_set({"metadata_topic": metadata_topic})
-    metadata_client.message_callback_add(metadata_topic, _on_metadata)
-
-    metadata_client.connect(mqtt_config["host"], mqtt_config["port"], 60)
-    metadata_client.subscribe(metadata_topic)
-    metadata_client.loop_start()
-
-    initial_fs = FS
-    start_time = time.time()
-    # Wait until the Metadata arrives
-    while FS == initial_fs and (time.time() - start_time) < WAIT_METADATA:
-        time.sleep(0.1)
-
-    metadata_client.loop_stop()
-    print(f"Sampling frequency FS = {FS}")
-
-    return FS
 
 
 def setup_client(mqtt_config: Dict[str, Any]) -> MQTTClient:
@@ -187,21 +116,24 @@ def get_oma_results(
 def publish_oma_results(sampling_period: int, aligner: Aligner,
                         publish_client: MQTTClient, publish_topic: str) -> None:
     """
-    Continuously runs system identification on incoming aligned data and publishes results.
+    Repeatedly tries to get aligned data and publish OMA results once.
+
+    Keeps looping until a successful OMA result is published.
 
     Args:
-        aligner: An initialized Aligner object for synchronized sensor data.
-        params: Dictionary containing SSI parameters.
+        sampling_period: Duration (in minutes) of data to extract.
+        aligner: Aligner object that provides synchronized sensor data.
         publish_client: MQTT client used for publishing results.
-        publish_topic: The MQTT topic where results will be published.
+        publish_topic: The MQTT topic to publish results to.
     """
-    try:
-        while True:
-            time.sleep(0.5)
-            result = get_oma_results(sampling_period, aligner)
-            if result and result[0] is not None:
-                oma_output, timestamp = result
-                # Build payload
+    while True:
+        try:
+            time.sleep(0.5) 
+            oma_output, timestamp = get_oma_results(sampling_period, aligner)
+            print(f"OMA result: {oma_output}")
+            print(f"Timestamp: {timestamp}")
+
+            if oma_output:
                 payload = {
                     "timestamp": timestamp.isoformat(),
                     "OMA_output": convert_numpy_to_list(oma_output)
@@ -209,19 +141,21 @@ def publish_oma_results(sampling_period: int, aligner: Aligner,
                 try:
                     message = json.dumps(payload)
 
-                    # Reconnect if needed
                     if not publish_client.is_connected():
                         print("Publisher disconnected. Reconnecting...")
                         publish_client.reconnect()
 
-                    # Publish
                     publish_client.publish(publish_topic, message, qos=1)
                     print(f"[{timestamp.isoformat()}] Published OMA result to {publish_topic}")
+                    break  # exit after first successful publish
 
                 except Exception as e:
                     print(f"Failed to publish OMA result: {e}")
-    except KeyboardInterrupt:
-        print("Shutting down gracefully")
-        aligner.client.loop_stop()
-        aligner.client.disconnect()
-        publish_client.disconnect()
+        except KeyboardInterrupt:
+            print("Shutting down gracefully")
+            aligner.client.loop_stop()
+            aligner.client.disconnect()
+            publish_client.disconnect()
+            break
+        except Exception as e:
+            print(f"Unexpected error: {e}")

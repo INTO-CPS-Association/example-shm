@@ -5,11 +5,8 @@ from datetime import datetime
 import json
 from methods.sys_id import (
     sysid,
-    convert_numpy_to_list,
     get_oma_results,
     publish_oma_results,
-    extract_fs_from_metadata,
-    _on_metadata,
     setup_client,
 )
 from paho.mqtt.client import Client as MQTTClient
@@ -41,22 +38,6 @@ def test_sysid_transposes_data_if_needed(oma_params):
     result = sysid(data, oma_params)
     assert isinstance(result, dict)
     assert "Fn_poles" in result
-
-
-def test_convert_numpy_to_list_handles_various_types():
-    input_data = {
-        "array": np.array([1, 2, 3]),
-        "complex": 1 + 2j,
-        "nested": [np.float64(1.5), {"x": np.array([[1, 2]])}],
-        "int": np.int64(42),
-        "float": np.float32(3.14)
-    }
-    output = convert_numpy_to_list(input_data)
-    assert output["array"] == [1, 2, 3]
-    assert "real" in output["complex"]
-    assert isinstance(output["nested"][0], float)
-    assert isinstance(output["int"], int)
-    assert isinstance(output["float"], float)
 
 
 def test_get_oma_results_success(mocker):
@@ -97,67 +78,66 @@ def test_get_oma_results_sysid_failure(mocker):
     assert ts is None
 
 
-def test_publish_oma_results_handles_publish_and_reconnect(mocker):
-    mocker.patch("methods.sys_id.get_oma_results", return_value=(
-        {"Fn_poles": [1, 2], "Fn_poles_cov": [], "Xi_poles": [],
-         "Xi_poles_cov": [], "Phi_poles": [], "Lab": []},
-        datetime(2025, 1, 1, 12, 0)
-    ))
-
-    mock_client = MagicMock()
-    mock_client.is_connected.return_value = False
-    mock_client.reconnect.return_value = None
-    mock_client.publish.return_value = None
-
-    mock_aligner = MagicMock()
-
-    mocker.patch("time.sleep", side_effect=[None, KeyboardInterrupt])
-
-    publish_oma_results(0.1, mock_aligner, mock_client, "test/topic")
-
-    mock_client.reconnect.assert_called_once()
-    mock_client.publish.assert_called_once()
-
-
-def test_extract_fs_from_metadata_reads_fs(mocker):
-    mock_mqtt = MagicMock(spec=MQTTClient)
-    mock_mqtt.loop_start.return_value = None
-    mock_mqtt.loop_stop.return_value = None
-    mock_mqtt.connect.return_value = None
-    mock_mqtt.subscribe.return_value = None
-
-    mocker.patch("methods.sys_id.setup_mqtt_client", return_value=(mock_mqtt, None))
-
-    # Simulate metadata message
-    payload = json.dumps({"Analysis chain": [{"Sampling": 200}]}).encode("utf-8")
-    message = MagicMock()
-    message.payload = payload
-
-    _on_metadata(mock_mqtt, {"metadata_topic": "meta"}, message)
-    assert isinstance(_on_metadata, object)  
-
-    config = {
-        "TopicsToSubscribe": ["sensor/topic", "meta"],
-        "host": "localhost",
-        "port": 1883
+def test_publish_oma_results_retries_and_publishes_once(mocker):
+    dummy_result = {
+        'Fn_poles': np.array([[3.2, 3.3], [3.4, 3.5]]),
+        'Fn_poles_cov': np.array([[0.1, 0.1], [0.1, 0.1]]),
+        'Xi_poles': np.array([[0.02, 0.03], [0.04, 0.05]]),
+        'Xi_poles_cov': np.array([[0.001, 0.001], [0.001, 0.001]]),
+        'Phi_poles': np.array([[1.0, 0.0], [0.0, 1.0]]),
+        'Lab': ['mode1', 'mode2']
     }
-    fs = extract_fs_from_metadata(config)
-    assert isinstance(fs, (int, float))
+    mocker.patch("methods.sys_id.time.sleep", return_value=None)
+
+    #First return (None, None), then return valid data
+    mocker.patch(
+        "methods.sys_id.get_oma_results",
+        side_effect=[
+            (None, None),  # simulate first try fails
+            (dummy_result, datetime(2024, 1, 1))  # second try succeeds
+        ]
+    )
+
+    # Patch convert_numpy_to_list
+    mocker.patch(
+        "methods.sys_id.convert_numpy_to_list",
+        return_value={k: v.tolist() if hasattr(v, "tolist") else v for k, v in dummy_result.items()}
+    )
+
+    mock_client = MagicMock(spec=MQTTClient)
+    mock_client.is_connected.return_value = True
+    aligner = MagicMock()
+    aligner.client = MagicMock()
+
+    # Run the function — it should retry once, then publish
+    publish_oma_results(0.1, aligner, mock_client, "test/topic")
+
+    # Assert that publish was called once
+    assert mock_client.publish.called, "Expected publish to be called"
+    assert mock_client.publish.call_count == 1
+    assert mock_client.publish.call_args[0][0] == "test/topic"
 
 
-def test_setup_client_invokes_metadata_logic(mocker):
-    mock_client = MagicMock()
-    mocker.patch("methods.sys_id.setup_mqtt_client", return_value=(mock_client, None))
-    mocker.patch("methods.sys_id.extract_fs_from_metadata", return_value=100)
-
-    config = {
-        "topics": ["data/topic", "meta/topic"],
-        "TopicsToSubscribe": ["data/topic", "meta/topic"],
+def test_setup_client_with_multiple_topics(mocker):
+    # Prepare mock MQTT config with multiple topics
+    mqtt_config = {
         "host": "localhost",
-        "port": 1883
+        "port": 1883,
+        "topics": ["topic1", "topic2"]
     }
 
-    client = setup_client(config)
-    assert isinstance(client, MagicMock)
-    client.connect.assert_called_once()
+    # Patch extract_fs_from_metadata
+    extract_mock = mocker.patch("methods.sys_id.extract_fs_from_metadata")
+
+    # Patch setup_mqtt_client to return a mock client
+    mock_mqtt_client = MagicMock()
+    mocker.patch("methods.sys_id.setup_mqtt_client", return_value=(mock_mqtt_client, None))
+
+    # Call the function
+    client = setup_client(mqtt_config)
+
+    # Assertions
+    extract_mock.assert_called_once_with(mqtt_config)
+    client.connect.assert_called_once_with("localhost", 1883, 60)
     client.loop_start.assert_called_once()
+    assert client == mock_mqtt_client

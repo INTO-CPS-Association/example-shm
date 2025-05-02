@@ -111,9 +111,13 @@ class Aligner(IAligner):
             for i in range(batch_size):
                 if samples_collected >= requested_samples:
                     break
+                # Iterate over each channel index and its corresponding data entries for the current key
                 for ch_idx, channel_data in enumerate(entries):
-                    if channel_data is not None and i < len(channel_data):
-                        aligned_data[ch_idx].append(channel_data[i])
+                    # Get the i-th sample from the channel, if it exists
+                    sample = channel_data[i] if channel_data and i < len(channel_data) else None
+                    # If a valid sample was retrieved, append it to the aligned data for that channel
+                    if sample is not None:
+                        aligned_data[ch_idx].append(sample)
                     else:
                         print(f"Missing data for channel index {ch_idx} skipping")
                 samples_collected += 1

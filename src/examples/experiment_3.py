@@ -24,13 +24,13 @@ def run_experiment_3_plot(config_path):
     while aligner_time is None:
         results, aligner_time = sysID.get_oma_results(number_of_minutes, aligner)
     data_client.disconnect()
-    fig_ax = plot_natural_frequencies(results['Fn_poles'],  fig_ax)
+    fig_ax = plot_natural_frequencies(results['Fn_poles'], freqlim=(0, 75), fig_ax=fig_ax)
     plt.show(block=True)
     sys.stdout.flush()
 
 
 def run_experiment_3_print(config_path):
-    number_of_minutes = 0.05
+    number_of_minutes = 0.2
     config = load_config(config_path)
     mqtt_config = config["MQTT"]
 
@@ -64,7 +64,7 @@ def run_experiment_3_publish(config_path):
     data_client = sysID.setup_client(mqtt_config)
 
     # Setting up the aligner
-    data_topic_indexes = [3, 4]
+    data_topic_indexes = [0, 2]
     selected_topics = [mqtt_config["TopicsToSubscribe"][i] for i in data_topic_indexes]
     aligner = Aligner(data_client, topics=selected_topics)
 
