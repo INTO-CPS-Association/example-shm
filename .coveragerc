@@ -6,6 +6,8 @@ omit =
     */__init__.py
     */src/data/accel/accelerometer.py
     */src/data/accel/aligner.py
+    */src/functions/natural_freq.py
+    */src/methods/pyoma/*
     */src/examples/*
 
 [report]

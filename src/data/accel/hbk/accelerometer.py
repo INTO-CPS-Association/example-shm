@@ -84,7 +84,7 @@ class Accelerometer(IAccelerometer):
                     if not oldest_deque:  # Remove the key/deque from the map if it's empty
                         del self.data_map[oldest_key]
                     total_samples = sum(len(dq) for dq in self.data_map.values())
-            print(f" Channel: {self.topic}  Key: {samples_from_daq_start}, Samples: {num_samples}")
+            #print(f" Channel: {self.topic}  Key: {samples_from_daq_start}, Samples: {num_samples}")
 
         except Exception as e:
             print(f"Error processing message: {e}")
