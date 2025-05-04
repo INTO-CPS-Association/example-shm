@@ -7,6 +7,11 @@ from examples.experiment_3 import (
     run_experiment_3_publish,
     run_experiment_3_print,
 )
+from examples.experiment_4 import (
+    run_experiment_4,
+    run_experiment_4_subscibe,
+)
+from examples.experiment_5 import run_experiment_5
 
 
 @click.group()
@@ -42,5 +47,21 @@ def experiment_3_plot(ctx):
 def experiment_3_print(ctx):
     run_experiment_3_print(ctx.obj["CONFIG"])
 
+
+@cli.command()
+@click.pass_context
+def experiment_4(ctx):
+    run_experiment_4(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def experiment_4_subscribe(ctx):
+    run_experiment_4_subscibe(ctx.obj["CONFIG"])
+
+
+@cli.command()
+@click.pass_context
+def experiment_5(ctx):
+    run_experiment_5(ctx.obj["CONFIG"])
 if __name__ == "__main__":
     cli(obj={})
