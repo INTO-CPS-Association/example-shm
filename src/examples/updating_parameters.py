@@ -1,11 +1,9 @@
 import time
-import matplotlib.pyplot as plt
-import numpy as np
-from methods import sys_id as sysID
 from data.comm.mqtt import load_config
 from data.accel.hbk.aligner import Aligner
+from methods import sys_id as sysID
 from methods import model_update_module as MT
-
+# pylint: disable=R0914, C0103
 
 def run_experiment_5(config_path):
     number_of_minutes = 5
@@ -53,6 +51,5 @@ def run_experiment_5(config_path):
         print("\nStiffness matrix K:\n", system_up["K"])
         print("\nDamping matrix C:\n", system_up["C"])
 
-        
     else:
         print("Model update failed.")

@@ -1,17 +1,17 @@
 # pylint: disable=E1120
 import click
-from examples.experiment_1 import run_experiment_1
-from examples.experiment_2 import run_experiment_2
-from examples.experiment_3 import (
+from examples.acceleration_readings import run_experiment_1
+from examples.aligning_readings import run_experiment_2
+from examples.run_pyoma import (
     run_experiment_3_plot,
     run_experiment_3_publish,
     run_experiment_3_print,
 )
-from examples.experiment_4 import (
+from examples.mode_tracking import (
     run_experiment_4,
     run_experiment_4_subscibe,
 )
-from examples.experiment_5 import run_experiment_5
+from examples.updating_parameters import run_experiment_5
 
 
 @click.group()

@@ -15,8 +15,8 @@ MSTAB_FACTOR = 0.4 # This is goning to be multiplied by the MODEL_ORDER to get t
 TMAC = 0.9
 
 # Constants for Model Update
-# 1st parameter is spring stiffness and 2nd is unbounded length 
-X0 = np.array([1e1, 10e-3]) 
+# 1st parameter is spring stiffness and 2nd is unbounded length
+X0 = np.array([1e1, 10e-3])
 
 # Create bounds using element-wise i.e. different parameters have different bounds
-BOUNDS = [(1e-2 * X0[0], 1e2 * X0[0]), (1e-2 * X0[1], 1e2 * X0[1])] 
+BOUNDS = [(1e-2 * X0[0], 1e2 * X0[0]), (1e-2 * X0[1], 1e2 * X0[1])]

@@ -1,18 +1,17 @@
 import json
-import typing
 import threading
 from typing import Any, List, Dict, Tuple, Optional
 import numpy as np
 import paho.mqtt.client as mqtt
 from scipy.optimize import minimize
 from scipy.linalg import eigh
-
 from methods.constants import MODEL_ORDER, MSTAB_FACTOR, TMAC
 from methods.packages.mode_track import mode_allingment
-from methods.packages.fun_cantilever_beam_new import eval_yafem_model
+from methods.packages.eval_yafem_model import eval_yafem_model
 from methods.packages import model_update
 from methods.constants import X0, BOUNDS
 from data.comm.mqtt import load_config, setup_mqtt_client
+# pylint: disable=C0103, W0603, E1121
 
 # Global threading event to wait for OMA data
 result_ready = threading.Event()
@@ -66,7 +65,9 @@ def run_mode_track(oma_output: Any) -> Tuple[List[Dict], np.ndarray, np.ndarray]
     Args:
         oma_output (Any): OMA output from subscription or elsewhere.
     Returns:
-        cleaned_values (List[Dict]), median_frequencies (np.ndarray), confidence_intervals (np.ndarray)
+        cleaned_values (List[Dict]), 
+        median_frequencies (np.ndarray), 
+        confidence_intervals (np.ndarray)
     """
     mstab = MODEL_ORDER * MSTAB_FACTOR
     cleaned_values = mode_allingment(oma_output, mstab, TMAC)
@@ -78,6 +79,7 @@ def run_mode_track(oma_output: Any) -> Tuple[List[Dict], np.ndarray, np.ndarray]
     return cleaned_values, median_frequencies, confidence_intervals
 
 
+# pylint: disable=R0914
 def run_model_update(cleaned_values: List[Dict]) -> Optional[Dict[str, Any]]:
     """
     Runs model updating based on cleaned OMA clusters.
@@ -97,6 +99,10 @@ def run_model_update(cleaned_values: List[Dict]) -> Optional[Dict[str, Any]]:
 
         pars_updated = {'k': X[0], 'Lab': X[1]}
         omegaMU, phi, PhiMU, myModel = eval_yafem_model(pars_updated)
+        print("\nomegaMU:",omegaMU)
+        print("\nphi:",phi)
+        print("\nPhiMU:",PhiMU)
+
         M = myModel.M.todense()
         K = myModel.K.todense()
 
@@ -133,7 +139,8 @@ def run_model_update(cleaned_values: List[Dict]) -> Optional[Dict[str, Any]]:
         return None
 
 
-def subscribe_and_get_cleaned_values(config_path: str, num_clusters: int = 2) -> Tuple[List[Dict], np.ndarray, np.ndarray]:
+def subscribe_and_get_cleaned_values(config_path: str,
+            num_clusters: int = 2) -> Tuple[List[Dict], np.ndarray, np.ndarray]:
     """
     Subscribes to MQTT broker, receives one OMA message, runs mode tracking, and returns results.
 
@@ -142,7 +149,9 @@ def subscribe_and_get_cleaned_values(config_path: str, num_clusters: int = 2) ->
         num_clusters (int): Number of clusters to keep after mode tracking.
 
     Returns:
-        cleaned_values (List[Dict]), median_frequencies (np.ndarray), confidence_intervals (np.ndarray)
+        cleaned_values (List[Dict]), 
+        median_frequencies (np.ndarray), 
+        confidence_intervals (np.ndarray)
     """
     global oma_output_global
     oma_output_global = None  # Reset in case old data is present

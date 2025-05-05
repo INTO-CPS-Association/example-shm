@@ -2,7 +2,7 @@
 import numpy as np
 import sys
 import os
-from methods.packages import fun_cantilever_beam_new as beam_new
+from methods.packages import eval_yafem_model as beam_new
 import json
 from methods.packages.mode_pairs import pair_calculate
 

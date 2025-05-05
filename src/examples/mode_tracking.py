@@ -1,14 +1,12 @@
-import sys
-import matplotlib.pyplot as plt
 import numpy as np
-from methods import sys_id as sysID
 from data.comm.mqtt import load_config
 from data.accel.hbk.aligner import Aligner
+from methods import sys_id as sysID
 from methods import model_update_module as MT
 
-
+# pylint: disable=R0914
 def run_experiment_4(config_path):
-    number_of_minutes = 2
+    number_of_minutes = 0.5
     config = load_config(config_path)
     mqtt_config = config["MQTT"]
 
@@ -25,7 +23,6 @@ def run_experiment_4(config_path):
         oma_output, aligner_time = sysID.get_oma_results(number_of_minutes, aligner, fs)
     data_client.disconnect()
 
-    data_client.disconnect()
     # Mode Track
     cleaned_values, median_frequencies, confidence_intervals = MT.run_mode_track(
         oma_output)
@@ -45,12 +42,13 @@ def run_experiment_4(config_path):
     print("Mode shapes:", mode_shapes_array)
     print("\nMedian frequencies:", median_frequencies)
     print("\nConfidence intervals:", confidence_intervals)
-    
-    
+
 
 def run_experiment_4_subscibe(config_path):
     config = load_config(config_path)
-    cleaned_values, median_frequencies, confidence_intervals = MT.subscribe_and_get_cleaned_values(config)
-
+    cleaned_values, median_frequencies, confidence_intervals = (
+        MT.subscribe_and_get_cleaned_values(config)
+    )
     print("Cleaned values:", cleaned_values)
     print("Tracked frequencies:", median_frequencies)
+    print("\nConfidence intervals:", confidence_intervals)

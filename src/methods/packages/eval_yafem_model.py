@@ -1,8 +1,8 @@
 import numpy as np
-from methods.packages.yafem import nodes
-from methods.packages.yafem import model
-from methods.packages.yafem.elem import beam2d
-from methods.packages.yafem.elem import MCK
+from yafem import nodes
+from yafem import model
+from yafem.elem import beam2d
+from yafem.elem import MCK
 
 def eval_yafem_model(pars=None):
     if pars is None: pars = {}

@@ -16,6 +16,7 @@ paho-mqtt = "^2.1.0"
 numpy = "^2.2.5"
 click ="^8.1.8"
 pyOMA-2 = "1.0.0"
+yafem = { path = "src/methods/packages/yafem-0.2.6-py3-none-any.whl" }
 
 
 [tool.poetry.group.dev.dependencies]
