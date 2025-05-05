@@ -47,7 +47,7 @@ def run_experiment_4(config_path):
 def run_experiment_4_subscibe(config_path):
     config = load_config(config_path)
     cleaned_values, median_frequencies, confidence_intervals = (
-        MT.subscribe_and_get_cleaned_values(config)
+        MT.subscribe_and_get_cleaned_values(config_path)
     )
     print("Cleaned values:", cleaned_values)
     print("Tracked frequencies:", median_frequencies)

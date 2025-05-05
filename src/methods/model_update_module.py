@@ -11,7 +11,7 @@ from methods.packages.eval_yafem_model import eval_yafem_model
 from methods.packages import model_update
 from methods.constants import X0, BOUNDS
 from data.comm.mqtt import load_config, setup_mqtt_client
-# pylint: disable=C0103, W0603, E1121
+# pylint: disable=C0103, W0603
 
 # Global threading event to wait for OMA data
 result_ready = threading.Event()
@@ -33,14 +33,14 @@ def _convert_oma_output(obj: Any) -> Any:
     return obj
 
 
-def _on_connect(client: mqtt.Client, userdata: dict, _flags: dict, rc: int) -> None:
+def _on_connect(client: mqtt.Client, userdata: dict, flags: dict, reason_code: int, properties: mqtt.Properties) -> None:
     """Callback when MQTT client connects."""
-    if rc == 0:
+    if reason_code  == 0:
         print("Connected to MQTT broker.")
         client.subscribe(userdata["topic"], qos=userdata["qos"])
         print(f"Subscribed to topic: {userdata['topic']}")
     else:
-        print(f"Failed to connect to MQTT broker. Code: {rc}")
+        print(f"Failed to connect to MQTT broker. Code: {reason_code}")
 
 
 def _on_message(_client: mqtt.Client, _userdata: dict, msg: mqtt.MQTTMessage) -> None:
@@ -158,12 +158,12 @@ def subscribe_and_get_cleaned_values(config_path: str,
     result_ready.clear()
 
     config = load_config(config_path)
-    mqtt_client, selected_topic = setup_mqtt_client(config["sysid"], topic_index=0)
+    mqtt_client, selected_topic = setup_mqtt_client(config["sysID"], topic_index=0)
 
     mqtt_client.user_data_set({"topic": selected_topic, "qos": 0})
     mqtt_client.on_connect = _on_connect
     mqtt_client.on_message = _on_message
-
+    mqtt_client.connect(config["sysID"]["host"], config["sysID"]["port"], keepalive=60)
     mqtt_client.loop_start()
     print("Waiting for OMA data...")
     result_ready.wait()  # Wait until message arrives
@@ -174,4 +174,4 @@ def subscribe_and_get_cleaned_values(config_path: str,
         raise RuntimeError("Failed to receive OMA data.")
 
     print("OMA data received. Running mode tracking...")
-    return run_mode_track(oma_output_global, num_clusters)
+    return run_mode_track(oma_output_global)
