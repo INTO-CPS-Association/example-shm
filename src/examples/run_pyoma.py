@@ -6,8 +6,17 @@ from data.accel.hbk.aligner import Aligner
 from functions.natural_freq import plot_natural_frequencies
 
 
-def run_experiment_3_plot(config_path):
-    number_of_minutes = 0.2
+def setup_oma(config_path, data_topic_indexes):
+    """
+    Helper function to set up OMA (Operational Modal Analysis).
+
+    Parameters:
+        config_path (str): Path to the configuration file.
+        data_topic_indexes (list): Indexes of topics to subscribe to.
+
+    Returns:
+        tuple: (aligner, data_client, fs)
+    """
     config = load_config(config_path)
     mqtt_config = config["MQTT"]
 
@@ -15,9 +24,16 @@ def run_experiment_3_plot(config_path):
     data_client, fs = sysID.setup_client(mqtt_config)
 
     # Setting up the aligner
-    data_topic_indexes = [0, 2]
     selected_topics = [mqtt_config["TopicsToSubscribe"][i] for i in data_topic_indexes]
     aligner = Aligner(data_client, topics=selected_topics)
+
+    return aligner, data_client, fs
+
+
+def run_oma_and_plot(config_path):
+    number_of_minutes = 0.2
+    data_topic_indexes = [0, 2]
+    aligner, data_client, fs = setup_oma(config_path, data_topic_indexes)
 
     fig_ax = None
     aligner_time = None
@@ -29,18 +45,10 @@ def run_experiment_3_plot(config_path):
     sys.stdout.flush()
 
 
-def run_experiment_3_print(config_path):
+def run_oma_and_print(config_path):
     number_of_minutes = 0.2
-    config = load_config(config_path)
-    mqtt_config = config["MQTT"]
-
-    # Setting up the client and extracting Fs
-    data_client, fs = sysID.setup_client(mqtt_config)
-
-    # Setting up the aligner
     data_topic_indexes = [0, 2]
-    selected_topics = [mqtt_config["TopicsToSubscribe"][i] for i in data_topic_indexes]
-    aligner = Aligner(data_client, topics=selected_topics)
+    aligner, data_client, fs = setup_oma(config_path, data_topic_indexes)
 
     aligner_time = None
     while aligner_time is None:
@@ -54,19 +62,11 @@ def run_experiment_3_print(config_path):
     print(f"\n cov_damping \n{results['Xi_poles_cov']}")
 
 
-def run_experiment_3_publish(config_path):
+def run_oma_and_publish(config_path):
     number_of_minutes = 0.02
-    config = load_config(config_path)
-    mqtt_config = config["MQTT"]
-    publish_config = config["sysID"]
-
-    # Setting up the client for getting accelerometer data
-    data_client, fs = sysID.setup_client(mqtt_config)
-
-    # Setting up the aligner
     data_topic_indexes = [0, 2]
-    selected_topics = [mqtt_config["TopicsToSubscribe"][i] for i in data_topic_indexes]
-    aligner = Aligner(data_client, topics=selected_topics)
+    aligner, data_client, fs = setup_oma(config_path, data_topic_indexes)
+    publish_config = load_config(config_path)["sysID"]
 
     # Setting up the client for publishing OMA results
     publish_client, _ = sysID.setup_client(publish_config)  # fs not needed here
@@ -80,4 +80,5 @@ def run_experiment_3_publish(config_path):
     )
 
     print(f"Publishing to topic: {publish_config['TopicsToSubscribe'][0]}")
+    data_client.disconnect()
     sys.stdout.flush()

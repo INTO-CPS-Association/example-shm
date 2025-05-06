@@ -5,7 +5,7 @@ from methods import sys_id as sysID
 from methods import model_update_module as MT
 
 # pylint: disable=R0914
-def run_experiment_4(config_path):
+def run_mode_tracking_with_local_sysid(config_path):
     number_of_minutes = 0.5
     config = load_config(config_path)
     mqtt_config = config["MQTT"]
@@ -44,7 +44,7 @@ def run_experiment_4(config_path):
     print("\nConfidence intervals:", confidence_intervals)
 
 
-def run_experiment_4_subscibe(config_path):
+def run_mode_tracking_with_remote_sysid(config_path):
     config = load_config(config_path)
     cleaned_values, median_frequencies, confidence_intervals = (
         MT.subscribe_and_get_cleaned_values(config_path)

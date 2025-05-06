@@ -5,7 +5,7 @@ from methods import sys_id as sysID
 from methods import model_update_module as MT
 # pylint: disable=R0914, C0103
 
-def run_experiment_5(config_path):
+def run_model_update(config_path):
     number_of_minutes = 5
     config = load_config(config_path)
     mqtt_config = config["MQTT"]

@@ -1,17 +1,17 @@
 # pylint: disable=E1120
 import click
-from examples.acceleration_readings import run_experiment_1
-from examples.aligning_readings import run_experiment_2
+from examples.acceleration_readings import read_accelerometers
+from examples.aligning_readings import align_acceleration_readings
 from examples.run_pyoma import (
-    run_experiment_3_plot,
-    run_experiment_3_publish,
-    run_experiment_3_print,
+    run_oma_and_plot,
+    run_oma_and_publish,
+    run_oma_and_print,
 )
 from examples.mode_tracking import (
-    run_experiment_4,
-    run_experiment_4_subscibe,
+    run_mode_tracking_with_local_sysid,
+    run_mode_tracking_with_remote_sysid,
 )
-from examples.updating_parameters import run_experiment_5
+from examples.updating_parameters import run_model_update
 
 
 @click.group()
@@ -23,45 +23,45 @@ def cli(ctx, config):
 
 @cli.command()
 @click.pass_context
-def experiment_1(ctx):
-    run_experiment_1(ctx.obj["CONFIG"])
+def accelerometers(ctx):
+    read_accelerometers(ctx.obj["CONFIG"])
 
 @cli.command()
 @click.pass_context
-def experiment_2(ctx):
-    run_experiment_2(ctx.obj["CONFIG"])
-
-
-@cli.command()
-@click.pass_context
-def experiment_3_publish(ctx):
-    run_experiment_3_publish(ctx.obj["CONFIG"])
-
-@cli.command()
-@click.pass_context
-def experiment_3_plot(ctx):
-    run_experiment_3_plot(ctx.obj["CONFIG"])
-
-@cli.command()
-@click.pass_context
-def experiment_3_print(ctx):
-    run_experiment_3_print(ctx.obj["CONFIG"])
+def align_readings(ctx):
+    align_acceleration_readings(ctx.obj["CONFIG"])
 
 
 @cli.command()
 @click.pass_context
-def experiment_4(ctx):
-    run_experiment_4(ctx.obj["CONFIG"])
+def oma_and_publish(ctx):
+    run_oma_and_publish(ctx.obj["CONFIG"])
 
 @cli.command()
 @click.pass_context
-def experiment_4_subscribe(ctx):
-    run_experiment_4_subscibe(ctx.obj["CONFIG"])
+def oma_and_plot(ctx):
+    run_oma_and_plot(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def oma_and_print(ctx):
+    run_oma_and_print(ctx.obj["CONFIG"])
 
 
 @cli.command()
 @click.pass_context
-def experiment_5(ctx):
-    run_experiment_5(ctx.obj["CONFIG"])
+def mode_tracking_with_local_sysid(ctx):
+    run_mode_tracking_with_local_sysid(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def mode_tracking_with_remote_sysid(ctx):
+    run_mode_tracking_with_remote_sysid(ctx.obj["CONFIG"])
+
+
+@cli.command()
+@click.pass_context
+def model_update(ctx):
+    run_model_update(ctx.obj["CONFIG"])
 if __name__ == "__main__":
     cli(obj={})
