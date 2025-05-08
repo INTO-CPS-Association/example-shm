@@ -6,7 +6,7 @@ import board  # pylint: disable=import-error
 import adafruit_adxl37x  # pylint: disable=import-error
 
 from data.comm.mqtt import load_config
-from mock_pt.constants import CALIBRATION_TIME, SENSOR_RANGE, DEFAULT_OFFSET
+from pt_mock.constants import CALIBRATION_TIME, SENSOR_RANGE, DEFAULT_OFFSET
 # Initialize I2C
 i2c: busio.I2C = busio.I2C(board.SCL, board.SDA)
 

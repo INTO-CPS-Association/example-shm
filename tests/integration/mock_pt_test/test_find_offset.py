@@ -7,8 +7,8 @@ sys.modules["board"] = MagicMock()
 sys.modules["busio"] = MagicMock()
 sys.modules["adafruit_adxl37x"] = MagicMock()
 
-from mock_pt.find_offset import main
-from integration.mock_pt_test.constants import (
+from pt_mock.find_offset import main
+from mock_pt_test.constants import (
     FAKE_START_TIME,
     TIME_STEP,
     NUM_FAKE_TIME_CALLS,
@@ -17,11 +17,11 @@ from integration.mock_pt_test.constants import (
 )
 
 @pytest.mark.integration
-@patch("mock_pt.find_offset.save_offset_config")
-@patch("mock_pt.find_offset.load_config")
-@patch("mock_pt.find_offset.enable_multiplexer_channel")
-@patch("mock_pt.find_offset.adafruit_adxl37x.ADXL375")
-@patch("mock_pt.find_offset.time.sleep", return_value=None)
+@patch("pt_mock.find_offset.save_offset_config")
+@patch("pt_mock.find_offset.load_config")
+@patch("pt_mock.find_offset.enable_multiplexer_channel")
+@patch("pt_mock.find_offset.adafruit_adxl37x.ADXL375")
+@patch("pt_mock.find_offset.time.sleep", return_value=None)
 def test_main_runs_without_hardware(
     mock_sleep,
     mock_adxl,
@@ -35,7 +35,7 @@ def test_main_runs_without_hardware(
     sensor2 = MagicMock()
     sensor2.acceleration = ACCELERATION_SENSOR_2
     mock_adxl.side_effect = [sensor1, sensor2]
-    with patch("mock_pt.find_offset.time.time") as mock_time:
+    with patch("pt_mock.find_offset.time.time") as mock_time:
         mock_time.side_effect = [FAKE_START_TIME + i * TIME_STEP for i in range(NUM_FAKE_TIME_CALLS)]
         main()
 
@@ -48,11 +48,11 @@ def test_main_runs_without_hardware(
 
 
 @pytest.mark.integration
-@patch("mock_pt.find_offset.save_offset_config")
-@patch("mock_pt.find_offset.load_config", side_effect=FileNotFoundError("Simulated missing config"))
-@patch("mock_pt.find_offset.enable_multiplexer_channel")
-@patch("mock_pt.find_offset.adafruit_adxl37x.ADXL375")
-@patch("mock_pt.find_offset.time.sleep", return_value=None)
+@patch("pt_mock.find_offset.save_offset_config")
+@patch("pt_mock.find_offset.load_config", side_effect=FileNotFoundError("Simulated missing config"))
+@patch("pt_mock.find_offset.enable_multiplexer_channel")
+@patch("pt_mock.find_offset.adafruit_adxl37x.ADXL375")
+@patch("pt_mock.find_offset.time.sleep", return_value=None)
 def test_main_creates_offset_file_when_missing(
     mock_sleep,
     mock_adxl,
@@ -65,7 +65,7 @@ def test_main_creates_offset_file_when_missing(
     sensor2 = MagicMock()
     sensor2.acceleration = ACCELERATION_SENSOR_2
     mock_adxl.side_effect = [sensor1, sensor2]
-    with patch("mock_pt.find_offset.time.time") as mock_time:
+    with patch("pt_mock.find_offset.time.time") as mock_time:
         mock_time.side_effect = [FAKE_START_TIME + i * TIME_STEP for i in range(NUM_FAKE_TIME_CALLS)]
         main()
 
@@ -78,10 +78,10 @@ def test_main_creates_offset_file_when_missing(
 
 
 @pytest.mark.integration
-@patch("mock_pt.find_offset.save_offset_config")
-@patch("mock_pt.find_offset.enable_multiplexer_channel")
-@patch("mock_pt.find_offset.adafruit_adxl37x.ADXL375")
-@patch("mock_pt.find_offset.time.sleep", return_value=None)
+@patch("pt_mock.find_offset.save_offset_config")
+@patch("pt_mock.find_offset.enable_multiplexer_channel")
+@patch("pt_mock.find_offset.adafruit_adxl37x.ADXL375")
+@patch("pt_mock.find_offset.time.sleep", return_value=None)
 @patch("builtins.open", new_callable=mock_open, read_data='{"SensorOffsets": {"Sensor1": 0.123, "Sensor2": 999.0}}')
 def test_main_overwrites_existing_offset_json(
     mock_open_file,
@@ -96,7 +96,7 @@ def test_main_overwrites_existing_offset_json(
     sensor2 = MagicMock()
     sensor2.acceleration = ACCELERATION_SENSOR_2  # [-2.0, -2.0, ..., -2.0]
     mock_adxl.side_effect = [sensor1, sensor2]
-    with patch("mock_pt.find_offset.time.time") as mock_time:
+    with patch("pt_mock.find_offset.time.time") as mock_time:
         mock_time.side_effect = [FAKE_START_TIME + i * TIME_STEP for i in range(NUM_FAKE_TIME_CALLS)]
         main()
 

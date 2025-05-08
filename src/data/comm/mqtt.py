@@ -6,6 +6,7 @@ subscriptions, and message publishing using the Paho MQTT library.
 """
 
 import json
+import uuid
 from paho.mqtt.client import Client as MQTTClient, CallbackAPIVersion, MQTTv5  # type: ignore
 
 
@@ -48,7 +49,7 @@ def create_on_connect_callback(topics, qos):
         if rc == 0:  # Connection was successful
             for topic in topics:
                 print(f"Subscribing to topic: {topic}")
-                client.subscribe(topic, qos=qos)
+                #client.subscribe(topic, qos=qos)
         else:
             print("Connection failed with result code:", rc)
 
@@ -97,7 +98,7 @@ def setup_mqtt_client(config, topic_index=0):
         tuple: (MQTTClient, selected_topic)
     """
     mqttc = MQTTClient(
-        client_id=config["ClientID"],
+        client_id=f"{config['ClientID']}_{uuid.uuid4().hex[:6]}",
         callback_api_version=CallbackAPIVersion.VERSION2,
         protocol=MQTTv5,
     )

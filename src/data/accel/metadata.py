@@ -30,7 +30,6 @@ def extract_fs_from_metadata(mqtt_config: Dict[str, Any]) -> int:
     start_time = time.time()
     while fs_result["fs"] is None and (time.time() - start_time) < WAIT_METADATA:
         time.sleep(0.1)
-
     client.loop_stop()
     if fs_result["fs"] is None:
         raise TimeoutError("Sampling frequency not received within timeout")

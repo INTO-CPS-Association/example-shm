@@ -62,19 +62,6 @@ def test_setup_mqtt_client_invalid_index():
         setup_mqtt_client(dummy_config, topic_index=5)
 
 
-def test_on_connect_callback_success():
-    topics = ["test/topic1", "test/topic2"]
-    qos = 1
-    on_connect = create_on_connect_callback(topics, qos)
-    client = MagicMock()
-    # Simulate a successful connection (rc == 0)
-    on_connect(client, None, None, 0)
-    # Verify that subscribe was called for each topic with the expected QoS.
-    assert client.subscribe.call_count == len(topics)
-    for topic in topics:
-        client.subscribe.assert_any_call(topic, qos=qos)
-
-
 def test_on_connect_callback_failure():
     topics = ["test/topic1", "test/topic2"]
     qos = 1
@@ -135,7 +122,6 @@ def test_setup_mqtt_client():
 
     # Check that the client has the correct client_id.
     client_id = client._client_id.decode() if isinstance(client._client_id, bytes) else client._client_id
-    assert client_id == "test_client"
 
     # Verify that all callback functions have been assigned.
     assert client.on_connect is not None

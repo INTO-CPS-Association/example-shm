@@ -34,6 +34,8 @@ def mqtt_client():
 @pytest.fixture(scope="function")
 def client_and_topic(mqtt_client):
     client, topic = mqtt_client
+    client.subscribe(topic, qos=1)
+
     return client, topic
 
 

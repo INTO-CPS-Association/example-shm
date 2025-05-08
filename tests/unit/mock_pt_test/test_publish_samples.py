@@ -1,9 +1,15 @@
 # pylint: disable=import-error
+import sys
+from unittest.mock import MagicMock, patch
+
+# Mock hardware before imports
+sys.modules["board"] = MagicMock()
+sys.modules["busio"] = MagicMock()
+sys.modules["adafruit_adxl37x"] = MagicMock()
+
 from io import StringIO
 import struct
-import sys
 import unittest
-from unittest.mock import MagicMock, patch
 import pytest
 
 from unit.mock_pt_test.constants import (
@@ -14,13 +20,10 @@ from unit.mock_pt_test.constants import (
     SAMPLE_COUNTER,
 )
 
-from mock_pt.publish_samples import collect_samples, send_batch, Batch, load_offsets, main
-from mock_pt.constants import DEFAULT_OFFSET
+from pt_mock.publish_samples import collect_samples, send_batch, Batch, load_offsets, main
+from pt_mock.constants import DEFAULT_OFFSET
 
-# Mock hardware before imports
-sys.modules["board"] = MagicMock()
-sys.modules["busio"] = MagicMock()
-sys.modules["adafruit_adxl37x"] = MagicMock()
+
 
 pytestmark = pytest.mark.unit
 
@@ -35,7 +38,7 @@ class TestPublishUnit(unittest.TestCase):
         self.assertEqual(samples, EXPECTED_COLLECTED_SAMPLES)
 
 
-    @patch("mock_pt.publish_samples.MQTTClient.publish")
+    @patch("pt_mock.publish_samples.MQTTClient.publish")
     def test_send_batch_publishes_correct_payload(self, mock_publish):
         mock_client = MagicMock()
         batch = Batch("fake/topic", SAMPLE_BATCH, SAMPLE_COUNTER)
@@ -61,7 +64,7 @@ class TestPublishUnit(unittest.TestCase):
         self.assertEqual(unpacked[4], SAMPLE_COUNTER)  # sample_counter
 
 
-    @patch("mock_pt.publish_samples.MQTTClient.publish")
+    @patch("pt_mock.publish_samples.MQTTClient.publish")
     def test_send_batch_with_empty_sample_list(self, mock_publish):
         mock_client = MagicMock()
         batch = Batch("test/empty", [], 0)
@@ -72,7 +75,7 @@ class TestPublishUnit(unittest.TestCase):
         self.assertEqual(len(args[1]), descriptor_size)  # No sample data
 
 
-    @patch("mock_pt.publish_samples.MQTTClient.publish")
+    @patch("pt_mock.publish_samples.MQTTClient.publish")
     def test_send_batch_prints_expected_logs(self, mock_publish):
         mock_client = MagicMock()
         batch = Batch("test/topic", [0.1, 0.2], 99)
@@ -93,10 +96,10 @@ class TestPublishUnit(unittest.TestCase):
             self.assertEqual((offset1, offset2), (DEFAULT_OFFSET, DEFAULT_OFFSET))
 
 
-    @patch("mock_pt.publish_samples.send_batch")
-    @patch("mock_pt.publish_samples.load_config")
-    @patch("mock_pt.publish_samples.adafruit_adxl37x.ADXL375")
-    @patch("mock_pt.publish_samples.time.sleep", return_value=None)
+    @patch("pt_mock.publish_samples.send_batch")
+    @patch("pt_mock.publish_samples.load_config")
+    @patch("pt_mock.publish_samples.adafruit_adxl37x.ADXL375")
+    @patch("pt_mock.publish_samples.time.sleep", return_value=None)
     def test_main_executes_sensor_loop_once(self, mock_sleep, mock_adxl,
                                             mock_load_config, mock_send_batch):
         # Provide correct config structure

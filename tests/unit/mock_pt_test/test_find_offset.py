@@ -1,10 +1,17 @@
 # pylint: disable=import-error
 import sys
 from unittest.mock import MagicMock, patch, mock_open
+#  Mock hardware modules
+sys.modules["board"] = MagicMock()
+sys.modules["busio"] = MagicMock()
+sys.modules["adafruit_adxl37x"] = MagicMock()
+
 import unittest
 import json
 import os
 import pytest
+
+
 
 from unit.mock_pt_test.constants import (
     FAKE_START_TIME,
@@ -13,24 +20,21 @@ from unit.mock_pt_test.constants import (
     ACCELERATION_SENSOR_1,
     ACCELERATION_SENSOR_2,
 )
-from mock_pt.find_offset import (
+from pt_mock.find_offset import (
   calibrate_sensor,
   calibrate_on_channel,
   save_offset_config,
   load_config
 )
 
-#  Mock hardware modules
-sys.modules["board"] = MagicMock()
-sys.modules["busio"] = MagicMock()
-sys.modules["adafruit_adxl37x"] = MagicMock()
+
 
 pytestmark = pytest.mark.unit
 
 
 class TestCalibrationUnit(unittest.TestCase):
 
-    @patch("mock_pt.find_offset.time.time")
+    @patch("pt_mock.find_offset.time.time")
     def test_calibrate_sensor(self, mock_time):
         mock_sensor = MagicMock()
         mock_sensor.acceleration = ACCELERATION_SENSOR_1
@@ -41,13 +45,13 @@ class TestCalibrationUnit(unittest.TestCase):
         self.assertAlmostEqual(result, 1.0, places=2)
 
 
-    @patch("mock_pt.find_offset.adafruit_adxl37x.ADXL375")
-    @patch("mock_pt.find_offset.enable_multiplexer_channel")
+    @patch("pt_mock.find_offset.adafruit_adxl37x.ADXL375")
+    @patch("pt_mock.find_offset.enable_multiplexer_channel")
     def test_calibrate_on_channel(self, mock_enable_channel, mock_adxl):
         mock_sensor = MagicMock()
         mock_sensor.acceleration = ACCELERATION_SENSOR_2
         mock_adxl.return_value = mock_sensor
-        with patch("mock_pt.find_offset.time.time") as mock_time:
+        with patch("pt_mock.find_offset.time.time") as mock_time:
             mock_time.side_effect = (
                 FAKE_START_TIME +
                 i * TIME_STEP for i in range(NUM_FAKE_TIME_CALLS)
@@ -68,7 +72,7 @@ class TestCalibrationUnit(unittest.TestCase):
         os.remove(path)
 
 
-    @patch("mock_pt.find_offset.time.time")
+    @patch("pt_mock.find_offset.time.time")
     def test_calibrate_sensor_zero_samples(self, mock_time):
         mock_sensor = MagicMock()
         mock_sensor.acceleration = ACCELERATION_SENSOR_1
