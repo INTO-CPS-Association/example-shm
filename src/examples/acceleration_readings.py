@@ -3,7 +3,7 @@ import sys
 from data.accel.hbk.accelerometer import Accelerometer
 from data.comm.mqtt import setup_mqtt_client, load_config  # type: ignore
 
-def run_experiment_1(config_path):
+def read_accelerometers(config_path):
     config = load_config(config_path)
     mqtt_config = config["MQTT"]
     topic_index = 0

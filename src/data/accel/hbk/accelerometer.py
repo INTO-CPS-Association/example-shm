@@ -31,12 +31,14 @@ class Accelerometer(IAccelerometer):
         self._lock = threading.Lock()
 
         # Setting up MQTT callback
+        self.mqtt_client.subscribe(self.topic, qos=1)
+
         self.mqtt_client.on_message = self._on_message
 
     # pylint: disable=unused-argument
     def _on_message(self, client: Any, userdata: Any, msg: mqtt.MQTTMessage) -> None:
         """Handles incoming MQTT messages."""
-        print(f"Received message on topic {msg.topic}")
+        #print(f"Received message on topic {msg.topic}")
 
         def safe_process():  # This ensures that an exception does not crash the entire thread
             try:

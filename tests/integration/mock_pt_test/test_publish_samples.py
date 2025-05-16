@@ -11,8 +11,8 @@ sys.modules["board"] = MagicMock()
 sys.modules["busio"] = MagicMock()
 sys.modules["adafruit_adxl37x"] = MagicMock()
 
-from mock_pt.publish_samples import main, send_batch, Batch, collect_samples, load_offsets, initialize_sensor
-from mock_pt.constants import SAMPLES_PER_MESSAGE, SENSOR_REFRESH_RATE, SENSOR_RANGE
+from pt_mock.publish_samples import main, send_batch, Batch, collect_samples, load_offsets, initialize_sensor
+from pt_mock.constants import SAMPLES_PER_MESSAGE, SENSOR_REFRESH_RATE, SENSOR_RANGE
 from data.comm.mqtt import setup_mqtt_client, load_config
 
 
@@ -48,9 +48,9 @@ def test_collect_samples_actual_offset():
     assert result == [9.0] * 4
 
 
-@patch("mock_pt.publish_samples.setup_sensor")
-@patch("mock_pt.publish_samples.enable_multiplexer_channel")
-@patch("mock_pt.publish_samples.time.sleep", return_value=None)
+@patch("pt_mock.publish_samples.setup_sensor")
+@patch("pt_mock.publish_samples.enable_multiplexer_channel")
+@patch("pt_mock.publish_samples.time.sleep", return_value=None)
 def test_main_runs_once_with_real_mqtt(mock_sleep, mock_mux, mock_setup_sensor):
     mock_sensor = MagicMock()
     mock_setup_sensor.side_effect = [mock_sensor, mock_sensor]
@@ -62,12 +62,12 @@ def test_main_runs_once_with_real_mqtt(mock_sleep, mock_mux, mock_setup_sensor):
 
 @patch("builtins.open", new_callable=mock_open, read_data="not-a-valid-json")
 def test_main_falls_back_when_offset_config_is_corrupt(mock_file):
-    with patch("mock_pt.publish_samples.collect_samples", return_value=[0.0] * SAMPLES_PER_MESSAGE), \
-         patch("mock_pt.publish_samples.setup_sensor") as mock_sensor, \
-         patch("mock_pt.publish_samples.send_batch") as mock_send, \
-         patch("mock_pt.publish_samples.enable_multiplexer_channel"), \
-         patch("mock_pt.publish_samples.setup_mqtt_client") as mock_mqtt, \
-         patch("mock_pt.publish_samples.load_config") as mock_config:
+    with patch("pt_mock.publish_samples.collect_samples", return_value=[0.0] * SAMPLES_PER_MESSAGE), \
+         patch("pt_mock.publish_samples.setup_sensor") as mock_sensor, \
+         patch("pt_mock.publish_samples.send_batch") as mock_send, \
+         patch("pt_mock.publish_samples.enable_multiplexer_channel"), \
+         patch("pt_mock.publish_samples.setup_mqtt_client") as mock_mqtt, \
+         patch("pt_mock.publish_samples.load_config") as mock_config:
 
         mock_config.return_value = {
             "MQTT": {
@@ -82,7 +82,7 @@ def test_main_falls_back_when_offset_config_is_corrupt(mock_file):
         }
         mock_sensor.return_value = MagicMock()
         mock_mqtt.return_value = (MagicMock(), "topic")
-        with patch("mock_pt.publish_samples.time.sleep", return_value=None):
+        with patch("pt_mock.publish_samples.time.sleep", return_value=None):
             main(run_once=True)
         assert mock_send.call_count == 2
 
@@ -96,9 +96,9 @@ def test_load_offsets_returns_correct_values_from_file():
 
 
 
-@patch("mock_pt.publish_samples.adafruit_adxl37x.ADXL375")
-@patch("mock_pt.publish_samples.time.sleep", return_value=None)
-@patch("mock_pt.publish_samples.enable_multiplexer_channel")
+@patch("pt_mock.publish_samples.adafruit_adxl37x.ADXL375")
+@patch("pt_mock.publish_samples.time.sleep", return_value=None)
+@patch("pt_mock.publish_samples.enable_multiplexer_channel")
 def test_initialize_sensor_sets_refresh_rate_and_range(
     mock_enable_mux, mock_sleep, mock_adxl_class
 ):

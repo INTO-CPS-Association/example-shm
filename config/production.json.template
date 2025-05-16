@@ -4,7 +4,7 @@
         "port": 8090,
         "userId": "NEEDED",
         "password": "NEEDED",
-        "ClientID": "test_client_id",
+        "ClientID": "NOT_NEEDED",
         "QoS": 1,
         "TopicsToSubscribe": [
         "cpsens/d8-3a-dd-37-d2-7e/3160-A-042_sn_999998/1/acc/raw/data",
@@ -25,3 +25,6 @@
       "TopicsToSubscribe": ["cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/1_2/oma_results"]
     }
 }
+
+
+

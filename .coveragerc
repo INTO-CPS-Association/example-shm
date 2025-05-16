@@ -7,7 +7,7 @@ omit =
     */src/data/accel/accelerometer.py
     */src/data/accel/aligner.py
     */src/functions/natural_freq.py
-    */src/methods/pyoma/*
+    */src/methods/packages/*
     */src/examples/*
 
 [report]
