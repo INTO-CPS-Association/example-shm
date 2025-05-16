@@ -1,11 +1,6 @@
 # pylint: disable=import-error
 import sys
 from unittest.mock import MagicMock, patch, mock_open
-#  Mock hardware modules
-sys.modules["board"] = MagicMock()
-sys.modules["busio"] = MagicMock()
-sys.modules["adafruit_adxl37x"] = MagicMock()
-
 import unittest
 import json
 import os
@@ -27,6 +22,12 @@ from pt_mock.find_offset import (
   load_config
 )
 
+#  Mock hardware modules
+sys.modules["board"] = MagicMock()
+sys.modules["busio"] = MagicMock()
+sys.modules["adafruit_adxl37x"] = MagicMock()
+
+
 
 
 pytestmark = pytest.mark.unit
@@ -47,7 +48,7 @@ class TestCalibrationUnit(unittest.TestCase):
 
     @patch("pt_mock.find_offset.adafruit_adxl37x.ADXL375")
     @patch("pt_mock.find_offset.enable_multiplexer_channel")
-    def test_calibrate_on_channel(self, mock_enable_channel, mock_adxl):
+    def test_calibrate_on_channel(self,_, mock_adxl):
         mock_sensor = MagicMock()
         mock_sensor.acceleration = ACCELERATION_SENSOR_2
         mock_adxl.return_value = mock_sensor
@@ -85,25 +86,25 @@ class TestCalibrationUnit(unittest.TestCase):
 
 
     @patch("builtins.open", new_callable=mock_open, read_data='{"MQTT": {"host": "localhost"}}')
-    def test_load_config_success(self, mock_file):
+    def test_load_config_success(self, _):
         result = load_config("dummy/path.json")
         self.assertIn("MQTT", result)
 
 
     @patch("builtins.open", side_effect=FileNotFoundError)
-    def test_load_config_file_not_found(self, mock_file):
+    def test_load_config_file_not_found(self, _):
         with self.assertRaises(FileNotFoundError):
             load_config("nonexistent.json")
 
 
     @patch("builtins.open", new_callable=mock_open, read_data="not-json")
-    def test_load_config_json_error(self, mock_file):
+    def test_load_config_json_error(self, _):
         with self.assertRaises(ValueError):
             load_config("corrupted.json")
 
 
     @patch("builtins.open", side_effect=Exception("weird crash"))
-    def test_load_config_unexpected_exception(self, mock_file):
+    def test_load_config_unexpected_exception(self, _):
         with self.assertRaises(RuntimeError):
             load_config("unknown.json")
 if __name__ == "__main__":

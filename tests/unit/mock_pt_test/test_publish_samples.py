@@ -2,11 +2,6 @@
 import sys
 from unittest.mock import MagicMock, patch
 
-# Mock hardware before imports
-sys.modules["board"] = MagicMock()
-sys.modules["busio"] = MagicMock()
-sys.modules["adafruit_adxl37x"] = MagicMock()
-
 from io import StringIO
 import struct
 import unittest
@@ -23,7 +18,10 @@ from unit.mock_pt_test.constants import (
 from pt_mock.publish_samples import collect_samples, send_batch, Batch, load_offsets, main
 from pt_mock.constants import DEFAULT_OFFSET
 
-
+# Mock hardware before imports
+sys.modules["board"] = MagicMock()
+sys.modules["busio"] = MagicMock()
+sys.modules["adafruit_adxl37x"] = MagicMock()
 
 pytestmark = pytest.mark.unit
 
@@ -39,7 +37,7 @@ class TestPublishUnit(unittest.TestCase):
 
 
     @patch("pt_mock.publish_samples.MQTTClient.publish")
-    def test_send_batch_publishes_correct_payload(self, mock_publish):
+    def test_send_batch_publishes_correct_payload(self, _):
         mock_client = MagicMock()
         batch = Batch("fake/topic", SAMPLE_BATCH, SAMPLE_COUNTER)
         send_batch(mock_client, batch)
@@ -65,7 +63,7 @@ class TestPublishUnit(unittest.TestCase):
 
 
     @patch("pt_mock.publish_samples.MQTTClient.publish")
-    def test_send_batch_with_empty_sample_list(self, mock_publish):
+    def test_send_batch_with_empty_sample_list(self, _):
         mock_client = MagicMock()
         batch = Batch("test/empty", [], 0)
         send_batch(mock_client, batch)
@@ -76,7 +74,7 @@ class TestPublishUnit(unittest.TestCase):
 
 
     @patch("pt_mock.publish_samples.MQTTClient.publish")
-    def test_send_batch_prints_expected_logs(self, mock_publish):
+    def test_send_batch_prints_expected_logs(self, _):
         mock_client = MagicMock()
         batch = Batch("test/topic", [0.1, 0.2], 99)
 
@@ -90,7 +88,7 @@ class TestPublishUnit(unittest.TestCase):
 
 
     @patch("builtins.open", new_callable=unittest.mock.mock_open, read_data="{ invalid json }")
-    def test_load_offsets_returns_default_on_json_error(self, mock_file):
+    def test_load_offsets_returns_default_on_json_error(self, _):
         with patch("json.load", side_effect=ValueError("bad json")):
             offset1, offset2 = load_offsets("some_path.json")
             self.assertEqual((offset1, offset2), (DEFAULT_OFFSET, DEFAULT_OFFSET))
@@ -100,7 +98,7 @@ class TestPublishUnit(unittest.TestCase):
     @patch("pt_mock.publish_samples.load_config")
     @patch("pt_mock.publish_samples.adafruit_adxl37x.ADXL375")
     @patch("pt_mock.publish_samples.time.sleep", return_value=None)
-    def test_main_executes_sensor_loop_once(self, mock_sleep, mock_adxl,
+    def test_main_executes_sensor_loop_once(self, _, mock_adxl,
                                             mock_load_config, mock_send_batch):
         # Provide correct config structure
         mock_load_config.return_value = {
