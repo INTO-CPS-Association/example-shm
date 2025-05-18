@@ -4,7 +4,7 @@ from data.comm.mqtt import setup_mqtt_client, load_config  # type: ignore
 from data.accel.hbk.aligner import Aligner
 
 
-def run_experiment_2(config_path):
+def align_acceleration_readings(config_path):
     config = load_config(config_path)
     mqtt_config = config["MQTT"]
     topic_indexes = [0,2]

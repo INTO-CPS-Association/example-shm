@@ -8,7 +8,7 @@ from functions.util import convert_numpy_to_list
 from data.accel.metadata import extract_fs_from_metadata
 from data.comm.mqtt import setup_mqtt_client
 from data.accel.hbk.aligner import Aligner
-from methods.pyoma.ssiWrapper import SSIcov
+from methods.packages.pyoma.ssiWrapper import SSIcov
 from methods.constants import MODEL_ORDER, BLOCK_SHIFT, DEFAULT_FS
 
 
@@ -69,9 +69,11 @@ def setup_client(mqtt_config: Dict[str, Any]) -> Tuple[MQTTClient, float]:
     Returns:
         A tuple of the connected MQTTClient instance and the extracted sampling frequency.
     """
-    if len(mqtt_config.get("topics", [])) > 1:
+    try:
         fs = extract_fs_from_metadata(mqtt_config)
-    else:
+        print("Extracted FS from metadata:", fs)
+    except Exception:
+        print("Failed to extract FS from metadata. Using DEFAULT_FS.")
         fs = DEFAULT_FS
 
     data_client, _ = setup_mqtt_client(mqtt_config, topic_index=0)

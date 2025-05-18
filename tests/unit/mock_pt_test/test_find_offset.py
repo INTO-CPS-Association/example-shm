@@ -6,6 +6,8 @@ import json
 import os
 import pytest
 
+
+
 from unit.mock_pt_test.constants import (
     FAKE_START_TIME,
     TIME_STEP,
@@ -13,7 +15,7 @@ from unit.mock_pt_test.constants import (
     ACCELERATION_SENSOR_1,
     ACCELERATION_SENSOR_2,
 )
-from mock_pt.find_offset import (
+from pt_mock.find_offset import (
   calibrate_sensor,
   calibrate_on_channel,
   save_offset_config,
@@ -25,12 +27,15 @@ sys.modules["board"] = MagicMock()
 sys.modules["busio"] = MagicMock()
 sys.modules["adafruit_adxl37x"] = MagicMock()
 
+
+
+
 pytestmark = pytest.mark.unit
 
 
 class TestCalibrationUnit(unittest.TestCase):
 
-    @patch("mock_pt.find_offset.time.time")
+    @patch("pt_mock.find_offset.time.time")
     def test_calibrate_sensor(self, mock_time):
         mock_sensor = MagicMock()
         mock_sensor.acceleration = ACCELERATION_SENSOR_1
@@ -41,13 +46,13 @@ class TestCalibrationUnit(unittest.TestCase):
         self.assertAlmostEqual(result, 1.0, places=2)
 
 
-    @patch("mock_pt.find_offset.adafruit_adxl37x.ADXL375")
-    @patch("mock_pt.find_offset.enable_multiplexer_channel")
-    def test_calibrate_on_channel(self, mock_enable_channel, mock_adxl):
+    @patch("pt_mock.find_offset.adafruit_adxl37x.ADXL375")
+    @patch("pt_mock.find_offset.enable_multiplexer_channel")
+    def test_calibrate_on_channel(self,_, mock_adxl):
         mock_sensor = MagicMock()
         mock_sensor.acceleration = ACCELERATION_SENSOR_2
         mock_adxl.return_value = mock_sensor
-        with patch("mock_pt.find_offset.time.time") as mock_time:
+        with patch("pt_mock.find_offset.time.time") as mock_time:
             mock_time.side_effect = (
                 FAKE_START_TIME +
                 i * TIME_STEP for i in range(NUM_FAKE_TIME_CALLS)
@@ -68,7 +73,7 @@ class TestCalibrationUnit(unittest.TestCase):
         os.remove(path)
 
 
-    @patch("mock_pt.find_offset.time.time")
+    @patch("pt_mock.find_offset.time.time")
     def test_calibrate_sensor_zero_samples(self, mock_time):
         mock_sensor = MagicMock()
         mock_sensor.acceleration = ACCELERATION_SENSOR_1
@@ -81,25 +86,25 @@ class TestCalibrationUnit(unittest.TestCase):
 
 
     @patch("builtins.open", new_callable=mock_open, read_data='{"MQTT": {"host": "localhost"}}')
-    def test_load_config_success(self, mock_file):
+    def test_load_config_success(self, _):
         result = load_config("dummy/path.json")
         self.assertIn("MQTT", result)
 
 
     @patch("builtins.open", side_effect=FileNotFoundError)
-    def test_load_config_file_not_found(self, mock_file):
+    def test_load_config_file_not_found(self, _):
         with self.assertRaises(FileNotFoundError):
             load_config("nonexistent.json")
 
 
     @patch("builtins.open", new_callable=mock_open, read_data="not-json")
-    def test_load_config_json_error(self, mock_file):
+    def test_load_config_json_error(self, _):
         with self.assertRaises(ValueError):
             load_config("corrupted.json")
 
 
     @patch("builtins.open", side_effect=Exception("weird crash"))
-    def test_load_config_unexpected_exception(self, mock_file):
+    def test_load_config_unexpected_exception(self, _):
         with self.assertRaises(RuntimeError):
             load_config("unknown.json")
 if __name__ == "__main__":
