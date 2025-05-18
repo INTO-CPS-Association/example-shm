@@ -82,7 +82,7 @@ Example,
 python .\src\examples\example.py --config .\config\production.json align-readings
 ```
 
-# Distributed Setup Overview
+## Distributed Setup Overview
 
 This explains the setup needed to run the distributed version of the example-shm pipeline.
 
@@ -92,10 +92,13 @@ This machine connects to ADXL375 sensors and is responsible for acquiring raw se
 It performs calibration and continuously publishes sensor data over MQTT.
 
 **Step 1**: Run calibration to find sensor offsets
+
 ```bash
 poetry run python src/scripts/find_offset.py
 ```
+
 **Step 2**: Start publishing raw accelerometer data
+
 ```bash
 poetry run python src/scripts/publish_samples.py
 ```
@@ -106,15 +109,17 @@ This machine subscribes to MQTT topics from Machine 1. It aligns multi-channel d
 and publishes pyOMA results.
 
 Run the aligner and system identification pipeline
+
 ```bash
 poetry run python src/examples/example.py oma-and-publish
 ```
+
 ## Machine 3: Cloud Layer – Mode Tracking and Model Update
 
 This machine subscribes to pyOMA results, performs mode tracking and updates the structural model.
 
 Run mode tracking and model update
+
 ```bash
 poetry run python src/examples/example.py mode-tracking-with-remote-sysid
 ```
-
