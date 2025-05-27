@@ -1,4 +1,5 @@
 import time
+import numpy as np
 import json
 from datetime import datetime
 from typing import Any, Dict, Optional, Tuple
@@ -103,7 +104,11 @@ def get_oma_results(
     }
 
     number_of_samples = int(sampling_period * 60 * fs)
-    data, timestamp = aligner.extract(number_of_samples)
+    #data, timestamp = aligner.extract(number_of_samples)
+    from datetime import datetime
+    timestamp = datetime(2025, 5, 27, 12, 34)
+
+    data = np.load("one_hour_data.npy")
 
     if data.size < number_of_samples:
         return None, None
