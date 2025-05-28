@@ -6,4 +6,4 @@ INTERVAL = 0.001  # Check every 0.001s to see if samples are collected
 
 MIN_SAMPLES_NEEDED = 500  # Minimum samples needed before running it to sysid
 
-WAIT_METADATA = 11 # Wait max 11 seconds for getting metadata message
+WAIT_METADATA = 0.001 # Wait max 11 seconds for getting metadata message

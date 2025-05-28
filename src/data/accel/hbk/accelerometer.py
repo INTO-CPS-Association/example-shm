@@ -13,7 +13,7 @@ class Accelerometer(IAccelerometer):
     def __init__(
         self,
         mqtt_client: mqtt.Client,
-        topic: str = "cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/1/acc/raw/data",
+        topic: str,
         map_size: int = MAX_MAP_SIZE ):
         """
         Initializes the Accelerometer instance with a pre-configured MQTT client.
@@ -38,7 +38,7 @@ class Accelerometer(IAccelerometer):
     # pylint: disable=unused-argument
     def _on_message(self, client: Any, userdata: Any, msg: mqtt.MQTTMessage) -> None:
         """Handles incoming MQTT messages."""
-        #print(f"Received message on topic {msg.topic}")
+        print(f"Received message on topic {msg.topic}")
 
         def safe_process():  # This ensures that an exception does not crash the entire thread
             try:
@@ -86,7 +86,7 @@ class Accelerometer(IAccelerometer):
                     if not oldest_deque:  # Remove the key/deque from the map if it's empty
                         del self.data_map[oldest_key]
                     total_samples = sum(len(dq) for dq in self.data_map.values())
-            #print(f" Channel: {self.topic}  Key: {samples_from_daq_start}, Samples: {num_samples}")
+            print(f" Channel: {self.topic}  Key: {samples_from_daq_start}, Samples: {num_samples}")
 
         except Exception as e:
             print(f"Error processing message: {e}")

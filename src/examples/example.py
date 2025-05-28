@@ -11,7 +11,10 @@ from examples.mode_tracking import (
     run_mode_tracking_with_local_sysid,
     run_mode_tracking_with_remote_sysid,
 )
-from examples.updating_parameters import run_model_update
+from examples.updating_parameters import (
+    run_model_update_local_sysid, 
+    run_model_update_remote_sysid
+)
 
 
 @click.group()
@@ -61,7 +64,13 @@ def mode_tracking_with_remote_sysid(ctx):
 
 @cli.command()
 @click.pass_context
-def model_update(ctx):
-    run_model_update(ctx.obj["CONFIG"])
+def model_update_local_sysid(ctx):
+    run_model_update_local_sysid(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def model_update_remote_sysid(ctx):
+    run_model_update_remote_sysid(ctx.obj["CONFIG"])
+
 if __name__ == "__main__":
     cli(obj={})
