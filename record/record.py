@@ -14,8 +14,9 @@ MQTT_CONFIG = {
     "ClientID": "xxxx",
     "QoS": 1,
     "TopicsToSubscribe": {
-        "cpsens/d8-3a-dd-37-d2-7e/3160-A-042_sn_999998/1/acc/raw/data": "mqtt_recordings/data1.jsonl",
-        "cpsens/d8-3a-dd-37-d2-7e/3160-A-042_sn_999998/2/acc/raw/data": "mqtt_recordings/data2.jsonl"
+        "cpsens/d8-3a-dd-37-d2-7e/3160-A-042_sn_999998/1/acc/raw/data": "record/mqtt_recordings/data1.jsonl",
+        "cpsens/d8-3a-dd-37-d2-7e/3160-A-042_sn_999998/1/acc/raw/metadata": "record/mqtt_recordings/metadata.jsonl",
+        "cpsens/d8-3a-dd-37-d2-7e/3160-A-042_sn_999998/2/acc/raw/data": "record/mqtt_recordings/data2.jsonl"
     }
 }
 

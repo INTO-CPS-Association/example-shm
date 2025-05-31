@@ -4,10 +4,11 @@ import time
 from datetime import datetime
 from paho.mqtt.client import Client as MQTTClient, CallbackAPIVersion, MQTTv5  # type: ignore
 
-RECORDINGS_DIR = "mqtt_recordings"
+RECORDINGS_DIR = "record/mqtt_recordings"
 
 TOPIC_MAPPING = {
     "data1.jsonl": "cpsens/recorded/1/data",
+    "metadata.jsonl": "cpsens/recorded/1/metadata",
     "data2.jsonl": "cpsens/recorded/2/data"
 }
 
