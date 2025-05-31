@@ -67,7 +67,9 @@ python .\src\examples\example.py oma-and-plot
 python .\src\examples\example.py oma-and-publish
 python .\src\examples\example.py mode-tracking-with-local-sysid
 python .\src\examples\example.py mode-tracking-with-remote-sysid
-python .\src\examples\example.py model-update
+python .\src\examples\example.py model-update-local-sysid
+python .\src\examples\example.py model-update-remote-sysid
+
 ```
 
 To run the examples with specified config, use
@@ -121,5 +123,5 @@ This machine subscribes to pyOMA results, performs mode tracking and updates the
 Run mode tracking and model update
 
 ```bash
-poetry run python src/examples/example.py mode-tracking-with-remote-sysid
+poetry run python src/examples/example.py model-update-remote-sysid
 ```
