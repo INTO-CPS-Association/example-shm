@@ -29,7 +29,7 @@ os.makedirs("mqtt_recordings", exist_ok=True)
 file_locks = {topic: threading.Lock() for topic in MQTT_CONFIG["TopicsToSubscribe"]}
 
 
-def on_connect(client, userdata, flags, rc):
+def on_connect(client, userdata, flags, rc, properties):
     print("Connected with result code", rc)
     for topic in MQTT_CONFIG["TopicsToSubscribe"]:
         client.subscribe(topic, qos=MQTT_CONFIG["QoS"])
@@ -51,7 +51,7 @@ def on_message(client, userdata, msg):
 
 
 def record_mqtt():
-    client = mqtt.Client(client_id=MQTT_CONFIG["ClientID"], protocol=mqtt.MQTTv311)
+    client = mqtt.Client(client_id=MQTT_CONFIG["ClientID"], protocol=mqtt.MQTTv311, callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
     client.username_pw_set(MQTT_CONFIG["userId"], MQTT_CONFIG["password"])
     client.on_connect = on_connect
     client.on_message = on_message
