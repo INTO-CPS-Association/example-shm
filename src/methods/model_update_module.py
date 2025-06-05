@@ -166,7 +166,15 @@ def subscribe_and_get_cleaned_values(config_path: str,
     mqtt_client.connect(config["sysID"]["host"], config["sysID"]["port"], keepalive=60)
     mqtt_client.loop_start()
     print("Waiting for OMA data...")
-    result_ready.wait()  # Wait until message arrives
+    try:
+        while not result_ready.wait(timeout=0.1): 
+            pass
+    except KeyboardInterrupt:
+        print("Cancel")
+        mqtt_client.loop_stop()
+        mqtt_client.disconnect()
+        raise SystemExit
+
     mqtt_client.loop_stop()
     mqtt_client.disconnect()
 
