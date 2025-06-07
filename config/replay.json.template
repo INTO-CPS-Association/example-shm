@@ -1,0 +1,28 @@
+{
+    "MQTT": {
+        "host": "test.mosquitto.org",
+        "port": 1883,
+        "userId": "",
+        "password": "",
+        "ClientID": "ReplaySubscriber",
+        "QoS": 1,
+        "TopicsToSubscribe": [
+            "cpsens/recorded/1/data",
+            "cpsens/recorded/1/metadata",
+            "cpsens/recorded/2/data"
+        ]
+      },
+
+    "sysID": {
+      "host": "test.mosquitto.org",
+      "port": 1883,
+      "userId": "",
+      "password": "",
+      "ClientID": "sub.232.sds.213s",
+      "QoS": 1,
+      "TopicsToSubscribe": ["cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/1_2/oma_results"]
+    }
+}
+
+
+
