@@ -1,5 +1,6 @@
 import typing
 import logging
+import numpy as np
 
 from pyoma2.algorithms.data.result import SSIResult
 from pyoma2.algorithms.data.run_params import SSIRunParams
@@ -63,6 +64,9 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         H, T = ssi.build_hank(
             Y=Y, Yref=Yref, br=br, method=method_hank, calc_unc=calc_unc, nb=nb
         )
+        # print(H)
+        
+        #np.savetxt('C:/swarup/demo_cantilever_beam/SHM_paper_results/Full/data/H_AU.txt', H,delimiter=',')
         # Get state matrix and output matrix
         Obs, A, C, Q1, Q2, Q3, Q4 = ssi.SSI_fast(
             H, br, ordmax, step=step, calc_unc=calc_unc, T=T, nb=nb
@@ -89,37 +93,100 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         hc_mpc_lim = hc["mpc_lim"]
         hc_mpd_lim = hc["mpd_lim"]
         hc_cov_max = hc["cov_max"]
+        # print(f'highest limit for covariance: {hc_cov_max}')
+        
+        # print(f'Fn before HC in conj: {Fns}')
+        # print(f'Xis before HC in conj: {Xis}')
+
+        # Apply HARD CRITERIA
+        # HC - presence of complex conjugate
+        # if hc_conj:
+        #     Lambds, mask1 = gen.HC_conj(Lambds)
+        #     lista = [Fns, Xis, Phis, Fn_cov, Xi_cov, Phi_cov]
+        #     Fns, Xis, Phis, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
+        #         lista, mask1, Phis.shape[2]
+        #     )
+        # print(f'Fn after HC in conj: {Fns}')
+        # print(f'Xis after HC in conj: {Xis}')
+        
+        # # HC - damping
+        # Xis, mask2 = gen.HC_damp(Xis, hc_xi_max)
+        # lista = [Fns, Lambds, Phis, Fn_cov, Xi_cov, Phi_cov]
+        # Fns, Lambds, Phis, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
+        #     lista, mask2, Phis.shape[2]
+        # )
+        # print(f'Fn after HC in damping: {Fns}')  
+        # print(f'Xis after HC in damping: {Xis}')
+        
+        # # HC - MPC and MPD
+        # mask3, mask4 = gen.HC_phi_comp(Phis, hc_mpc_lim, hc_mpd_lim)
+        # lista = [Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov]
+        # Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
+        #     lista, mask3, Phis.shape[2]
+        # )
+        # Fns, Xis, Phis, Lambds, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
+        #     lista, mask4, Phis.shape[2]
+        # )
         
         
         # Criteria regarding eigenvalue stability
         # HC - remove eigevalues with positive real part
         Lambds, mask6 = gen.HC_realEigen(Lambds)
-        lista = [Fns, Xis, Phis, Fn_cov, Xi_cov, Phi_cov]
+        list = [Fns, Xis, Phis, Fn_cov, Xi_cov, Phi_cov]
         Fns, Xis, Phis, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
-            lista, mask6, Phis.shape[2]
+            list, mask6, Phis.shape[2]
             )
         
         # Criteria regarding zero imaginary part in eigenvalues
         # HC - remove eigenvalues with zero imaginary part of eigenvalues
         Lambds, mask7 = gen.HC_removeZeroImg(Lambds)
-        lista = [Fns, Xis, Phis, Fn_cov, Xi_cov, Phi_cov]
+        list = [Fns, Xis, Phis, Fn_cov, Xi_cov, Phi_cov]
         Fns, Xis, Phis, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
-            lista, mask7, Phis.shape[2]
+            list, mask7, Phis.shape[2]
             )
-       
+        
+        #Infer minimum order
+        for ii in range(ordmin):
+            id = ii
+            nan_Matrix = np.empty(Fns.shape[0])
+            nan_Matrix[:] = np.nan
+            Fns[:,id] = nan_Matrix
+            Xis[:,id] = nan_Matrix
+            Fn_cov[:,id] = nan_Matrix
+            Xi_cov[:,id] = nan_Matrix
+            nan_Matrix = np.empty((Phis.shape[0],Phis.shape[2]))
+            nan_Matrix[:,:] = np.nan
+            Phis[:,id,:] = nan_Matrix
+            Phi_cov[:,id,:] = nan_Matrix
+
+        # # HC - maximum covariance
+        # if Fn_cov is not None:
+        #     Fn_cov, mask5 = gen.HC_cov(Fn_cov, hc_cov_max)
+        #     lista = [Fns, Xis, Phis, Lambds, Xi_cov, Phi_cov]
+        #     Fns, Xis, Phis, Lambds, Xi_cov, Phi_cov = gen.applymask(
+        #         lista, mask5, Phis.shape[2]
+        #     )
+        
+        # print(f'Fn after HC in maximum covariance: {Fns}')  
+        # print(f'Xis after HC in maximum covariance: {Xis}')    
+            
+        # print(f'err_fn for stability: {sc["err_fn"]}')   
+        # print(f'err_xi for stability: {sc["err_xi"]}')  
+        # print(f'err_phi for stability: {sc["err_phi"]}')  
+
       
         # Get the labels of the poles
-        Lab = gen.SC_apply(
-            Fns,
-            Xis,
-            Phis,
-            ordmin,
-            ordmax,
-            step,
-            sc["err_fn"],
-            sc["err_xi"],
-            sc["err_phi"],
-        )
+        # Lab = gen.SC_apply(
+        #     Fns,
+        #     Xis,
+        #     Phis,
+        #     ordmin,
+        #     ordmax,
+        #     step,
+        #     sc["err_fn"],
+        #     sc["err_xi"],
+        #     sc["err_phi"],
+        # )
 
         return SSIResult(
             Obs=Obs,
@@ -130,7 +197,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
             Fn_poles=Fns,
             Xi_poles=Xis,
             Phi_poles=Phis,
-            Lab=Lab,
+            # Lab=Lab,
             Fn_poles_cov=Fn_cov,
             Xi_poles_cov=Xi_cov,
             Phi_poles_cov=Phi_cov,
@@ -262,120 +329,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         self.result.Xi_cov = Xi_cov
         self.result.Phi_cov = Phi_cov
 
-    def plot_stab(
-        self,
-        freqlim: typing.Optional[tuple[float, float]] = None,
-        hide_poles: typing.Optional[bool] = True,
-    ) -> typing.Any:
-        """
-        Plot the Stability Diagram for the SSI algorithms.
-
-        The Stability Diagram helps visualize the stability of identified poles across different
-        model orders, making it easier to separate physical poles from spurious ones.
-
-        Parameters
-        ----------
-        freqlim : tuple of float, optional
-            Frequency limits for the plot. If None, limits are determined automatically. Default is None.
-        hide_poles : bool, optional
-            Option to hide poles in the plot for clarity. Default is True.
-
-        Returns
-        -------
-        typing.Any
-            A tuple containing the matplotlib figure and axes of the Stability Diagram plot.
-        """
-        if not self.result:
-            raise ValueError("Run algorithm first")
-
-        fig, ax = plot.stab_plot(
-            Fn=self.result.Fn_poles,
-            Lab=self.result.Lab,
-            step=self.run_params.step,
-            ordmax=self.run_params.ordmax,
-            ordmin=self.run_params.ordmin,
-            freqlim=freqlim,
-            hide_poles=hide_poles,
-            fig=None,
-            ax=None,
-            Fn_cov=self.result.Fn_poles_cov,
-        )
-        return fig, ax
-
-    def plot_cluster(
-        self,
-        freqlim: typing.Optional[tuple[float, float]] = None,
-        hide_poles: typing.Optional[bool] = True,
-    ) -> typing.Any:
-        """
-        Plot the frequency-damping cluster diagram for the identified modal parameters.
-
-        The cluster diagram visualizes the relationship between frequencies and damping
-        ratios for the identified poles, helping to identify clusters of physical modes.
-
-        Parameters
-        ----------
-        freqlim : tuple of float, optional
-            Frequency limits for the plot. If None, limits are determined automatically. Default is None.
-        hide_poles : bool, optional
-            Option to hide poles in the plot for clarity. Default is True.
-
-        Returns
-        -------
-        typing.Any
-            A tuple containing the matplotlib figure and axes of the cluster diagram plot.
-        """
-        if not self.result:
-            raise ValueError("Run algorithm first")
-
-        fig, ax = plot.cluster_plot(
-            Fn=self.result.Fn_poles,
-            Xi=self.result.Xi_poles,
-            Lab=self.result.Lab,
-            ordmin=self.run_params.ordmin,
-            freqlim=freqlim,
-            hide_poles=hide_poles,
-        )
-        return fig, ax
-
-    def plot_svalH(
-        self,
-        iter_n: typing.Optional[int] = None,
-    ) -> typing.Any:
-        """
-        Plot the singular values of the Hankel matrix for the SSI algorithm.
-
-        This plot is useful for checking the influence of the number of block-rows, br,
-        on the Singular Values of the Hankel matrix.
-
-        Parameters
-        ----------
-        iter_n : int, optional
-            The iteration number for which to plot the singular values. If None, the last
-            iteration is used. Default is None.
-
-        Returns
-        -------
-        typing.Any
-            A tuple containing the matplotlib figure and axes of the singular value plot.
-
-        Raises
-        ------
-        ValueError
-            If the algorithm has not been run before plotting.
-        """
-        if not self.result:
-            raise ValueError("Run algorithm first")
-
-        fig, ax = plot.svalH_plot(H=self.result.H, br=self.run_params.br, iter_n=iter_n)
-        return fig, ax
-
-
-
-
-
-
-
+    
 
 
 

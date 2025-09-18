@@ -3,7 +3,7 @@ import numpy as np
 from datetime import datetime
 from unittest.mock import MagicMock
 
-from methods import sys_id
+from methods.packages import sys_id
 
 def test_sysid():
     # Define OMA parameters
@@ -76,7 +76,7 @@ def test_sysid_full_flow_success():
 def test_get_oma_results_integration(mocker):
     from datetime import datetime
     import numpy as np
-    from methods import sys_id
+    from methods.packages import sys_id
 
     fs = 100  # sampling frequency
     mock_aligner = MagicMock()

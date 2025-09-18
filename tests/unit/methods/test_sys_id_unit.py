@@ -3,7 +3,7 @@ import numpy as np
 from unittest.mock import MagicMock, patch
 from datetime import datetime
 import json
-from methods.sys_id import (
+from methods.packages.sys_id import (
     sysid,
     get_oma_results,
     publish_oma_results,

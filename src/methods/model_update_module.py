@@ -5,11 +5,10 @@ import numpy as np
 import paho.mqtt.client as mqtt
 from scipy.optimize import minimize
 from scipy.linalg import eigh
-from methods.constants import MODEL_ORDER, MSTAB_FACTOR, TMAC
-from methods.packages.mode_track import mode_allingment
-from methods.packages.eval_yafem_model import eval_yafem_model
+from methods.constants import PARAMS
+from methods.packages.clustering import (cluster_func)
+from methods.packages.cantilever_beam.eval_yafem_model import eval_yafem_model
 from methods.packages import model_update
-from methods.constants import X0, BOUNDS
 from data.comm.mqtt import load_config, setup_mqtt_client
 # pylint: disable=C0103, W0603
 
@@ -33,7 +32,8 @@ def _convert_oma_output(obj: Any) -> Any:
     return obj
 
 
-def _on_connect(client: mqtt.Client, userdata: dict, flags: dict, reason_code: int, properties: mqtt.Properties) -> None:
+def _on_connect(client: mqtt.Client, userdata: dict, flags: dict,
+                reason_code: int, properties: mqtt.Properties) -> None:
     """Callback when MQTT client connects."""
     if reason_code  == 0:
         print("Connected to MQTT broker.")
@@ -58,7 +58,7 @@ def _on_message(_client: mqtt.Client, _userdata: dict, msg: mqtt.MQTTMessage) ->
         print(f"Error processing OMA message: {e}")
 
 
-def run_mode_track(oma_output: Any) -> Tuple[List[Dict], np.ndarray, np.ndarray]:
+def run_mode_clustering(oma_output: Any) -> Dict[str, Dict]:
     """
     Runs the mode tracking algorithm.
 
@@ -69,39 +69,45 @@ def run_mode_track(oma_output: Any) -> Tuple[List[Dict], np.ndarray, np.ndarray]
         median_frequencies (np.ndarray), 
         confidence_intervals (np.ndarray)
     """
-    mstab = MODEL_ORDER * MSTAB_FACTOR
-    cleaned_values = mode_allingment(oma_output, mstab, TMAC)
-    median_frequencies = np.array([cluster["median"] for cluster in cleaned_values])
-    confidence_intervals = np.array([
-        cluster["original_cluster"]["confidence_interval"]
-        for cluster in cleaned_values
-    ])
-    return cleaned_values, median_frequencies, confidence_intervals
+
+    cluster_dict_before, cluster_dict_allignment, cluster_dict = cluster_func(oma_output,
+                                                                              PARAMS, plot=False)
+
+    return cluster_dict_before, cluster_dict
 
 
 # pylint: disable=R0914
-def run_model_update(cleaned_values: List[Dict]) -> Optional[Dict[str, Any]]:
+def run_model_update(cluster_dict: Dict[str, Dict], model_pars={}) -> Optional[Dict[str, Any]]:
     """
     Runs model updating based on cleaned OMA clusters.
 
     Args:
-        cleaned_values (List[Dict]): Cleaned cluster results.
+        cleaned_values (Dict[str, Dict]): Cleaned cluster results.
 
     Returns:
         Updated model details or None if error.
     """
-    comb = {'cluster': cleaned_values}
+    comb = {'cluster': cluster_dict}
     try:
-        res = minimize(lambda x: model_update.par_est(x, comb),
-                       X0, bounds=BOUNDS, options={'maxiter': 1000})
+        res = minimize(lambda x: model_update.par_est(x, comb, PARAMS, model_pars),
+                       PARAMS['MU_start_values'], bounds=PARAMS["MU_bounds"],
+                       options={'maxiter': 1000})
         X = res.x
         print(f'Updated parameters: {X}')
 
-        pars_updated = {'k': X[0], 'Lab': X[1]}
+        idx = 0
+        pars_updated = {}
+        for key in model_pars:
+            if str(key) in PARAMS['pars_to_update']:
+                pars_updated[key] = PARAMS['updated_values'][idx]
+                idx += 1
+            else:
+                pars_updated[key] = model_pars[key]
+
         omegaMU, phi, PhiMU, myModel = eval_yafem_model(pars_updated)
         print("\nomegaMU:",omegaMU)
-        print("\nphi:",phi)
-        print("\nPhiMU:",PhiMU)
+        # print("\nphi:",phi)
+        # print("\nPhiMU:",PhiMU)
 
         M = myModel.M.todense()
         K = myModel.K.todense()
@@ -110,28 +116,11 @@ def run_model_update(cleaned_values: List[Dict]) -> Optional[Dict[str, Any]]:
         omegaN = np.sqrt(eigenvalues)
         omegaN_pi = omegaN / (2 * np.pi)
 
-        dd = np.sqrt(np.diag(eigenvectors.T @ M @ eigenvectors))
-        aa = eigenvectors @ np.diag(1.0 / dd)
-
-        zeta = np.zeros(len(omegaN))
-        zeta_medians = np.array([np.median(cluster['z_values']) for cluster in cleaned_values])
-        zeta[:len(zeta_medians)] = zeta_medians
-
-        Cmodal = np.diag(2 * zeta * omegaN)
-        C = np.linalg.inv(aa).T @ Cmodal @ np.linalg.inv(aa)
-        system_updated = {
-            "M": M,
-            "K": K,
-            "C": C
-        }
         return {
             'optimized_parameters': X,
             'omegaN_rad': omegaN,
             'omegaN_Hz': omegaN_pi,
-            'mode_shapes': aa,
-            'damping_matrix': C,
             'pars_updated': pars_updated,
-            'System_updated': system_updated
         }
 
     except ValueError as e:
@@ -158,12 +147,14 @@ def subscribe_and_get_cleaned_values(config_path: str,
     result_ready.clear()
 
     config = load_config(config_path)
-    mqtt_client, selected_topic = setup_mqtt_client(config["sysID"], topic_index=0)
+    mqtt_client, selected_topic = setup_mqtt_client(config["MQTT"], topic_index=0)
+    #mqtt_client, selected_topic = setup_mqtt_client(config["sysID"], topic_index=0)
 
     mqtt_client.user_data_set({"topic": selected_topic, "qos": 0})
     mqtt_client.on_connect = _on_connect
     mqtt_client.on_message = _on_message
-    mqtt_client.connect(config["sysID"]["host"], config["sysID"]["port"], keepalive=60)
+    mqtt_client.connect(config["MQTT"]["host"], config["MQTT"]["port"], keepalive=60)
+    #mqtt_client.connect(config["sysID"]["host"], config["sysID"]["port"], keepalive=60)
     mqtt_client.loop_start()
     print("Waiting for OMA data...")
     result_ready.wait()  # Wait until message arrives
@@ -174,4 +165,4 @@ def subscribe_and_get_cleaned_values(config_path: str,
         raise RuntimeError("Failed to receive OMA data.")
 
     print("OMA data received. Running mode tracking...")
-    return run_mode_track(oma_output_global)
+    return cluster_func(oma_output_global,PARAMS)
