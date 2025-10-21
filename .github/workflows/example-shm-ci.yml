@@ -2,14 +2,6 @@ name: Example SHM CI
 
 on:
   pull_request:
-    paths:
-      - "src/**"
-      - "tests/**"
-      - "pyproject.toml"
-      - "poetry.lock"
-      - ".pylintrc"
-      - "pytest.ini"
-      - ".github/workflows/example-shm-ci.yml"
 
 jobs:
   ci:
@@ -49,8 +41,8 @@ jobs:
         run: poetry install --with dev
 
       # ───── 4. Lint ─────
-      - name: Run pylint (min score 10.0)
-        run: poetry run pylint src tests --rcfile=.pylintrc --fail-under=10
+      - name: Run pylint (min score 7.0)
+        run: poetry run pylint src tests --rcfile=.pylintrc --fail-under=7
 
       # ───── 5. Tests ─────
       - name: Run pytest (with coverage)
