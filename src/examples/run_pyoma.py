@@ -1,9 +1,11 @@
 import sys
+import time
 import matplotlib.pyplot as plt
-from methods import sys_id as sysID
 from data.comm.mqtt import load_config
 from data.accel.hbk.aligner import Aligner
-from functions.natural_freq import plot_natural_frequencies
+from functions.sysid_plot import plot_stabilization_diagram
+from methods import sysid_module as sysID
+from methods.constants import PARAMS
 
 
 def setup_oma(config_path, data_topic_indexes):
@@ -31,27 +33,38 @@ def setup_oma(config_path, data_topic_indexes):
 
 
 def run_oma_and_plot(config_path):
-    number_of_minutes = 0.2
-    data_topic_indexes = [0, 2]
+    number_of_minutes = 1
+    data_topic_indexes = [0, 2, 3, 4]
     aligner, data_client, fs = setup_oma(config_path, data_topic_indexes)
 
     fig_ax = None
     aligner_time = None
+    t1 = time.time()
     while aligner_time is None:
+        time.sleep(0.1)
+        t2 = time.time()
+        t_text = f"Waiting for data for {round(t2-t1,1)} seconds"
+        print(t_text,end="\r")
         results, aligner_time = sysID.get_oma_results(number_of_minutes, aligner, fs)
     data_client.disconnect()
-    fig_ax = plot_natural_frequencies(results['Fn_poles'], freqlim=(0, 75), fig_ax=fig_ax)
+    print(aligner_time)
+    fig_ax = plot_stabilization_diagram(results, PARAMS, fig_ax=fig_ax)
     plt.show(block=True)
     sys.stdout.flush()
 
 
 def run_oma_and_print(config_path):
     number_of_minutes = 0.2
-    data_topic_indexes = [0, 2]
+    data_topic_indexes = [0, 2, 3, 4]
     aligner, data_client, fs = setup_oma(config_path, data_topic_indexes)
 
     aligner_time = None
+    t1 = time.time()
     while aligner_time is None:
+        time.sleep(0.1)
+        t2 = time.time()
+        t_text = f"Waiting for data for {round(t2-t1,1)} seconds"
+        print(t_text,end="\r")
         results, aligner_time = sysID.get_oma_results(number_of_minutes, aligner, fs)
     data_client.disconnect()
     sys.stdout.flush()
@@ -63,15 +76,15 @@ def run_oma_and_print(config_path):
 
 
 def run_oma_and_publish(config_path):
-    number_of_minutes = 0.02
-    data_topic_indexes = [0, 2]
+    number_of_minutes = 1
+    data_topic_indexes = [0, 2, 3, 4]
     aligner, data_client, fs = setup_oma(config_path, data_topic_indexes)
     publish_config = load_config(config_path)["sysID"]
 
     # Setting up the client for publishing OMA results
     publish_client, _ = sysID.setup_client(publish_config)  # fs not needed here
 
-    sysID.publish_oma_results(
+    publish_result = sysID.publish_oma_results(
         number_of_minutes,
         aligner,
         publish_client,
@@ -79,6 +92,29 @@ def run_oma_and_publish(config_path):
         fs
     )
 
-    print(f"Publishing to topic: {publish_config['TopicsToSubscribe'][0]}")
+    if publish_result is True:
+        print(f"Publishing to topic: {publish_config['TopicsToSubscribe'][0]}")
     data_client.disconnect()
     sys.stdout.flush()
+
+
+def run_oma_and_publish_loop(config_path):
+    number_of_minutes = 1
+    data_topic_indexes = [0, 2, 3, 4]
+    aligner, data_client, fs = setup_oma(config_path, data_topic_indexes)
+    publish_config = load_config(config_path)["sysID"]
+
+    # Setting up the client for publishing OMA results
+    publish_client, _ = sysID.setup_client(publish_config)  # fs not needed here
+
+    loop = True
+    while loop:
+        loop = sysID.publish_oma_results(
+            number_of_minutes,
+            aligner,
+            publish_client,
+            publish_config["TopicsToSubscribe"][0],
+            fs
+        )
+        if loop is True:
+            print(f"Publishing to topic: {publish_config['TopicsToSubscribe'][0]}")

@@ -1,8 +1,10 @@
 import time
 from data.comm.mqtt import load_config
 from data.accel.hbk.aligner import Aligner
-from methods import sys_id as sysID
-from methods import model_update_module as MT
+from methods import sysid_module as sysID
+from methods import clustering_tracking_module as MT
+from methods import model_update_module as MU
+from methods.constants import PARAMS
 # pylint: disable=R0914, C0103
 
 def run_model_update(config_path):
@@ -26,10 +28,10 @@ def run_model_update(config_path):
     data_client.disconnect()
 
     # Mode Track
-    cleaned_values, _, _ = MT.run_mode_track(oma_output)
+    dictionary_clusters, median_frequencies = MT.run_mode_clustering(oma_output,PARAMS)
 
     # Run model update
-    update_result = MT.run_model_update(cleaned_values)
+    update_result = MU.run_model_update(dictionary_clusters)
 
     if update_result is not None:
         optimized_parameters = update_result['optimized_parameters']
