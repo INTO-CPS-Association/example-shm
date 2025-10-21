@@ -6,10 +6,17 @@ from examples.run_pyoma import (
     run_oma_and_plot,
     run_oma_and_publish,
     run_oma_and_print,
+    run_oma_and_publish_loop,
+)
+from examples.clustering import (
+    run_clustering_with_local_sysid,
+    run_clustering_with_remote_sysid,
+    run_live_clustering_with_remote_sysid,
 )
 from examples.mode_tracking import (
     run_mode_tracking_with_local_sysid,
     run_mode_tracking_with_remote_sysid,
+    run_live_mode_tracking_with_remote_sysid,
 )
 from examples.updating_parameters import (
     run_model_update_local_sysid, 
@@ -42,6 +49,11 @@ def oma_and_publish(ctx):
 
 @cli.command()
 @click.pass_context
+def oma_and_publish_looping(ctx):
+    run_oma_and_publish_loop(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
 def oma_and_plot(ctx):
     run_oma_and_plot(ctx.obj["CONFIG"])
 
@@ -50,6 +62,20 @@ def oma_and_plot(ctx):
 def oma_and_print(ctx):
     run_oma_and_print(ctx.obj["CONFIG"])
 
+@cli.command()
+@click.pass_context
+def clustering_with_local_sysid(ctx):
+    run_clustering_with_local_sysid(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def clustering_with_remote_sysid(ctx):
+    run_clustering_with_remote_sysid(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def live_clustering_with_remote_sysid(ctx):
+    run_live_clustering_with_remote_sysid(ctx.obj["CONFIG"])
 
 @cli.command()
 @click.pass_context
@@ -60,6 +86,11 @@ def mode_tracking_with_local_sysid(ctx):
 @click.pass_context
 def mode_tracking_with_remote_sysid(ctx):
     run_mode_tracking_with_remote_sysid(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def live_mode_tracking_with_remote_sysid(ctx):
+    run_live_mode_tracking_with_remote_sysid(ctx.obj["CONFIG"])
 
 
 @cli.command()
