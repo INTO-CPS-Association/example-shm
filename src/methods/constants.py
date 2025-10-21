@@ -42,3 +42,19 @@ PARAMS['obj_cri'] = 0.1
 # If more clusters match, an it is not clear what cluster is best,
 # then check if the difference of the objective function values are less than the criteria.
 # Then it is probably the one with higest MAC rather than frequency [difference]
+
+# Params for model updating
+PARAMS['tMAC_MU'] = 0.7
+
+PARAMS['modes_search_paring'] = 6
+PARAMS['pars_to_update'] = ["k_rot","m"]
+PARAMS['MU_start_values'] = np.array([10, 0.015])
+PARAMS['MU_bounds'] = [(0.01, 1000), (0, 1000)]
+PARAMS['MU_modes'] = [1,2,3]
+
+MODEL_PARAMETERS = {'modes': PARAMS['modes_search_paring'],
+            'dofs_sel': np.array([[7,1],[6,1],[5,1],[4,1]]),
+            'k_rot': None, 
+            'l4': 0.1289,
+            'm': None,
+            }

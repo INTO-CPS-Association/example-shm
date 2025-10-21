@@ -49,8 +49,9 @@ def run_mode_tracking_with_local_sysid(config_path):
 
 def run_mode_tracking_with_remote_sysid(config_path):
     sysid_output, clusters, tracked_clusters = MT.subscribe_and_track_clusters(config_path)
-    fig_ax = plot_tracked_modes(tracked_clusters, PARAMS, fig_ax = None, x_length = None)
-    plt.show(block=True)
+    if sysid_output is not None:
+        fig_ax = plot_tracked_modes(tracked_clusters, PARAMS, fig_ax = None, x_length = None)
+        plt.show(block=True)
     sys.stdout.flush()
 
 def run_live_mode_tracking_with_remote_sysid(config_path):

@@ -32,10 +32,9 @@ def run_mode_clustering_with_local_sysid(config_path):
         sysid_output, aligner_time = sysID.get_sysid_results(number_of_minutes, aligner, fs)
     data_client.disconnect()
 
-    # Mode Tracks
+    # Mode clustering
     dictionary_of_clusters, median_frequencies = MC.cluster_sysid(
         sysid_output,PARAMS)
-
     # Print frequencies
     print("\nMedian frequencies:", median_frequencies)
 
@@ -44,10 +43,14 @@ def run_mode_clustering_with_local_sysid(config_path):
     sys.stdout.flush()
 
 def run_mode_clustering_with_remote_sysid(config_path):
-    sysid_output, dictionary_of_clusters, meadian_frequencies = MC.subscribe_and_cluster(config_path,PARAMS)
-    fig_ax = plot_clusters(dictionary_of_clusters, sysid_output, PARAMS, fig_ax = None)
-    plt.show(block=True)
+    cluster_results, sysid_output, dictionary_of_clusters, meadian_frequencies, timestamp = MC.subscribe_and_cluster(config_path,PARAMS)
+    if sysid_output is not None:
+        fig_ax = plot_clusters(dictionary_of_clusters, sysid_output, PARAMS, fig_ax = None)
+        plt.show(block=True)
     sys.stdout.flush()
 
 def run_live_mode_clustering_with_remote_sysid(config_path):
     MC.live_mode_clustering(config_path,topic_index=0,plot=[1,1])
+
+def run_live_mode_clustering_with_remote_sysid_and_publish(config_path):    
+    MC.live_mode_clustering_publish(config_path,topic_index=0)

@@ -31,3 +31,19 @@ def convert_numpy_to_list(obj: Any) -> Any:
     except Exception:
         pass
     return obj
+
+
+def _convert_list_to_dict_or_array(obj: Any) -> Any:
+    """Recursively convert JSON structure into complex numbers and numpy arrays."""
+    if isinstance(obj, dict):
+        if "real" in obj and "imag" in obj:
+            return complex(obj["real"], obj["imag"])
+        return {k: _convert_list_to_dict_or_array(v) for k, v in obj.items()}
+
+    if isinstance(obj, list):
+        try:
+            return np.array([_convert_list_to_dict_or_array(item) for item in obj])
+        except Exception:
+            return [_convert_list_to_dict_or_array(item) for item in obj]
+
+    return obj

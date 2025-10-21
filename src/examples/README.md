@@ -74,11 +74,15 @@ python .\src\examples\example.py live-sysid-publish
 python .\src\examples\example.py clustering-with-local-sysid
 python .\src\examples\example.py clustering-with-remote-sysid
 python .\src\examples\example.py live-clustering-with-remote-sysid
-python .\src\examples\example.py mode-tracking-with-remote-sysid
+python .\src\examples\example.py live-clustering-with-remote-sysid-and-publish
 python .\src\examples\example.py mode-tracking-with-local-sysid
-python .\src\examples\example.py live-mode-tracking-remote-sysid
+python .\src\examples\example.py mode-tracking-with-remote-sysid
+python .\src\examples\example.py live-mode-tracking-with-remote-sysid
 python .\src\examples\example.py model-update-local-sysid
 python .\src\examples\example.py live-model-update-remote-sysid
+python .\src\examples\example.py live-model-update-remote-clustering
+python .\src\examples\example.py live-model-update-remote-clustering-and-publish
+
 ```
 
 To run the examples with specified config, use
@@ -116,21 +120,20 @@ poetry run python src/scripts/publish_samples.py
 
 ## Machine 2: Fog Layer – Data Alignment and System Identification
 
-This machine subscribes to MQTT topics from Machine 1. It aligns multi-channel data, runs system identification,
-and publishes pyOMA results.
+This machine subscribes to MQTT topics from Machine 1. It aligns multi-channel data, runs system identification, and continuously publishes SysID results.
 
 Run the aligner and system identification pipeline
 
 ```bash
-poetry run python src/examples/example.py oma-and-publish
+poetry run python src/examples/example.py live-sysid-publish
 ```
 
 ## Machine 3: Cloud Layer – Mode Tracking and Model Update
 
-This machine subscribes to pyOMA results, performs mode tracking and updates the structural model.
+This machine subscribes to SysID results, and performs mode tracking.
 
-Run mode tracking and model update
+Run mode tracking
 
 ```bash
-poetry run python src/examples/example.py model-update-remote-sysid
+poetry run python src/examples/example.py mode-tracking-with-remote-sysid
 ```

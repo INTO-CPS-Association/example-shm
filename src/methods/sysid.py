@@ -1,19 +1,20 @@
 import time
 import json
+import numpy as np
 from datetime import datetime
 from typing import Any, Dict, Optional, Tuple
 from paho.mqtt.client import Client as MQTTClient
 from pyoma2.setup.single import SingleSetup
 from functions.util import convert_numpy_to_list
 from data.accel.metadata import extract_fs_from_metadata
-from data.comm.mqtt import setup_mqtt_client
+from data.comm.mqtt import (setup_mqtt_client, reconnect_client)
 from data.accel.hbk.aligner import Aligner
 from methods.packages.pyoma.ssiWrapper import SSIcov
 from methods.constants import DEFAULT_FS, PARAMS
 
 
 
-def sysid(data, params):
+def sysid(data: np.ndarray[float], params: Dict[str,Any]) -> Dict[str, Any]:
     """
     Perform system identification using the Covariance-based
             Stochastic Subspace Identification (SSI-COV) method.
@@ -71,7 +72,7 @@ def setup_client(mqtt_config: Dict[str, Any]) -> Tuple[MQTTClient, float]:
     """
     try:
         fs = extract_fs_from_metadata(mqtt_config)
-        print("Extracted FS from metadata:", fs)
+        print("Extracted Fs from metadata:", fs)
     except Exception:
         print("Failed to extract FS from metadata. Using DEFAULT_FS.")
         fs = DEFAULT_FS
@@ -113,7 +114,7 @@ def get_sysid_results(
 
 def publish_sysid_results(sampling_period: int, aligner: Aligner,
                         publish_client: MQTTClient, publish_topic: str,
-                        fs: float) -> None:
+                        fs: float) -> int:
     """
     Repeatedly tries to get aligned data and publish sysid results once.
 
@@ -125,7 +126,8 @@ def publish_sysid_results(sampling_period: int, aligner: Aligner,
         fs: Sampling frequency.
     """
     t1 = time.time()
-    loop = True
+    timestamp = datetime.now()
+    publish_result = True
     while True:
         try:
             time.sleep(0.1)
@@ -144,13 +146,11 @@ def publish_sysid_results(sampling_period: int, aligner: Aligner,
                 try:
                     message = json.dumps(payload)
 
-                    if not publish_client.is_connected():
-                        print("Publisher disconnected. Reconnecting...")
-                        publish_client.reconnect()
+                    reconnect_succes = reconnect_client(publish_client)
 
                     publish_client.publish(publish_topic, message, qos=1)
                     print(f"[{timestamp.isoformat()}] Published sysid result to {publish_topic}")
-                    loop = True
+                    publish_result = True
                     break
                 except Exception as e:
                     print(f"\nFailed to publish sysid result: {e}")
@@ -160,9 +160,9 @@ def publish_sysid_results(sampling_period: int, aligner: Aligner,
             aligner.mqtt_client.loop_stop()
             aligner.mqtt_client.disconnect()
             publish_client.disconnect()
-            loop = False
+            publish_result = False
             break
         except Exception as e:
             print(f"\nUnexpected error: {e}")
 
-    return loop
+    return publish_result, timestamp.isoformat()
