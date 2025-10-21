@@ -130,7 +130,7 @@ class Aligner(IAligner):
             ch.clear_used_data(group[0], requested_samples)
 
         aligned_array = np.array(aligned_data, dtype=np.float32)
-        print(f"Aligned shape: {aligned_array.shape}")
+        print(f"\nAligned shape: {aligned_array.shape}")
         return aligned_array, utc_time
 
 
