@@ -64,4 +64,4 @@ def plot_tracked_modes(
     fig.canvas.draw()
     fig.canvas.flush_events()
 
-    return fig, (ax1)
+    return fig, ax1

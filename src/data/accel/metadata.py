@@ -11,7 +11,6 @@ def extract_fs_from_metadata(mqtt_config: Dict[str, Any]) -> int:
     def _on_metadata(client: MQTTClient, userdata, message) -> None:
         try:
             payload = json.loads(message.payload.decode("utf-8"))
-            print("Metadata",payload)
             fs_candidate = payload["Analysis chain"][0]["Sampling"]
             if fs_candidate:
                 fs_result["fs"] = fs_candidate

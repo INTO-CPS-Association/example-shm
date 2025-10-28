@@ -3,7 +3,7 @@ import numpy as np
 from datetime import datetime
 from unittest.mock import MagicMock
 
-from methods import sysid_module
+from methods import sysid
 
 def test_sysid():
     # Define OMA parameters
@@ -17,7 +17,7 @@ def test_sysid():
     data = np.loadtxt('tests/integration/input_data/Acc_4DOF.txt').T
 
     # Perform system identification
-    sysid_output = sysid_module.sysid(data, oma_params)
+    sysid_output = sysid.sysid(data, oma_params)
     
     # Extract results using dictionary keys
     frequencies = sysid_output['Fn_poles']
@@ -59,7 +59,7 @@ def test_sysid_full_flow_success():
         "model_order": 20
     }
 
-    oma_result = sysid_module.sysid(data, oma_params)
+    oma_result = sysid.sysid(data, oma_params)
 
     # Check output structure
     assert isinstance(oma_result, dict)
@@ -68,7 +68,7 @@ def test_sysid_full_flow_success():
         assert isinstance(oma_result[key], list) or isinstance(oma_result[key], np.ndarray)
 
     # Convert to JSON-safe structure
-    converted = sysid_module.convert_numpy_to_list(oma_result)
+    converted = sysid.convert_numpy_to_list(oma_result)
     assert isinstance(converted, dict)
     assert isinstance(converted["Fn_poles"], list)
 
@@ -76,7 +76,7 @@ def test_sysid_full_flow_success():
 def test_get_oma_results_integration(mocker):
     from datetime import datetime
     import numpy as np
-    from methods import sysid_module
+    from methods import sysid
 
     fs = 100  # sampling frequency
     mock_aligner = MagicMock()
@@ -88,7 +88,7 @@ def test_get_oma_results_integration(mocker):
 
     mock_aligner.extract.return_value = (mock_data, mock_timestamp)
 
-    oma_output, timestamp = sysid_module.get_oma_results(number_of_minutes, mock_aligner, fs)
+    oma_output, timestamp = sysid.get_oma_results(number_of_minutes, mock_aligner, fs)
 
     assert isinstance(oma_output, dict)
     assert "Fn_poles" in oma_output
@@ -108,4 +108,4 @@ def test_sysid_raises_on_empty_data():
     }
 
     with pytest.raises(Exception):
-        sysid_module.sysid(data, oma_params)
+        sysid.sysid(data, oma_params)

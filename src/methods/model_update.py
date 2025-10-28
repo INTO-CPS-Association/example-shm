@@ -6,7 +6,7 @@ import paho.mqtt.client as mqtt
 from scipy.optimize import minimize
 from scipy.linalg import eigh
 from methods.packages.eval_yafem_model import eval_yafem_model
-from methods.packages import model_update
+from methods.mode_update_functions import model_update
 from methods.constants import X0, BOUNDS
 # pylint: disable=C0103, W0603
 

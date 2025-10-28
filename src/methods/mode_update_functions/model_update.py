@@ -4,7 +4,7 @@ import sys
 import os
 from methods.packages import eval_yafem_model as beam_new
 import json
-from methods.packages.mode_pairs import pair_calculate
+from methods.mode_update_functions.mode_pairs import pair_calculate
 
 
 def par_est(x, comb):

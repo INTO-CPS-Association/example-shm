@@ -3,13 +3,13 @@ import time
 import matplotlib.pyplot as plt
 from data.comm.mqtt import load_config
 from data.accel.hbk.aligner import Aligner
-from methods import sysid_module as sysID
-from methods import clustering_tracking_module as MT
+from methods import sysid as sysID
+from methods import mode_clustering as MC
 from methods.constants import PARAMS
-from functions.sysid_plot import plot_clusters
+from functions.plot_clusters import plot_clusters
 
 # pylint: disable=R0914
-def run_clustering_with_local_sysid(config_path):
+def run_mode_clustering_with_local_sysid(config_path):
     number_of_minutes = 1
     config = load_config(config_path)
     mqtt_config = config["MQTT"]
@@ -29,25 +29,25 @@ def run_clustering_with_local_sysid(config_path):
         t2 = time.time()
         t_text = f"Waiting for data for {round(t2-t1,1)} seconds"
         print(t_text,end="\r")
-        oma_output, aligner_time = sysID.get_oma_results(number_of_minutes, aligner, fs)
+        sysid_output, aligner_time = sysID.get_sysid_results(number_of_minutes, aligner, fs)
     data_client.disconnect()
 
     # Mode Tracks
-    dictionary_of_clusters, median_frequencies = MT.run_mode_clustering(
-        oma_output,PARAMS)
+    dictionary_of_clusters, median_frequencies = MC.cluster_sysid(
+        sysid_output,PARAMS)
 
     # Print frequencies
     print("\nMedian frequencies:", median_frequencies)
 
-    fig_ax = plot_clusters(dictionary_of_clusters, oma_output, PARAMS, fig_ax = None)
-    plt.show(block=False)
+    fig_ax = plot_clusters(dictionary_of_clusters, sysid_output, PARAMS, fig_ax = None)
+    plt.show(block=True)
     sys.stdout.flush()
 
-def run_clustering_with_remote_sysid(config_path):
-    oma_output, dictionary_of_clusters = MT.subscribe_and_cluster(config_path,PARAMS)
-    fig_ax = plot_clusters(dictionary_of_clusters, oma_output, PARAMS, fig_ax = None)
-    plt.show(block=False)
+def run_mode_clustering_with_remote_sysid(config_path):
+    sysid_output, dictionary_of_clusters, meadian_frequencies = MC.subscribe_and_cluster(config_path,PARAMS)
+    fig_ax = plot_clusters(dictionary_of_clusters, sysid_output, PARAMS, fig_ax = None)
+    plt.show(block=True)
     sys.stdout.flush()
 
-def run_live_clustering_with_remote_sysid(config_path):
-    MT.subscribe_cluster_looping(config_path,topic_index=0,plot=[1,1])
+def run_live_mode_clustering_with_remote_sysid(config_path):
+    MC.live_mode_clustering(config_path,topic_index=0,plot=[1,1])

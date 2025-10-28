@@ -1,9 +1,11 @@
 import sys
+import time
 import matplotlib.pyplot as plt
 from data.comm.mqtt import load_config
 from data.accel.hbk.aligner import Aligner
-from methods import sysid_module as sysID
-from methods import clustering_tracking_module as MT
+from methods import sysid as sysID
+from methods import mode_clustering as MC
+from methods import mode_tracking as MT
 from methods.constants import PARAMS
 from functions.plot_mode_tracking import plot_tracked_modes
 
@@ -22,29 +24,34 @@ def run_mode_tracking_with_local_sysid(config_path):
     aligner = Aligner(data_client, topics=selected_topics)
 
     aligner_time = None
+    t1 = time.time()
     while aligner_time is None:
-        oma_output, aligner_time = sysID.get_oma_results(number_of_minutes, aligner, fs)
+        time.sleep(0.1)
+        t2 = time.time()
+        t_text = f"Waiting for data for {round(t2-t1,1)} seconds"
+        print(t_text,end="\r")
+        sysid_output, aligner_time = sysID.get_sysid_results(number_of_minutes, aligner, fs)
     data_client.disconnect()
 
     # Mode Tracks
-    dictionary_of_clusters, median_frequencies = MT.run_mode_clustering(
-        oma_output,PARAMS)
+    dictionary_of_clusters, median_frequencies = MC.cluster_sysid(
+        sysid_output,PARAMS)
 
     # Print frequencies
     print("\nMedian frequencies:", median_frequencies)
 
     tracked_clusters = {}
-    tracked_clusters = MT.run_mode_tracking(dictionary_of_clusters,tracked_clusters,PARAMS)
+    tracked_clusters = MT.track_clusters(dictionary_of_clusters,tracked_clusters,PARAMS)
 
     fig_ax = plot_tracked_modes(tracked_clusters, PARAMS, fig_ax = None, x_length = None)
     plt.show(block=True)
     sys.stdout.flush()
 
 def run_mode_tracking_with_remote_sysid(config_path):
-    oma_output, clusters, tracked_clusters = MT.subscribe_and_get_clusters(config_path)
+    sysid_output, clusters, tracked_clusters = MT.subscribe_and_track_clusters(config_path)
     fig_ax = plot_tracked_modes(tracked_clusters, PARAMS, fig_ax = None, x_length = None)
     plt.show(block=True)
     sys.stdout.flush()
 
 def run_live_mode_tracking_with_remote_sysid(config_path):
-    MT.subscribe_cluster_and_tracking_looping(config_path,topic_index=0,plot=[1,1,1])
+    MT.live_mode_tracking(config_path,plot=[1,1])

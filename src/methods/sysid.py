@@ -33,7 +33,7 @@ def sysid(data, params):
     if data.shape[0]<data.shape[1]:
         data = data.T                           # transpose it if data has more column than rows
     print(f"Data dimensions: {data.shape}")
-    print(f"OMA parameters: {params}")
+    print(f"sysid parameters: {params}")
 
     my_setup = SingleSetup(data, fs=params['Fs'])
     ssi_mode_track = SSIcov(
@@ -82,7 +82,7 @@ def setup_client(mqtt_config: Dict[str, Any]) -> Tuple[MQTTClient, float]:
     return data_client, fs
 
 
-def get_oma_results(
+def get_sysid_results(
         sampling_period: int, aligner: Aligner, fs: float
         ) -> Optional[Tuple[Dict[str, Any], datetime]]:
     """
@@ -91,10 +91,10 @@ def get_oma_results(
     Args:
         sampling_period: How many minutes of data to pass to sysid.
         aligner: An initialized Aligner object.
-        fs: Sampling frequency to use in the OMA algorithm.
+        fs: Sampling frequency to use in the sysid algorithm.
 
     Returns:
-        A tuple (OMA_output, timestamp) if successful, or None if data is not ready.
+        A tuple (sysid_output, timestamp) if successful, or None if data is not ready.
     """
 
     number_of_samples = int(sampling_period * 60 * fs)
@@ -104,18 +104,18 @@ def get_oma_results(
         return None, None
 
     try:
-        oma_output = sysid(data, PARAMS)
-        return oma_output, timestamp
+        sysid_output = sysid(data, PARAMS)
+        return sysid_output, timestamp
     except Exception as e:
         print(f"sysID failed: {e}")
         return None, None
 
 
-def publish_oma_results(sampling_period: int, aligner: Aligner,
+def publish_sysid_results(sampling_period: int, aligner: Aligner,
                         publish_client: MQTTClient, publish_topic: str,
                         fs: float) -> None:
     """
-    Repeatedly tries to get aligned data and publish OMA results once.
+    Repeatedly tries to get aligned data and publish sysid results once.
 
     Args:
         sampling_period: Duration (in minutes) of data to extract.
@@ -132,14 +132,14 @@ def publish_oma_results(sampling_period: int, aligner: Aligner,
             t2 = time.time()
             t_text = f"Waiting for data for {round(t2-t1,1)} seconds"
             print(t_text,end="\r")
-            oma_output, timestamp = get_oma_results(sampling_period, aligner, fs)
+            sysid_output, timestamp = get_sysid_results(sampling_period, aligner, fs)
 
 
-            if oma_output:
+            if sysid_output:
                 print(f"Timestamp: {timestamp}")
                 payload = {
                     "timestamp": timestamp.isoformat(),
-                    "OMA_output": convert_numpy_to_list(oma_output)
+                    "sysid_output": convert_numpy_to_list(sysid_output)
                 }
                 try:
                     message = json.dumps(payload)
@@ -149,11 +149,11 @@ def publish_oma_results(sampling_period: int, aligner: Aligner,
                         publish_client.reconnect()
 
                     publish_client.publish(publish_topic, message, qos=1)
-                    print(f"[{timestamp.isoformat()}] Published OMA result to {publish_topic}")
+                    print(f"[{timestamp.isoformat()}] Published sysid result to {publish_topic}")
                     loop = True
                     break
                 except Exception as e:
-                    print(f"\nFailed to publish OMA result: {e}")
+                    print(f"\nFailed to publish sysid result: {e}")
 
         except KeyboardInterrupt:
             print("\nShutting down gracefully")

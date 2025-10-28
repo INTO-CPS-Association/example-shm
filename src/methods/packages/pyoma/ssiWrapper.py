@@ -123,19 +123,6 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
             Phis[:,id,:] = nan_Matrix
             Phi_cov[:,id,:] = nan_Matrix
       
-        # # Get the labels of the poles
-        # Lab = gen.SC_apply(
-        #     Fns,
-        #     Xis,
-        #     Phis,
-        #     ordmin,
-        #     ordmax,
-        #     step,
-        #     sc["err_fn"],
-        #     sc["err_xi"],
-        #     sc["err_phi"],
-        # )
-
         return SSIResult(
             Obs=Obs,
             A=A,
@@ -145,7 +132,6 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
             Fn_poles=Fns,
             Xi_poles=Xis,
             Phi_poles=Phis,
-            # Lab=Lab,
             Fn_poles_cov=Fn_cov,
             Xi_poles_cov=Xi_cov,
             Phi_poles_cov=Phi_cov,
