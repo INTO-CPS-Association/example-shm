@@ -122,7 +122,8 @@ plt.rcParams['font.family'] = 'Times New Roman'
 def plot_clusters(clusters: Dict[str,dict],
         sysid_results: Dict[str, Any],
         sysid_params: Dict[str, Any],
-        fig_ax = None)-> Tuple[matplotlib.figure.Figure, Tuple[plt.Axes,plt.Axes]]:
+        fig_ax = None,
+        legend = True)-> Tuple[matplotlib.figure.Figure, Tuple[plt.Axes,plt.Axes]]:
     """
     Plot stabilization of clusters
 
@@ -168,7 +169,8 @@ def plot_clusters(clusters: Dict[str,dict],
 
     ax1.set_ylabel("Model order", fontsize=20, color = 'black')
     ax1.set_ylim(0, sysid_params['model_order'] + 1)
-    ax1.legend(prop={'size': 20})
+    if legend is True:
+        ax1.legend(prop={'size': 10})
     ax1.set_title(f"Data set: {title_number}")
 
     # # # ............................................................................

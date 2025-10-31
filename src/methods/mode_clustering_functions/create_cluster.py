@@ -87,7 +87,7 @@ def cluster_creation(IP: dict[str,Any],Params: dict[str,Any]) -> dict[str,Any]: 
             #Check if there are multiple points with same model order as ip
             ip_ids = np.argwhere(row==row[0])
             if len(ip_ids[:,0]) > 1: # Remove all the other points at the same model order
-                for ii in ip_ids[1:,0]:
+                for ii in ip_ids[:,0]:
                     try:
                         frequencies = np.delete(frequencies,ii)
                         cov_f = np.delete(cov_f,ii)
