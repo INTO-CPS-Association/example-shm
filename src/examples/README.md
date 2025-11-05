@@ -62,13 +62,18 @@ To run the examples with the default config, use:
 ```bash
 python .\src\examples\example.py accelerometers
 python .\src\examples\example.py align-readings
-python .\src\examples\example.py oma-and-print
-python .\src\examples\example.py oma-and-plot
-python .\src\examples\example.py oma-and-publish
-python .\src\examples\example.py mode-tracking-with-local-sysid
-python .\src\examples\example.py mode-tracking-with-remote-sysid
+python .\src\examples\example.py sysid-and-print
+python .\src\examples\example.py sysid-and-plot
+python .\src\examples\example.py sysid-and-publish
+python .\src\examples\example.py live-sysid-publish
+python .\src\examples\example.py clustering-with-local-sysid
+python .\src\examples\example.py clustering-with-remote-sysid
+python .\src\examples\example.py live-clustering-with-remote-sysid
+python .\src\examples\example.py mode-tracking-remote-sysid
+python .\src\examples\example.py mode_tracking-with-local-sysid
+python .\src\examples\example.py live-mode-tracking-remote-sysid
 python .\src\examples\example.py model-update-local-sysid
-python .\src\examples\example.py model-update-remote-sysid
+python .\src\examples\example.py ilve-model-update-remote-sysid
 
 ```
 
