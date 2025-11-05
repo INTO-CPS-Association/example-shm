@@ -13,7 +13,6 @@ def alignment(cluster_dict: dict[str,dict], Params: dict[str,Any]) -> dict[str,d
             cluster_dict (dict): Dictionary of aligned clusters
 
     """
-    #print("\nCluster alignment")
     median_f = []
     for key in cluster_dict.keys(): #Find the median of each cluster
         cluster = cluster_dict[key]
@@ -23,7 +22,6 @@ def alignment(cluster_dict: dict[str,dict], Params: dict[str,Any]) -> dict[str,d
     deleted_cluster_id = []
     for ii, m_f in enumerate(median_f): #Go through all medians
         if ii in deleted_cluster_id: #If cluster is deleted pass on
-            #print(deleted_cluster_id)
             continue
         # Calculate absolute difference of selected median and all medians
         diff = abs(median_f-m_f)
@@ -35,29 +33,14 @@ def alignment(cluster_dict: dict[str,dict], Params: dict[str,Any]) -> dict[str,d
         mask = (diff > 0) & (diff < min(m_f*Params['allignment_factor'][0],Params['Fs']/2*Params['allignment_factor'][1]))
         indices = np.argwhere(mask == True) #Indicies of clusters that are closely located in frequency
 
-
-
-        #print(cluster_dict.keys())
         if indices.shape[0] > 0:# If one or more clusters are found
             ids = indices[:,0]
-            #print("ids",ids)
             for id in ids: #Go through all clusters that is closely located
                 if id in deleted_cluster_id:
                     continue
 
-
-                #print("id",id)
-                break_loop = 0
                 cluster1 = cluster_dict[str(ii)] #Parent cluster
                 cluster2 = cluster_dict[str(id)] #Co-located cluster
-                
-                # Proposed method
-                # for r in cluster2['model_order']:
-                #     if r in cluster1['model_order']: #If the two clusters have poles with same model order, then skip the allignment
-                #         print("Clusters have the same MO",cluster2['model_order'],cluster1['model_order'])
-                #         break_loop = 1
-                # if break_loop == 1:
-                #     break
 
                 MAC = calculate_mac(cluster1['mode_shapes'][0],cluster2['mode_shapes'][0]) # Check mode shape for the first pole in each cluster
                 if MAC >= Params['tMAC']: #If MAC complies with the criteria, then add the two clusters
@@ -83,9 +66,6 @@ def alignment(cluster_dict: dict[str,dict], Params: dict[str,Any]) -> dict[str,d
                             deleted_cluster_id.append(int(id)) #The delete cluster id
                         else:
                             cluster_dict[str(id)] = cluster_remaining #Save the remaining cluster
-                    # else:
-                    #     if cluster1['f'][0] > 300:
-                    #         breakpoint()
                     
     
     cluster_dict_alligned = cluster_dict

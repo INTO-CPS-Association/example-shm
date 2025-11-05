@@ -78,7 +78,7 @@ def run_sysid_and_print(config_path):
 
 
 def run_sysid_and_publish(config_path):
-    number_of_minutes = 1
+    number_of_minutes = 0.2
     data_topic_indexes = [0, 2, 3, 4]
     aligner, data_client, fs = setup_sysid(config_path, data_topic_indexes)
     publish_config = load_config(config_path)["sysID"]

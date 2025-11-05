@@ -12,9 +12,11 @@ def cluster_expansion(cluster: dict[str,Any], data: dict[str,Any], Params: dict[
             Params (dict): Dictionary of algorithm parameters
         Returns:
             cluster (dict): Expanded cluster
+        
+        Raises:
+            Double orders exist
 
     """
-    #print("\nExpansion")
     unClustered_frequencies = data['frequencies']
     unClustered_damping = data['damping_ratios']
     
@@ -78,6 +80,6 @@ def cluster_expansion(cluster: dict[str,Any], data: dict[str,Any], Params: dict[
             print("row_after",cluster['row'])
             print("exp2",cluster['f'])
             print("double orders",cluster['row'])
-            breakpoint()
+            raise ValueError("Failed due to double orders exist")
 
     return cluster

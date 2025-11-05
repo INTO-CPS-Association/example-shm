@@ -2,21 +2,22 @@ from typing import Tuple, Dict, Any
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.figure
+import matplotlib.axes
 plt.rcParams['font.family'] = 'Times New Roman'
 
 def plot_tracked_modes(
         tracked_clusters: Dict[str, Any],
-        oma_params: Dict[str, Any],
+        sysid_params: Dict[str, Any],
         fig_ax: Any = None,
-        x_length: int = None)-> Tuple[matplotlib.figure.Figure, Tuple[plt.Axes,plt.Axes]]:
+        x_length: Any = None)-> Tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]:
     """
     Plot tracked modes
 
     Args:
-        oma_results (dict): PyOMA results
-        oma_params (dict): OMA parameters
+        tracked_clusters (Dict[str, Any]): Tracked clusters
+        sysid_params (Dict[str, Any]): sysid parameters
     Returns:
-        fig_ax (tuple): fig and ax of plot
+        fig_ax (Tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]): fig and ax of plot
 
     """
 
@@ -50,7 +51,7 @@ def plot_tracked_modes(
     ax1.set_xlabel("Dataset", fontsize=20, color = 'black')
     ax1.tick_params(axis='both', which='major', labelsize=17)
 
-    ax1.set_ylim(0, oma_params['Fs']/2)
+    ax1.set_ylim(0, sysid_params['Fs']/2)
     if x_length is not None:
         ax1.set_xlim(np.maximum(max(max_x)-x_length,0),max(max_x)+1)
         ax1.set_xticks(np.arange(np.maximum(max(max_x)-x_length,0),

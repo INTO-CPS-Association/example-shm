@@ -2,6 +2,7 @@ from typing import Tuple, Dict, Any
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.figure
+import matplotlib.axes
 from functions.clean_sysid_output import (remove_complex_conjugates,remove_highly_uncertain_points)
 plt.rcParams['font.family'] = 'Times New Roman'
 
@@ -9,17 +10,17 @@ plt.rcParams['font.family'] = 'Times New Roman'
 def plot_pre_stabilization_diagram(
         sysid_results: Dict[str, Any],
         sysid_params: Dict[str, Any],
-        fig_ax)-> Tuple[matplotlib.figure.Figure, Tuple[plt.Axes,plt.Axes]]:
+        fig_ax)-> Tuple[matplotlib.figure.Figure, Tuple[matplotlib.axes.Axes,matplotlib.axes.Axes]]:
 
     """
     Plot stabilization of raw sysid data before pre-cleaning
 
     Args:
-        sysid_results (dict): Pyoma results
-        sysid_params (dict): sysid parameters
-        fix_ax (tuple): fig and ax of plot to redraw
+        sysid_results (Dict[str, Any]): Pyoma results
+        sysid_params (Dict[str, Any]): sysid parameters
+        fix_ax (Tuple): fig and ax of plot to redraw
     Returns:
-        fig_ax (tuple): fig and ax of plot
+        fig_ax (Tuple): fig and ax of plot
 
     """
     if fig_ax is None:
@@ -63,7 +64,7 @@ def plot_pre_stabilization_diagram(
 def plot_stabilization_diagram(
         sysid_results: Dict[str, Any],
         sysid_params: Dict[str, Any],
-        fig_ax)-> Tuple[matplotlib.figure.Figure, Tuple[plt.Axes,plt.Axes]]:
+        fig_ax)-> Tuple[matplotlib.figure.Figure, Tuple[matplotlib.axes.Axes,matplotlib.axes.Axes]]:
     """
     Plot stabilization of sysid data before after pre-cleaning
 
@@ -113,7 +114,40 @@ def plot_stabilization_diagram(
     return fig, (ax1,ax2)
 
 
-def add_scatter_data(ax,x,y,cov,error_dir,mark="o",lab='Non clustered',size=50):
+def add_scatter_cluster(ax: matplotlib.axes.Axes, x: np.ndarray[float], y: np.ndarray[float], cov: np.ndarray[float], cluster_id = int, error_dir: str = "h") -> Tuple[matplotlib.axes.Axes, Any]:
+    """
+    Add scatter plot of clusters to existing axes
+    
+    Args:
+        ax (matplotlib.axes.Axes): ax from matplotlib
+        x (np.ndarray[float]): x-axis data
+        y (np.ndarray[float]): y-axis data
+        cov (np.ndarray[float]): covariance for errorbars
+        cluster_id (int): Index of cluster for labeling
+        error_dir (str): Direction of errorbars, either "h" horizontal or "v" vertical
+
+    Returns:
+        ax (matplotlib.axes.Axes):
+        col (Any):
+    """
+
+def add_scatter_data(ax: matplotlib.axes.Axes, x: np.ndarray[float], y: np.ndarray[float], cov: np.ndarray[float], error_dir: str = "h", mark: str ="o", lab: str ='Non clustered',size: float = 50) -> matplotlib.axes.Axes:
+    """
+    Add scatter plot of sysid results to existing axes
+    
+    Args:
+        ax (matplotlib.axes.Axes): ax from matplotlib
+        x (np.ndarray[float]): x-axis data
+        y (np.ndarray[float]): y-axis data
+        cov (np.ndarray[float]): covariance for errorbars
+        error_dir (str): Direction of errorbars, either "h" horizontal or "v" vertical
+        mark (str): marker type option
+        lab (str): Labeling for legend
+        size (float): Size of markers
+
+    Returns:
+        ax (matplotlib.axes.Axes):
+    """
     ax.scatter(x, y, marker=mark, s=size, c="r", label = lab)
     if cov is not None:
         xerr = np.sqrt(cov) * 2
@@ -124,7 +158,16 @@ def add_scatter_data(ax,x,y,cov,error_dir,mark="o",lab='Non clustered',size=50):
             ax.errorbar(x, y, yerr=xerr, fmt="None", capsize=5, ecolor="gray")
     return ax
 
-def add_plot_standard_flair(ax,sysid_params):
+def add_plot_standard_flair(ax: matplotlib.axes.Axes, sysid_params: Dict[str,Any]) -> matplotlib.axes.Axes:
+    """
+    Add labels, grid and limit existing axes
+    
+    Args:
+        ax (matplotlib.axes.Axes): ax from matplotlib
+        sysid_params (Dict[str, Any]): sysid parameters
+    Returns:
+        ax (matplotlib.axes.Axes):
+    """
     ax.set_xlabel("Frequency [Hz]", fontsize=20, color = 'black')
     ax.tick_params(axis='both', which='major', labelsize=17)
 
@@ -136,7 +179,19 @@ def add_plot_standard_flair(ax,sysid_params):
 
     return ax
 
-def add_plot_annotation(ax,x,y,y_model_order):
+def add_plot_annotation(ax: matplotlib.axes.Axes, x: np.ndarray[float], y: np.ndarray[float], y_model_order: np.ndarray[float]) -> matplotlib.axes.Axes:
+    """
+    Add model order annotations
+    
+    Args:
+        ax (matplotlib.axes.Axes): ax from matplotlib
+        x (np.ndarray[float]): x-axis data
+        y (np.ndarray[float]): y-axis data
+        y_model_order (np.ndarray[float]): Model order data
+
+    Returns:
+        ax (matplotlib.axes.Axes):
+    """
     for i, txt in enumerate(y_model_order):
         ax.annotate(str(txt), (x[i], y[i]))
     return ax

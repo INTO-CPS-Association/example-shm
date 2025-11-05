@@ -27,27 +27,6 @@ def cluster_func(sysid_output: dict[str,Any], Params : dict[str,Any]) -> tuple[d
     #Preeliminary cleaning
     frequencies, cov_freq, damping_ratios, cov_damping, mode_shapes = remove_highly_uncertain_points(sysid_output,Params) 
 
-    # Transpose, flip and sort arrays, such that arrays maps directly to the stabilization diagram.
-    # This means the the frequency array maps directly to the plot:
-    # MO.
-    # 5.| x    x     
-    # 4.| x          
-    # 3.| x          
-    # 2.|      x
-    # 1.|
-    # 0.|
-    #    -1----4------- Frequency
-    # The frequency array will then have the shape (6,3). Initially (6,6) but the complex conjugates have been removed. So 6 is halved to 3.
-    # 6 for each model order, including 0 and 3 for maximum poles in a modelorder
-    # The frequency array will then become:
-    #   _0_1_
-    # 0| 1 4
-    # 1| 1 Nan
-    # 0| 1 Nan
-    # 0| Nan 4
-    # 0| Nan Nan
-    # 0| Nan Nan 
-
     frequencies, cov_freq, damping_ratios, cov_damping, mode_shapes2, model_orders = transform_sysid_features(frequencies, cov_freq, damping_ratios, cov_damping, mode_shapes)
     
     row, col = np.indices(model_orders.shape)
@@ -93,8 +72,7 @@ def cluster_func(sysid_output: dict[str,Any], Params : dict[str,Any]) -> tuple[d
             while expansion:
                 kk += 1
                 if kk > 10:
-                    print("Expansion never ends, something is wrong.")
-                    breakpoint()
+                    raise("Expansion never ends, something is wrong.")
                 pre_cluster = cluster1
                 cluster2 = cluster_expansion(cluster1,data2,Params)
                 if cluster2['f'].shape == pre_cluster['f'].shape:
@@ -111,7 +89,6 @@ def cluster_func(sysid_output: dict[str,Any], Params : dict[str,Any]) -> tuple[d
             
             #Save cluster
             if isinstance(cluster2['f'],np.ndarray): #Must atleast have two poles
-                #print("Cluster saved", np.median(cluster2['f']))
                 cluster_dict[str(cluster_counter)] = cluster2
                 cluster_counter += 1
                 data1 = remove_data_from_S(data2,cluster2) #Remove clustered poles from data
@@ -131,7 +108,7 @@ def cluster_func(sysid_output: dict[str,Any], Params : dict[str,Any]) -> tuple[d
             if cluster['f'].shape[0] < Params['mstab']:
                 print("cluster", np.median(cluster['f']),"too short:",cluster['f'].shape[0],"But must be:",Params['mstab'])
             else:
-                print("Cluster saved", np.median(cluster['f']))
+                print("Cluster saved:", np.median(cluster['f']))
                 cluster_dict3[str(ii)] = cluster
                 cluster_counter += 1
                 data1 = remove_data_from_S(data2,cluster) #Remove clustered poles from data

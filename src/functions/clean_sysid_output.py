@@ -34,6 +34,27 @@ def remove_complex_conjugates(sysid_output):
 def transform_sysid_features(frequencies_,cov_freq_,damping_ratios_,cov_damping_,mode_shapes_):
     """
     Transform sysid results
+
+    Transpose, flip and sort arrays, such that arrays maps directly to the stabilization diagram.
+    This means the the frequency array maps directly to the plot:
+    MO.
+    5.| x    x     
+    4.| x          
+    3.| x          
+    2.|      x
+    1.|
+    0.|
+       -1----4------- Frequency
+    The frequency array will then have the shape (6,3). Initially (6,6) but the complex conjugates have been removed. So 6 is halved to 3.
+    6 for each model order, including 0 and 3 for maximum poles in a modelorder
+    The frequency array will then become:
+      _0_1_
+    0| 1 4
+    1| 1 Nan
+    0| 1 Nan
+    0| Nan 4
+    0| Nan Nan
+    0| Nan Nan
     
     Args:
         frequencies_ (np.ndarray): Frequencies (mean)
@@ -49,26 +70,6 @@ def transform_sysid_features(frequencies_,cov_freq_,damping_ratios_,cov_damping_
         cov_damping (np.ndarray): Covariance of damping ratio
         mode_shapes (np.ndarray): Mode shapes
     """
-    # Transpose, flip and sort arrays, such that arrays maps directly to the stabilization diagram.
-    # This means the the frequency array maps directly to the plot:
-    # MO.
-    # 5.| x    x     
-    # 4.| x          
-    # 3.| x          
-    # 2.|      x
-    # 1.|
-    # 0.|
-    #    -1----4------- Frequency
-    # The frequency array will then have the shape (6,3). Initially (6,6) but the complex conjugates have been removed. So 6 is halved to 3.
-    # 6 for each model order, including 0 and 3 for maximum poles in a modelorder
-    # The frequency array will then become:
-    #   _0_1_
-    # 0| 1 4
-    # 1| 1 Nan
-    # 0| 1 Nan
-    # 0| Nan 4
-    # 0| Nan Nan
-    # 0| Nan Nan 
 
     #Transformation of data
     frequencies = np.transpose(frequencies_)

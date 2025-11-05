@@ -1,8 +1,8 @@
 import numpy as np
-from typing import Any
+from typing import Any, Dict
 from functions.calculate_mac import calculate_mac
 
-def cluster_creation(IP: dict[str,Any],Params: dict[str,Any]) -> dict[str,Any]: #Algorithm 2
+def cluster_creation(IP: Dict[str,Any],Params: Dict[str,Any]) -> Dict[str,Any]: #Algorithm 2
     """
         Create cluster
 
@@ -36,7 +36,6 @@ def cluster_creation(IP: dict[str,Any],Params: dict[str,Any]) -> dict[str,Any]: 
                     IPu['ms'] = np.array((mode_shapes[ii,:]))
                     IPu['row'] = row[ii]
                     IPu['col'] = col[ii]
-                    unique = 1 #To determine if the unique poles are more than one, for later use. if 1 then only one unique pole exist
                 else: 
                     IPu['f'] = np.append(IPu['f'],frequencies[ii])
                     IPu['cov_f'] = np.append(IPu['cov_f'],cov_f[ii])
@@ -45,10 +44,9 @@ def cluster_creation(IP: dict[str,Any],Params: dict[str,Any]) -> dict[str,Any]: 
                     IPu['ms'] = np.vstack((IPu['ms'],mode_shapes[ii,:]))
                     IPu['row'] = np.append(IPu['row'],row[ii])
                     IPu['col'] = np.append(IPu['col'],col[ii])
-                    unique = 2 #To determine if the unique poles are more than one, for later use. if 2 more than one uniqe pole exist
         
         if len(IPu) > 0: #If there exist model orders with unique poles
-            if unique == 1: #If there only exist one unique pole
+            if type(IPu['f']) == np.float64:
                 cluster = {'f':np.array([IPu['f']]),
                     'cov_f':np.array([IPu['cov_f']]),
                     'd':np.array([IPu['d']]),
@@ -87,7 +85,7 @@ def cluster_creation(IP: dict[str,Any],Params: dict[str,Any]) -> dict[str,Any]: 
             #Check if there are multiple points with same model order as ip
             ip_ids = np.argwhere(row==row[0])
             if len(ip_ids[:,0]) > 1: # Remove all the other points at the same model order
-                for ii in ip_ids[:,0]:
+                for ii in np.flip(ip_ids[:,0]):
                     try:
                         frequencies = np.delete(frequencies,ii)
                         cov_f = np.delete(cov_f,ii)
@@ -151,7 +149,7 @@ def cluster_creation(IP: dict[str,Any],Params: dict[str,Any]) -> dict[str,Any]: 
 
     return cluster
 
-def cluster_from_mac(cluster: dict[str,Any], IP: dict[str,Any], Params: dict[str,Any]) -> dict[str,Any]:
+def cluster_from_mac(cluster: Dict[str,Any], IP: Dict[str,Any], Params: Dict[str,Any]) -> Dict[str,Any]:
     """
         Add points to cluster based on MAC
 
@@ -199,25 +197,25 @@ def cluster_from_mac(cluster: dict[str,Any], IP: dict[str,Any], Params: dict[str
             skip_id.append(idx)
 
     #Compare remaining points with newly added cluster points, i.e. points are compared with the full cluster, not just ip
-    if cluster['f'].shape[0] > 1: #If points have been added to cluster proceed
+    if cluster['f'].shape[0] > 1: #Proceed if points have been added to cluster 
         if IP['ms'].shape[0] > len(skip_id): #If there are more points to compare left, then proceed
-            unclustered_points = 1
-            while IP['ms'].shape[0] != unclustered_points: #Run until no points are clustered anymore
-                unclustered_points = IP['ms'].shape[0]
+            cluster_length = len(cluster['row'])
+            new_cluster_length = 0
+            while cluster_length != new_cluster_length: #Run until no points are clustered anymore
+                cluster_length = len(cluster['row'])
 
                 i_ms = IP['ms'][1:]
                 for jj, ms in enumerate(i_ms):
                     idx = jj+1
-                    if idx in skip_id:
-                        # print(idx)
+                    if idx in skip_id: #Skip indecies of points that have already been added
                         continue
 
                     MAC_list = []
                     for c_ms in cluster['mode_shapes']:
                         MAC_list.append(calculate_mac(c_ms,ms))
 
-                    # print("MAC_list",MAC_list)
                     if max(MAC_list) > Params['tMAC']: #line 2 in algorithm
+                        MAC = calculate_mac(ip_ms,ms)
                         #Add to cluster
                         cluster['f'] = np.append(cluster['f'],frequencies[idx])
                         cluster['cov_f'] = np.append(cluster['cov_f'],cov_f[idx])
@@ -230,6 +228,9 @@ def cluster_from_mac(cluster: dict[str,Any], IP: dict[str,Any], Params: dict[str
                         cluster['col'] = np.append(cluster['col'],col[idx])
 
                         skip_id.append(idx)
+
+                new_cluster_length = len(cluster['row']) 
+
 
     clustered_id = []
     for r2 in cluster['row']: #For every entry in row cluster
@@ -258,7 +259,7 @@ def cluster_from_mac(cluster: dict[str,Any], IP: dict[str,Any], Params: dict[str
 
     return cluster, unclustered_IPu
 
-def cluster_from_mac_IPm(cluster: dict[str,Any], IPm: dict[str,Any], Params: dict[str,Any]) -> dict[str,Any]:
+def cluster_from_mac_IPm(cluster: Dict[str,Any], IPm: Dict[str,Any], Params: Dict[str,Any]) -> Dict[str,Any]:
     """
         Cluster based on MAC if multiple poles exist for the model order
 
@@ -368,8 +369,6 @@ def cluster_from_mac_IPm(cluster: dict[str,Any], IPm: dict[str,Any], Params: dic
                 cluster['col'] = np.append(cluster['col'],col[ll])
 
                 skip_id.append(oo)
-            # else:
-            #     print("Not clustered. MAC not satisfied")
 
     clustered_id = []
     for r2 in cluster['row']: #For every entry in row cluster

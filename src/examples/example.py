@@ -25,7 +25,7 @@ from examples.run_model_update import (
 
 
 @click.group()
-@click.option('--config', default="config/DTU_config.json", help="Path to config file")
+@click.option('--config', default="config/production.json", help="Path to config file")
 @click.pass_context
 def cli(ctx, config):
     ctx.ensure_object(dict)
@@ -83,12 +83,12 @@ def mode_tracking_with_local_sysid(ctx):
 
 @cli.command()
 @click.pass_context
-def mode_tracking_remote_sysid(ctx):
+def mode_tracking_with_remote_sysid(ctx):
     run_mode_tracking_with_remote_sysid(ctx.obj["CONFIG"])
 
 @cli.command()
 @click.pass_context
-def live_mode_tracking_remote_sysid(ctx):
+def live_mode_tracking_with_remote_sysid(ctx):
     run_live_mode_tracking_with_remote_sysid(ctx.obj["CONFIG"])
 
 @cli.command()
