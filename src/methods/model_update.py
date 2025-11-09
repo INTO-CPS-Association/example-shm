@@ -1,16 +1,13 @@
 import json
 import threading
-from typing import Any, List, Dict, Tuple, Optional
+from typing import Any, List, Dict, Optional
 import numpy as np
 import paho.mqtt.client as mqtt
 from scipy.optimize import minimize
 from scipy.linalg import eigh
-from methods.constants import MODEL_ORDER, MSTAB_FACTOR, TMAC
-from methods.packages.mode_track import mode_allingment
 from methods.packages.eval_yafem_model import eval_yafem_model
-from methods.packages import model_update
+from methods.mode_update_functions import model_update
 from methods.constants import X0, BOUNDS
-from data.comm.mqtt import load_config, setup_mqtt_client
 # pylint: disable=C0103, W0603
 
 # Global threading event to wait for OMA data
@@ -56,27 +53,6 @@ def _on_message(_client: mqtt.Client, _userdata: dict, msg: mqtt.MQTTMessage) ->
         result_ready.set()
     except Exception as e:
         print(f"Error processing OMA message: {e}")
-
-
-def run_mode_track(oma_output: Any) -> Tuple[List[Dict], np.ndarray, np.ndarray]:
-    """
-    Runs the mode tracking algorithm.
-
-    Args:
-        oma_output (Any): OMA output from subscription or elsewhere.
-    Returns:
-        cleaned_values (List[Dict]), 
-        median_frequencies (np.ndarray), 
-        confidence_intervals (np.ndarray)
-    """
-    mstab = MODEL_ORDER * MSTAB_FACTOR
-    cleaned_values = mode_allingment(oma_output, mstab, TMAC)
-    median_frequencies = np.array([cluster["median"] for cluster in cleaned_values])
-    confidence_intervals = np.array([
-        cluster["original_cluster"]["confidence_interval"]
-        for cluster in cleaned_values
-    ])
-    return cleaned_values, median_frequencies, confidence_intervals
 
 
 # pylint: disable=R0914
@@ -137,49 +113,3 @@ def run_model_update(cleaned_values: List[Dict]) -> Optional[Dict[str, Any]]:
     except ValueError as e:
         print(f"Skipping model updating due to error: {e}")
         return None
-
-
-def subscribe_and_get_cleaned_values(config_path: str,
-            num_clusters: int = 2) -> Tuple[List[Dict], np.ndarray, np.ndarray]:
-    """
-    Subscribes to MQTT broker, receives one OMA message, runs mode tracking, and returns results.
-
-    Args:
-        config_path (str): Path to config JSON.
-        num_clusters (int): Number of clusters to keep after mode tracking.
-
-    Returns:
-        cleaned_values (List[Dict]), 
-        median_frequencies (np.ndarray), 
-        confidence_intervals (np.ndarray)
-    """
-    global oma_output_global
-    oma_output_global = None  # Reset in case old data is present
-    result_ready.clear()
-
-    config = load_config(config_path)
-    mqtt_client, selected_topic = setup_mqtt_client(config["sysID"], topic_index=0)
-
-    mqtt_client.user_data_set({"topic": selected_topic, "qos": 0})
-    mqtt_client.on_connect = _on_connect
-    mqtt_client.on_message = _on_message
-    mqtt_client.connect(config["sysID"]["host"], config["sysID"]["port"], keepalive=60)
-    mqtt_client.loop_start()
-    print("Waiting for OMA data...")
-    try:
-        while not result_ready.wait(timeout=0.1): 
-            pass
-    except KeyboardInterrupt:
-        print("Cancel")
-        mqtt_client.loop_stop()
-        mqtt_client.disconnect()
-        raise SystemExit
-
-    mqtt_client.loop_stop()
-    mqtt_client.disconnect()
-
-    if oma_output_global is None:
-        raise RuntimeError("Failed to receive OMA data.")
-
-    print("OMA data received. Running mode tracking...")
-    return run_mode_track(oma_output_global)

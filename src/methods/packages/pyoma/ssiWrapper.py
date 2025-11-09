@@ -1,6 +1,8 @@
 import typing
 import logging
 
+import numpy as np
+
 from pyoma2.algorithms.data.result import SSIResult
 from pyoma2.algorithms.data.run_params import SSIRunParams
 from pyoma2.algorithms.base import BaseAlgorithm
@@ -106,21 +108,21 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
         Fns, Xis, Phis, Fn_cov, Xi_cov, Phi_cov = gen.applymask(
             lista, mask7, Phis.shape[2]
             )
-       
-      
-        # Get the labels of the poles
-        Lab = gen.SC_apply(
-            Fns,
-            Xis,
-            Phis,
-            ordmin,
-            ordmax,
-            step,
-            sc["err_fn"],
-            sc["err_xi"],
-            sc["err_phi"],
-        )
 
+        #Infer minimum order
+        for ii in range(ordmin):
+            id = ii
+            nan_Matrix = np.empty(Fns.shape[0])
+            nan_Matrix[:] = np.nan
+            Fns[:,id] = nan_Matrix
+            Xis[:,id] = nan_Matrix
+            Fn_cov[:,id] = nan_Matrix
+            Xi_cov[:,id] = nan_Matrix
+            nan_Matrix = np.empty((Phis.shape[0],Phis.shape[2]))
+            nan_Matrix[:,:] = np.nan
+            Phis[:,id,:] = nan_Matrix
+            Phi_cov[:,id,:] = nan_Matrix
+      
         return SSIResult(
             Obs=Obs,
             A=A,
@@ -130,7 +132,6 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
             Fn_poles=Fns,
             Xi_poles=Xis,
             Phi_poles=Phis,
-            Lab=Lab,
             Fn_poles_cov=Fn_cov,
             Xi_poles_cov=Xi_cov,
             Phi_poles_cov=Phi_cov,
