@@ -42,20 +42,25 @@ There are 5 examples.
 * **aligning_readings** demonstrates the use of `Aligner` class to collect and
   align accelerometer measurements from multiple MQTT data streams.
 
-* **run_pyoma** demonstrates the use of `sys_id` with 3 cases:
-    1. **oma-and-plot**: plots natural frequencies.
-    1. **oma-and-print**: prints OMA results to console.
-    1. **oma-and-publish**: publishes OMA results via MQTT to the config given under [sysid] config.
+* **sysid** demonstrates the use of `sys_id` with four cases:
+    1. **sysid-and-plot**: plots natural frequencies.
+    1. **sysid-and-print**: prints SysID results to console.
+    1. **sysid-and-publish**: publishes one set of SysID results via MQTT to the config given under [sysid] config.
+    1. **live-sysid-and-publish**: Continuously publishes SysID results via MQTT to the config given under [sysid] config.
 
-* **mode_tracking** demonstrates the use of `mode_track` with 2 cases:
+* **mode-tracking** demonstrates the use of `mode_track` with three cases:
     1. **mode-tracking-with-local-sysid**: gets the pyOMA results by runing sysid
        locally, then runs the mode track.
     1. **mode-tracking-with-remote-sysid**: gets pyOMA results by subscribing,
-       then runs the mode track.
+       then runs the mode track. This is a one time operation.
+    1. **live-mode-tracking-with-remote-sysid**: gets pyOMA results by subscribing,
+       then runs the mode track. This operation runs in loop.
 
-* **updating_paramteres** demonstrates the use of **model-update**.
-  Gets the mode track output, then uses it to run update model and
-  get updated system parameters.
+* **model-update** demonstrates the use of `model_update` with two cases:
+    1 **model-update-local-sysid**: gets the mode track output, then uses it to
+      run update model and get updated system parameters.
+    1 **live-model-update-remote-sysid**: gets the mode track output by subscribing to
+      MQTT topic, then uses the mode track output to run update model and get updated system parameters.
 
 To run the examples with the default config, use:
 
@@ -69,12 +74,11 @@ python .\src\examples\example.py live-sysid-publish
 python .\src\examples\example.py clustering-with-local-sysid
 python .\src\examples\example.py clustering-with-remote-sysid
 python .\src\examples\example.py live-clustering-with-remote-sysid
-python .\src\examples\example.py mode-tracking-remote-sysid
-python .\src\examples\example.py mode_tracking-with-local-sysid
+python .\src\examples\example.py mode-tracking-with-remote-sysid
+python .\src\examples\example.py mode-tracking-with-local-sysid
 python .\src\examples\example.py live-mode-tracking-remote-sysid
 python .\src\examples\example.py model-update-local-sysid
-python .\src\examples\example.py ilve-model-update-remote-sysid
-
+python .\src\examples\example.py live-model-update-remote-sysid
 ```
 
 To run the examples with specified config, use
