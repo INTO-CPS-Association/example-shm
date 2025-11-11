@@ -1,12 +1,18 @@
 from typing import Any
 import numpy as np
 from functions.calculate_mac import calculate_mac
+# pylint: disable=C0103
 
-def match_cluster_to_tracked_cluster(cluster_dict: dict[str,Any], tracked_clusters: dict[str,Any], Params: dict[str,Any], result_prev: dict[str,Any] = {},skip_cluster: list = [], skip_tracked_cluster: list = []) -> dict[str,Any]:
+def match_cluster_to_tracked_cluster(cluster_dict: dict[str,Any], tracked_clusters: dict[str,Any],
+                                     params: dict[str,Any], result_pairs_prev: dict[str,Any] = {},
+                                     skip_cluster: list = [],
+                                     skip_tracked_cluster: list = []) -> dict[str,Any]:
     """
     Match clusters to tracked clusters
 
-    The result dictionary consist of keys: cluster indecies, and values: indecies of tracked cluster to match with
+    The result dictionary consist of keys: cluster indecies,
+    and values: indecies of tracked cluster to match with
+
     Example:
         Cluster 1 match with tracked cluster 2
         Cluster 2 match with tracked cluster 1
@@ -16,19 +22,19 @@ def match_cluster_to_tracked_cluster(cluster_dict: dict[str,Any], tracked_cluste
     Args:
         cluster_dict (dict): Dictionary of clusters
         tracked_clusters (dict): Previously tracked clusters
-        Params (dict): tracking parameters
+        params (dict): tracking parameters
         result_prev (dict): Dictionary of previous match result
-        skip_cluster (list): List of clusters that have proven they are a optimal match with a tracked cluster
-        skip_tracked_cluster (list): List of tracked clusters that have an optimal match with a cluster
+        skip_cluster (list): List of clusters that are the optimal match with a tracked cluster
+        skip_tracked_cluster (list): List of tracked clusters are an optimal match with a cluster
 
     Returns:
         result (dict): Dictionary of matches
 
     """
-    result = {}
+    result_pairs = {}
     for id, key in enumerate(cluster_dict): #Go through all clusters
         if id in skip_cluster: #If this cluster is already matched skip it
-            result[str(id)] = result_prev[str(id)]
+            result_pairs[str(id)] = result_pairs_prev[str(id)]
             continue
 
         #Get mode shapes
@@ -37,113 +43,103 @@ def match_cluster_to_tracked_cluster(cluster_dict: dict[str,Any], tracked_cluste
         phi = cluster['mode_shapes'][0]
         phi_all = cluster['mode_shapes']
 
-        Xres = []
         MAC_list = []
-        D_freq = []
-        omega_t_list = []
+        R_freq = []
         MAC_max_list = []
         MAC_avg_list = []
-        for key in tracked_clusters: #Go through all tracked clusters. They are identified with keys which are integers from 0 and up to total number of clusters
+        for key in tracked_clusters: #Go through all tracked clusters.
+            #They are identified with keys which are integers from 0 up to total number of clusters
             if key == 'iteration':
                 pass
             else:
-                tracked_cluster_list = tracked_clusters[key] #Accessing all cluster in a tracked cluster group
-                tracked_cluster = tracked_cluster_list[-1] #Accessing the last cluster for each tracked cluster group
-                omega_t = tracked_cluster['median_f'] #median freq of last cluster in tracked cluster group
-                omega_t_list.append(omega_t)
-                phi_t_all = tracked_cluster['mode_shapes'] #phi of last cluster in tracked cluster group
-                phi_t = phi_t_all[0]
+                #Accessing all cluster in a tracked cluster group
+                tracked_cluster_list = tracked_clusters[key]
+                n_last_tracked_clusters = np.min((len(tracked_cluster_list),6))
+                for ii in range(n_last_tracked_clusters):
+                    tracked_cluster = tracked_cluster_list[-1*(ii+1)]
 
-                MAC_list.append(float(calculate_mac(phi_t, phi)))
+                    #median freq of last cluster in tracked cluster group
+                    omega_t = tracked_cluster['median_f']
+                    #phi of last cluster in tracked cluster group
+                    phi_t_all = tracked_cluster['mode_shapes']
 
-                MACs = np.zeros((phi_all.shape[0],phi_t_all.shape[0]))
-                for ii, phi in enumerate(phi_all):
-                    for jj, phi_t in enumerate(phi_t_all):
-                        MAC = float(calculate_mac(phi_t, phi))
-                        MACs[ii,jj] = MAC #Compare the cluster with all tracked clusters
+                    MAC_matrix = np.zeros((phi_all.shape[0],phi_t_all.shape[0]))
+                    for ii, phi in enumerate(phi_all):
+                        for jj, phi_t in enumerate(phi_t_all):
+                            MAC = float(calculate_mac(phi_t, phi))
+                            #array to compare the cluster with all tracked clusters
+                            MAC_matrix[ii,jj] = MAC
+                    if np.max(MAC_matrix) > params['phi_cri']:
+                        break
 
                 if key in skip_tracked_cluster:
                     MAC_avg = np.mean(0)
                     MAC_max = np.max(0)
                     MAC_max_list.append(0)
                     MAC_avg_list.append(0)
-                    D_freq.append(10**6)
+                    R_freq.append(10**6)
                 else:
-                    MAC_avg = np.mean(MACs)
-                    MAC_max = np.max(MACs)
+                    MAC_avg = np.mean(MAC_matrix)
+                    MAC_max = np.max(MAC_matrix)
                     MAC_max_list.append(MAC_max)
                     MAC_avg_list.append(MAC_avg)
-                    D_freq.append(abs(omega_t-omega)/omega)
-                
-        itemindex1 = np.argwhere(np.array(MAC_max_list) > Params['phi_cri']) #Find where the cluster matches the tracked cluster regarding the MAC criteria
-        itemindex = np.argwhere(np.array(D_freq)[itemindex1[:,0]] < Params['freq_cri']) #Find where the cluster matches the tracked cluster regarding the MAC and frequency criteria
+                    R_freq.append(abs(omega_t-omega)/omega_t)
+
+        #Find where the cluster matches the tracked cluster regarding the MAC criteria
+        itemindex1 = np.argwhere(np.array(MAC_max_list) > params['phi_cri'])
+        #Find where the cluster matches the tracked cluster regarding the MAC and frequency criteria
+        itemindex = np.argwhere(np.array(R_freq)[itemindex1[:,0]] < params['freq_cri'])
         indicies = itemindex1[itemindex[:,0]]
         if len(indicies) > 1: #If two or more clusters combly with the mode shape criteria
-            Xres = []
-            Xres_f = []
-            Xres_MAC = []
-            for nn in indicies:
-                pos = nn[0]
-                X = D_freq[pos]/MAC_max_list[pos] #Objective function
-                Xres.append(X)
-                Xres_f.append(D_freq[pos])
-                Xres_MAC.append(MAC_max_list[pos])
+            X_list = []
+            R_f_list = []
+            MAC_list = []
+            for pos in indicies[:,0]:
+                X = R_freq[pos]/MAC_max_list[pos] #Objective function
+                X_list.append(X)
+                R_f_list.append(R_freq[pos])
+                MAC_list.append(MAC_max_list[pos])
 
-            if Xres != []: # One or more cluster(s) combly with the frequency criteria
-                pos1 = Xres.index(min(Xres)) #Find the cluster that is most likely
-                pos2 = Xres_MAC.index(max(Xres_MAC)) #Find the largest MAC
-                pos3 = Xres_f.index(min(Xres_f)) #Find the smallest frequency difference
-                
-                if len(Xres) > 1: #If more than one cluster comply with criteria
-                    Xres_left = Xres.copy()
-                    del Xres_left[pos1]
-                    if type(Xres_left) == np.float64:
-                        Xres_left = [Xres_left]
+            pos1 = X_list.index(min(X_list)) #Find the cluster that is most likely
+            pos2 = MAC_list.index(max(MAC_list)) #Find the largest MAC
+            pos3 = R_f_list.index(min(R_f_list)) #Find the smallest frequency difference
+            #If one match on all three parameters:
+            if pos2 == pos3:
+                pos = int(indicies[pos1][0])
+                result_pairs[str(id)] = pos #group to a tracked cluster
+            else:
+                X_list_left = X_list.copy()
+                del X_list_left[pos1]
+                if isinstance(X_list_left,float):
+                    X_list_left = [X_list_left]
 
-                    Xres_MAC_left = Xres_MAC.copy()
-                    del Xres_MAC_left[pos1]
-                    if type(Xres_MAC_left) == np.float64:
-                        Xres_MAC_left = [Xres_MAC_left]
+                MAC_list_left = MAC_list.copy()
+                del MAC_list_left[pos1]
+                if isinstance(MAC_list_left,float):
+                    MAC_list_left = [MAC_list_left]
 
-                    Xres_f_left = Xres_f.copy()
-                    del Xres_f_left[pos1]
-                    if type(Xres_f_left) == np.float64:
-                        Xres_f_left = [Xres_f_left]
+                #Find the cluster that is most likely based on MAC
+                pos2_2 = MAC_list_left.index(max(MAC_list_left))
 
-                    pos1_2 = Xres_left.index(min(Xres_left)) #Find the cluster that is most likely
-                    pos2_2 = Xres_MAC_left.index(max(Xres_MAC_left)) #Find the cluster that is most likely based on MAC
-                    pos3_2 = Xres_f_left.index(min(Xres_f_left)) #Find the cluster that is most likely based on Freq
-
-                if (pos1 == pos2) and (pos1 == pos3): #If one match on all three parameters: objective function, max MAC and frequency difference
-                    pos = int(indicies[pos1][0])
-                    result[str(id)] = pos #group to a tracked cluster
-                
-                #Make different: abs(min(Xres_left)/min(Xres)) < Params['obj_cri'] = 2
-                elif abs(min(Xres_left)-min(Xres)) < Params['obj_cri']: #If the objective function results are close
-                    if (min(Xres_f) < Params['freq_cri']) and (min(Xres_f_left) < Params['freq_cri']): #If both frequency differences are close to the target cluster
+                #Make different: abs(min(X_list_left)/min(X_list)) < params['obj_cri'] = 2
+                #If the objective function results are close
+                if abs(min(X_list_left)-min(X_list)) < params['obj_cri']:
+                    #Cluster with the best MAC
+                    if max(MAC_list_left) > max(MAC_list):
                         pos = int(indicies[pos2_2][0]) #Match with best MAC
-                        result[str(id)] = pos #group to a tracked cluster
-                    elif (min(Xres_f) < Params['freq_cri']) and (min(Xres_f_left) > Params['freq_cri']): #If Xres_f is smaller than the threshold
-                        pos = int(indicies[pos3][0]) #Match with lowest frequency difference
-                        result[str(id)] = pos #group to a tracked cluster
-                    elif (min(Xres_f) > Params['freq_cri']) and (min(Xres_f_left) < Params['freq_cri']):
-                        pos = int(indicies[pos3_2][0]) #Match with lowest frequency difference
-                        result[str(id)] = pos #group to a tracked cluster
-                    else: #If none of the above choose the one with highest MAC
-                        pos = int(indicies[pos2_2][0])
-                        result[str(id)] = pos #group to a tracked cluster
-                else: #If none of the above choose the one with lowest onjective function
+                        result_pairs[str(id)] = pos #group to a tracked cluster
+                    else:
+                        pos = int(indicies[pos2][0]) #Match with best X
+                        result_pairs[str(id)] = pos #group to a tracked cluster
+                else: #If none of the above choose the one with lowest opjective function
                     pos = int(indicies[pos1][0])
-                    result[str(id)] = pos #group to a tracked cluster
-    
-            else:  #No cluster comply with frequency criteria, so a new cluster is saved
-                result[str(id)] = "new"
-    
+                    result_pairs[str(id)] = pos #group to a tracked cluster
+
         elif len(indicies) == 1: #If one cluster combly with the mode shape criteria
             pos = int(indicies[0][0])
-            result[str(id)] = pos #group to a tracked cluster
+            result_pairs[str(id)] = pos #group to a tracked cluster
 
         else: #Does not comply with mode shape criteria
-            result[str(id)] = "new"
-    
-    return result
+            result_pairs[str(id)] = "new"
+
+    return result_pairs

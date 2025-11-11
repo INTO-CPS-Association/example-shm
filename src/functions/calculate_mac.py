@@ -12,5 +12,7 @@ def calculate_mac(reference_mode_shape: np.array, second_mode_shape: np.array) -
 
     """
     numerator = np.abs(np.dot(reference_mode_shape.conj().T, second_mode_shape)) ** 2
-    denominator = np.dot(reference_mode_shape.conj().T, reference_mode_shape) * np.dot(second_mode_shape.conj().T, second_mode_shape)
+    denominator = np.dot(reference_mode_shape.conj().T,
+                         reference_mode_shape) * np.dot(second_mode_shape.conj().T,
+                                                         second_mode_shape)
     return np.real(numerator / denominator)

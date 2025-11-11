@@ -1,15 +1,16 @@
 from typing import Any
 import numpy as np
 from methods.mode_clustering_functions.create_cluster import cluster_creation
+# pylint: disable=C0103
 
-def cluster_expansion(cluster: dict[str,Any], data: dict[str,Any], Params: dict[str,Any]) -> dict[str,Any]:
+def cluster_expansion(cluster: dict[str,Any], data: dict[str,Any], params: dict[str,Any]) -> dict[str,Any]:
     """
         Expand cluster based on minima and maxima bound
 
         Args:
             cluster (dict): Intermediate cluster
             data (dict): OMA points data
-            Params (dict): Dictionary of algorithm parameters
+            params (dict): Dictionary of algorithm parameters
         Returns:
             cluster (dict): Expanded cluster
         
@@ -19,23 +20,29 @@ def cluster_expansion(cluster: dict[str,Any], data: dict[str,Any], Params: dict[
     """
     unClustered_frequencies = data['frequencies']
     unClustered_damping = data['damping_ratios']
-    
+
     freq_c = cluster['f']
     cov_f = cluster['cov_f']
     damp_c = cluster['d']
     cov_d = cluster['cov_d']
-    row = cluster['row']
 
-    bound_multiplier = Params['bound_multiplier']
-    
+    bound_multiplier = params['bound_multiplier']
+
     #Find min-max bounds of cluster
-    f_lower_bound = np.min(freq_c - bound_multiplier * np.sqrt(cov_f))  # Minimum of all points for frequencies
-    f_upper_bound = np.max(freq_c + bound_multiplier * np.sqrt(cov_f))  # Maximum of all points for frequencies
-    d_lower_bound = np.min(damp_c - bound_multiplier * np.sqrt(cov_d))  # Minimum of all points for damping
-    d_upper_bound = np.max(damp_c + bound_multiplier * np.sqrt(cov_d))  # Maximum of all points for damping
+    # Minimum of all points for frequencies
+    f_lower_bound = np.min(freq_c - bound_multiplier * np.sqrt(cov_f))
+    # Maximum of all points for frequencies
+    f_upper_bound = np.max(freq_c + bound_multiplier * np.sqrt(cov_f))
+    # Minimum of all points for damping
+    d_lower_bound = np.min(damp_c - bound_multiplier * np.sqrt(cov_d))
+    # Maximum of all points for damping
+    d_upper_bound = np.max(damp_c + bound_multiplier * np.sqrt(cov_d))
 
     #Mask of possible expanded poles
-    condition_mask = (unClustered_frequencies >= f_lower_bound) & (unClustered_frequencies <= f_upper_bound) & (unClustered_damping >= d_lower_bound) & (unClustered_damping <= d_upper_bound)
+    condition_mask = ((unClustered_frequencies >= f_lower_bound)
+                      & (unClustered_frequencies <= f_upper_bound)
+                      & (unClustered_damping >= d_lower_bound)
+                      & (unClustered_damping <= d_upper_bound))
     # Get indices satisfying the condition
     expanded_indices = np.argwhere(condition_mask)
 
@@ -73,7 +80,7 @@ def cluster_expansion(cluster: dict[str,Any], data: dict[str,Any], Params: dict[
     cluster_points['col'] = cluster_points['col'][indecies]
 
     #Check if these values can be clustered
-    cluster = cluster_creation(cluster_points,Params)
+    cluster = cluster_creation(cluster_points,params)
     if isinstance(cluster['f'],np.ndarray):
         if len(cluster['row']) != len(set(cluster['row'])):
             print("row_before",cluster_points['row'])
