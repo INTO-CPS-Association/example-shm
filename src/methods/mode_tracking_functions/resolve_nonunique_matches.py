@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 import numpy as np
 from functions.calculate_mac import calculate_mac
 # pylint: disable=C0103
@@ -6,7 +6,7 @@ from functions.calculate_mac import calculate_mac
 def resolve_nonunique_matches(possible_match_id: int, itemindex: np.ndarray[int],
                               result: Dict[str,Any],cluster_dict: Dict[str,Any],
                               tracked_clusters: Dict[str,Any]
-                              ) -> tuple[int, Dict[str, Any], np.ndarray[int]]:
+                              ) -> Tuple[int, Dict[str, Any], np.ndarray[int]]:
     """
     Resolve if two clusters match with the same tracked cluster.
     Determine what match is the most optimal.

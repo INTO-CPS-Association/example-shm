@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Dict, Tuple
 import numpy as np
 from functions.clean_sysid_output import (remove_highly_uncertain_points,transform_sysid_features)
 from methods.mode_clustering_functions.create_cluster import cluster_creation
@@ -10,9 +10,9 @@ from methods.mode_clustering_functions.align_clusters import alignment
 # Following the algorithm proposed here: https://doi.org/10.1007/978-3-031-61421-7_56
 # JVM 22/10/2025
 
-def cluster_func(sysid_output: dict[str,Any],
-                 params: dict[str,Any])-> tuple[dict[str,Any],
-                                                dict[str,Any], dict[str,Any]]:
+def cluster_func(sysid_output: Dict[str,Any],
+                 params: Dict[str,Any])-> Tuple[Dict[str,Any],
+                                                Dict[str,Any], Dict[str,Any]]:
     """
         Clustering of OMA results
 
@@ -145,7 +145,7 @@ def cluster_func(sysid_output: dict[str,Any],
 
     return cluster_dict4
 
-def remove_data_from_S(data: dict[str,Any],cluster: dict[str,Any]) -> dict[str,Any]:
+def remove_data_from_S(data: Dict[str,Any],cluster: Dict[str,Any]) -> Dict[str,Any]:
     """
         Remove cluster from data or S
 
@@ -185,7 +185,7 @@ def remove_data_from_S(data: dict[str,Any],cluster: dict[str,Any]) -> dict[str,A
 
     return data2
 
-def sort_cluster(cluster: dict[str,Any]) -> dict[str,Any]:
+def sort_cluster(cluster: Dict[str,Any]) -> Dict[str,Any]:
     """
         Sort cluster based on row/model order
 

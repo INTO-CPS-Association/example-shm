@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Dict
 import numpy as np
 from methods.mode_tracking_functions.match_to_tracked_cluster import (
     match_cluster_to_tracked_cluster)
@@ -7,8 +7,8 @@ from methods.mode_tracking_functions.resolve_nonunique_matches import (
 # pylint: disable=C0103
 # JVM 22/10/2025
 
-def cluster_tracking(cluster_dict: dict[str,Any],tracked_clusters: dict[str,Any],
-                     Params: dict[str,Any] = None) -> dict[str,Any]:
+def cluster_tracking(cluster_dict: Dict[str,Any],tracked_clusters: Dict[str,Any],
+                     Params: Dict[str,Any] = None) -> Dict[str,Any]:
     """
     Tracking of modes across experiments
 

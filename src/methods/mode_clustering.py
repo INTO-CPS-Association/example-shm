@@ -59,14 +59,14 @@ def setup_publish_client(mqtt_config: Dict[str, Any]) -> Tuple[mqtt.Client, floa
     data_client.loop_start()
     return data_client, topic
 
-def cluster_sysid(sysid_output: Any, params: dict[str,Any]) -> Tuple[dict[str,Any], np.ndarray]:
+def cluster_sysid(sysid_output: Any, params: Dict[str,Any]) -> Tuple[Dict[str,Any], np.ndarray]:
     """
     Runs the mode clustering algorithm.
 
     Args:
         sysid_output (Any): sysid output from subscription or elsewhere.
     Returns:
-        cluster_dict (dict[str,Any]), 
+        cluster_dict (Dict[str,Any]), 
         median_frequencies (np.ndarray), 
     """
     dictionary_clusters = cluster_func(sysid_output, params)
@@ -132,7 +132,7 @@ def subscribe_and_cluster(config_path: str, params: Dict[str,Any]
 
 
 def live_mode_clustering(config_path: str, topic_index: int = 0,
-                        plot: np.ndarray[bool] = np.array([1,1])
+                        plot: np.ndarray = np.array([1,1])
                         ) -> Tuple[List[Dict], np.ndarray, np.ndarray]:
     """
     Subscribes to MQTT broker, receives one sysid message, runs mode clustering, plots results. Continue until stopped.
@@ -202,7 +202,6 @@ def live_mode_clustering_publish(config_path: str, topic_index: int = 0
     Args:
         config_path (str): Path to config JSON.
         topic_index (int): Topic to subscribe
-        plot (np.ndarray[bool]): Array describing what plots to show
 
     Returns:
         sysid_output_global (Dict[str,Any]): sysid output

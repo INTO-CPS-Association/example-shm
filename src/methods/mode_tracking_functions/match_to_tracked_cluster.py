@@ -1,12 +1,12 @@
-from typing import Any
+from typing import Any, Dict, List
 import numpy as np
 from functions.calculate_mac import calculate_mac
 # pylint: disable=C0103
 
-def match_cluster_to_tracked_cluster(cluster_dict: dict[str,Any], tracked_clusters: dict[str,Any],
-                                     params: dict[str,Any], result_pairs_prev: dict[str,Any] = {},
-                                     skip_cluster: list = [],
-                                     skip_tracked_cluster: list = []) -> dict[str,Any]:
+def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_clusters: Dict[str,Any],
+                                     params: Dict[str,Any], result_pairs_prev: Dict[str,Any] = {},
+                                     skip_cluster: List = [],
+                                     skip_tracked_cluster: List = []) -> Dict[str,Any]:
     """
     Match clusters to tracked clusters
 

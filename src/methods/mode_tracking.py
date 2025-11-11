@@ -9,15 +9,15 @@ from functions.plot_mode_tracking import plot_tracked_modes
 from functions.plot_clusters import plot_clusters
 # pylint: disable=C0103, W0603
 
-def track_clusters(cluster_dict: dict[str,Any], tracked_clusters: dict[str,Any],
-                      params: dict[str,Any]) -> dict[str,Any]:
+def track_clusters(cluster_dict: Dict[str,Any], tracked_clusters: Dict[str,Any],
+                      params: Dict[str,Any]) -> Dict[str,Any]:
     """
     Runs the mode tracking algorithm.
 
     Args:
-        cluster_dict (dict[str,Any]): Clusters from OMA
+        cluster_dict (Dict[str,Any]): Clusters from OMA
     Returns:
-        tracked_clusters (dict[str,Any]): Tracked clusters
+        tracked_clusters (Dict[str,Any]): Tracked clusters
     """
     tracked_clusters = cluster_tracking(cluster_dict, tracked_clusters, params)
     return tracked_clusters
@@ -44,7 +44,7 @@ def subscribe_and_track_clusters(config_path: str) -> Tuple[List[Dict], np.ndarr
         return None, None, None
 
 def live_mode_tracking(config_path: str,
-                        plot: np.ndarray[bool] = np.array([1,1])
+                        plot: np.ndarray = np.array([1,1])
                         ) -> Tuple[List[Dict], np.ndarray, np.ndarray]:
     """
     Subscribes to MQTT broker, receives one OMA message, runs mode tracking, plot results. Continue until stopped.
