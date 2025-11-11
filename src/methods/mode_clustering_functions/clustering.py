@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-from typing import Any
-=======
 from typing import Any, Dict, Tuple
->>>>>>> eceb467 (Added clustering and mode tracking)
 import numpy as np
 from functions.clean_sysid_output import (remove_highly_uncertain_points,transform_sysid_features)
 from methods.mode_clustering_functions.create_cluster import cluster_creation
