@@ -10,8 +10,8 @@ plt.rcParams['font.family'] = 'Times New Roman'
 def plot_clusters(clusters: Dict[str,dict],
         sysid_results: Dict[str, Any],
         sysid_params: Dict[str, Any],
-        fig_ax = None,
-        legend = True)-> Tuple[matplotlib.figure.Figure, Tuple[matplotlib.axes.Axes,matplotlib.axes.Axes]]:
+    fig_ax = None,
+    legend = True)-> Tuple[Any, Tuple[Any, Any]]:
     """
     Plot stabilization of clusters
 
@@ -88,15 +88,15 @@ def plot_clusters(clusters: Dict[str,dict],
     return fig, (ax1,ax2)
 
 
-def add_scatter_cluster(ax: matplotlib.axes.Axes, x: np.ndarray[float], y: np.ndarray[float], cov: np.ndarray[float], cluster_id = int, error_dir: str = "h") -> Tuple[matplotlib.axes.Axes, Any]:
+def add_scatter_cluster(ax: matplotlib.axes.Axes, x: np.ndarray, y: np.ndarray, cov: np.ndarray, cluster_id: int, error_dir: str = "h") -> Tuple[matplotlib.axes.Axes, Any]:
     """
     Add scatter plot of clusters to existing axes
     
     Args:
         ax (matplotlib.axes.Axes): ax from matplotlib
-        x (np.ndarray[float]): x-axis data
-        y (np.ndarray[float]): y-axis data
-        cov (np.ndarray[float]): covariance for errorbars
+        x (np.ndarray): x-axis data
+        y (np.ndarray): y-axis data
+        cov (np.ndarray): covariance for errorbars
         cluster_id (int): Index of cluster for labeling
         error_dir (str): Direction of errorbars, either "h" horizontal or "v" vertical
 

@@ -10,7 +10,7 @@ plt.rcParams['font.family'] = 'Times New Roman'
 def plot_pre_stabilization_diagram(
         sysid_results: Dict[str, Any],
         sysid_params: Dict[str, Any],
-        fig_ax)-> Tuple[matplotlib.figure.Figure, Tuple[matplotlib.axes.Axes,matplotlib.axes.Axes]]:
+    fig_ax)-> Tuple[Any, Tuple[Any, Any]]:
 
     """
     Plot stabilization of raw sysid data before pre-cleaning
@@ -64,7 +64,7 @@ def plot_pre_stabilization_diagram(
 def plot_stabilization_diagram(
         sysid_results: Dict[str, Any],
         sysid_params: Dict[str, Any],
-        fig_ax)-> Tuple[matplotlib.figure.Figure, Tuple[matplotlib.axes.Axes,matplotlib.axes.Axes]]:
+    fig_ax)-> Tuple[Any, Tuple[Any, Any]]:
     """
     Plot stabilization of sysid data before after pre-cleaning
 

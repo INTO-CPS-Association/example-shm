@@ -8,8 +8,8 @@ plt.rcParams['font.family'] = 'Times New Roman'
 def plot_tracked_modes(
         tracked_clusters: Dict[str, Any],
         sysid_params: Dict[str, Any],
-        fig_ax: Any = None,
-        x_length: Any = None)-> Tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]:
+    fig_ax: Any = None,
+    x_length: Any = None)-> Tuple[Any, Any]:
     """
     Plot tracked modes
 
@@ -17,7 +17,7 @@ def plot_tracked_modes(
         tracked_clusters (Dict[str, Any]): Tracked clusters
         sysid_params (Dict[str, Any]): sysid parameters
     Returns:
-        fig_ax (Tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]): fig and ax of plot
+        fig_ax (Tuple): fig and ax of plot
 
     """
 
