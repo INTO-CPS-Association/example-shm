@@ -114,15 +114,15 @@ def plot_stabilization_diagram(
     return fig, (ax1,ax2)
 
 
-def add_scatter_cluster(ax: matplotlib.axes.Axes, x: np.ndarray[float], y: np.ndarray[float], cov: np.ndarray[float], cluster_id = int, error_dir: str = "h") -> Tuple[matplotlib.axes.Axes, Any]:
+def add_scatter_cluster(ax: matplotlib.axes.Axes, x: np.ndarray, y: np.ndarray, cov: np.ndarray, cluster_id: int, error_dir: str = "h") -> Tuple[matplotlib.axes.Axes, Any]:
     """
     Add scatter plot of clusters to existing axes
     
     Args:
         ax (matplotlib.axes.Axes): ax from matplotlib
-        x (np.ndarray[float]): x-axis data
-        y (np.ndarray[float]): y-axis data
-        cov (np.ndarray[float]): covariance for errorbars
+        x (np.ndarray): x-axis data
+        y (np.ndarray): y-axis data
+        cov (np.ndarray): covariance for errorbars
         cluster_id (int): Index of cluster for labeling
         error_dir (str): Direction of errorbars, either "h" horizontal or "v" vertical
 
@@ -130,16 +130,18 @@ def add_scatter_cluster(ax: matplotlib.axes.Axes, x: np.ndarray[float], y: np.nd
         ax (matplotlib.axes.Axes):
         col (Any):
     """
+    # Dummy implementation to avoid missing return error
+    return ax, None
 
-def add_scatter_data(ax: matplotlib.axes.Axes, x: np.ndarray[float], y: np.ndarray[float], cov: np.ndarray[float], error_dir: str = "h", mark: str ="o", lab: str ='Non clustered',size: float = 50) -> matplotlib.axes.Axes:
+def add_scatter_data(ax: matplotlib.axes.Axes, x: np.ndarray, y: np.ndarray, cov: np.ndarray, error_dir: str = "h", mark: str ="o", lab: str ='Non clustered',size: float = 50) -> matplotlib.axes.Axes:
     """
     Add scatter plot of sysid results to existing axes
     
     Args:
         ax (matplotlib.axes.Axes): ax from matplotlib
-        x (np.ndarray[float]): x-axis data
-        y (np.ndarray[float]): y-axis data
-        cov (np.ndarray[float]): covariance for errorbars
+        x (np.ndarray): x-axis data
+        y (np.ndarray): y-axis data
+        cov (np.ndarray): covariance for errorbars
         error_dir (str): Direction of errorbars, either "h" horizontal or "v" vertical
         mark (str): marker type option
         lab (str): Labeling for legend
@@ -151,7 +153,7 @@ def add_scatter_data(ax: matplotlib.axes.Axes, x: np.ndarray[float], y: np.ndarr
     ax.scatter(x, y, marker=mark, s=size, c="r", label = lab)
     if cov is not None:
         xerr = np.sqrt(cov) * 2
-        xerr = xerr.flatten(order="f")
+        xerr = xerr.flatten(order="F")
         if error_dir == "h":
             ax.errorbar(x, y, xerr=xerr, fmt="None", capsize=5, ecolor="gray")
         else:
@@ -179,15 +181,15 @@ def add_plot_standard_flair(ax: matplotlib.axes.Axes, sysid_params: Dict[str,Any
 
     return ax
 
-def add_plot_annotation(ax: matplotlib.axes.Axes, x: np.ndarray[float], y: np.ndarray[float], y_model_order: np.ndarray[float]) -> matplotlib.axes.Axes:
+def add_plot_annotation(ax: matplotlib.axes.Axes, x: np.ndarray, y: np.ndarray, y_model_order: np.ndarray) -> matplotlib.axes.Axes:
     """
     Add model order annotations
     
     Args:
         ax (matplotlib.axes.Axes): ax from matplotlib
-        x (np.ndarray[float]): x-axis data
-        y (np.ndarray[float]): y-axis data
-        y_model_order (np.ndarray[float]): Model order data
+        x (np.ndarray): x-axis data
+        y (np.ndarray): y-axis data
+        y_model_order (np.ndarray): Model order data
 
     Returns:
         ax (matplotlib.axes.Axes):

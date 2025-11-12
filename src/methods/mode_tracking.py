@@ -43,14 +43,14 @@ def subscribe_and_track_clusters(config_path: str) -> Tuple[List[Dict], np.ndarr
     return sysid_output, clusters, tracked_clusters
 
 def live_mode_tracking(config_path: str,
-                        plot: np.ndarray[bool] = np.array([1,1])
+                        plot: np.ndarray = np.array([1,1])
                         ) -> Tuple[List[Dict], np.ndarray, np.ndarray]:
     """
     Subscribes to MQTT broker, receives one OMA message, runs mode tracking, plot results. Continue until stopped.
 
     Args:
         config_path (str): Path to config JSON.
-        plot (np.ndarray[bool]): Array describing what plots to show
+        plot (np.ndarray): Array describing what plots to show
 
     Returns:
 
