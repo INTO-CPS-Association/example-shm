@@ -1,6 +1,6 @@
 import time
 import json
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple
 import busio  # pylint: disable=import-error
 import board  # pylint: disable=import-error
 import adafruit_adxl37x  # pylint: disable=import-error
@@ -53,10 +53,10 @@ def calibrate_sensor(sensor: Any, sensor_label: str,
           f"for {duration} seconds...")
     sensor.range = SENSOR_RANGE
     start_time: float = time.time()
-    samples: list[float] = []
+    samples: List[float] = []
 
     while time.time() - start_time < duration:
-        reading: tuple[float, float, float] = sensor.acceleration
+        reading: Tuple[float, float, float] = sensor.acceleration
         samples.append(reading[0])  # x-axis
 
     avg_x: float = sum(samples) / len(samples)

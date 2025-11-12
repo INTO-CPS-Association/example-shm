@@ -12,9 +12,9 @@ license = "INTO-CPS Association"
 packages = [{include = "*", from="src"}]
 
 [tool.poetry.dependencies]
-python = ">=3.12, <3.13"
+python = ">=3.8, <4.0"
 paho-mqtt = "^2.1.0"
-numpy = "^2.2.5"
+numpy = "^1.24.0"
 click ="^8.1.8"
 pyOMA-2 = "1.0.0"
 yafem = "1.0.0"

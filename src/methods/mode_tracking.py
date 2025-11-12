@@ -9,8 +9,8 @@ from functions.plot_mode_tracking import plot_tracked_modes
 from functions.plot_clusters import plot_clusters
 # pylint: disable=C0103, W0603
 
-def track_clusters(cluster_dict: dict[str,Any], tracked_clusters: dict[str,Any],
-                      params: dict[str,Any]) -> dict[str,Any]:
+def track_clusters(cluster_dict: Dict[str, Any], tracked_clusters: Dict[str, Any],
+                      params: Dict[str, Any]) -> Dict[str, Any]:
     """
     Runs the mode tracking algorithm.
 

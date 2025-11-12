@@ -202,7 +202,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
 
     def mpe_from_plot(
         self,
-        freqlim: typing.Optional[tuple[float, float]] = None,
+        freqlim: typing.Optional[typing.Tuple[float, float]] = None,
         rtol: float = 1e-2,
     ) -> typing.Any:
         """
@@ -265,7 +265,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
 
     def plot_stab(
         self,
-        freqlim: typing.Optional[tuple[float, float]] = None,
+        freqlim: typing.Optional[typing.Tuple[float, float]] = None,
         hide_poles: typing.Optional[bool] = True,
     ) -> typing.Any:
         """
@@ -305,7 +305,7 @@ class SSIdat(BaseAlgorithm[SSIRunParams, SSIResult, typing.Iterable[float]]):
 
     def plot_cluster(
         self,
-        freqlim: typing.Optional[tuple[float, float]] = None,
+        freqlim: typing.Optional[typing.Tuple[float, float]] = None,
         hide_poles: typing.Optional[bool] = True,
     ) -> typing.Any:
         """

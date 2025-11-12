@@ -1,7 +1,7 @@
-from typing import Any
+from typing import Any, List, Dict
 import numpy as np
 
-def cluster_initial(ip: list[float], data: dict[str,Any], bound: float = 2) -> dict[str,Any]:
+def cluster_initial(ip: List[float], data: Dict[str, Any], bound: float = 2) -> Dict[str, Any]:
     """
         Find the initial cluster points
 

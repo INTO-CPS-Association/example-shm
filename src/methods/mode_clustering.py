@@ -57,7 +57,7 @@ def _on_message(_client: mqtt.Client, _userdata: dict, msg: mqtt.MQTTMessage) ->
         print(f"Error processing sysid message: {e}")
 
 
-def cluster_sysid(sysid_output: Any, params: dict[str,Any]) -> Tuple[dict[str,Any], np.ndarray]:
+def cluster_sysid(sysid_output: Any, params: Dict[str, Any]) -> Tuple[Dict[str, Any], np.ndarray]:
     """
     Runs the mode clustering algorithm.
 

@@ -1,8 +1,8 @@
-from typing import Any
+from typing import Any, Dict, List
 import numpy as np
 from functions.calculate_mac import calculate_mac
 
-def match_cluster_to_tracked_cluster(cluster_dict: dict[str,Any], tracked_clusters: dict[str,Any], Params: dict[str,Any], result_prev: dict[str,Any] = {},skip_cluster: list = [], skip_tracked_cluster: list = []) -> dict[str,Any]:
+def match_cluster_to_tracked_cluster(cluster_dict: Dict[str, Any], tracked_clusters: Dict[str, Any], Params: Dict[str, Any], result_prev: Dict[str, Any] = None, skip_cluster: List = None, skip_tracked_cluster: List = None) -> Dict[str, Any]:
     """
     Match clusters to tracked clusters
 
@@ -25,6 +25,13 @@ def match_cluster_to_tracked_cluster(cluster_dict: dict[str,Any], tracked_cluste
         result (dict): Dictionary of matches
 
     """
+    if result_prev is None:
+        result_prev = {}
+    if skip_cluster is None:
+        skip_cluster = []
+    if skip_tracked_cluster is None:
+        skip_tracked_cluster = []
+    
     result = {}
     for id, key in enumerate(cluster_dict): #Go through all clusters
         if id in skip_cluster: #If this cluster is already matched skip it

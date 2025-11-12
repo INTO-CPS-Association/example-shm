@@ -154,7 +154,7 @@ class Accelerometer(IAccelerometer):
                 remaining_to_remove -= num_to_remove
 
 
-    def read(self, requested_samples: int) -> Tuple[(int, np.ndarray)]:
+    def read(self, requested_samples: int) -> Tuple[int, np.ndarray]:
         """
         Reads the oldest accelerometer data from the FIFO buffer and removes only the read samples.
 

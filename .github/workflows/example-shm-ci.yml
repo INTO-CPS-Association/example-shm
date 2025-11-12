@@ -9,6 +9,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
 
     steps:
       # ───── 1. Checkout ─────
@@ -17,7 +18,7 @@ jobs:
       # ───── 2. Python + Poetry ─────
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
 
       - name: Install Poetry
         env:
@@ -46,11 +47,11 @@ jobs:
 
       # ───── 5. Tests ─────
       - name: Run pytest (with coverage)
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
         run: poetry run pytest --cov=src --cov-report=xml --cov-report=term-missing
 
       - name: Upload coverage to Codecov
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
         uses: codecov/codecov-action@v5
         with:
           files: coverage.xml
@@ -59,7 +60,7 @@ jobs:
 
       # Windows/macOS → test without coverage
       - name: Run pytest (no coverage)
-        if: matrix.os != 'ubuntu-latest'
+        if: matrix.os != 'ubuntu-latest' || matrix.python-version != '3.12'
         run: poetry run pytest --no-cov -q
 
       # ───── 6. Build + dist artefacts ─────
@@ -72,7 +73,7 @@ jobs:
           poetry build --format sdist
 
       - name: Upload dist artefacts
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
         uses: actions/upload-artifact@v4
         with:
           name: example-shm-dist

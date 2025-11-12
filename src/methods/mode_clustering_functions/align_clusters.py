@@ -1,8 +1,8 @@
 import numpy as np
-from typing import Any
+from typing import Any, Dict
 from functions.calculate_mac import calculate_mac
 
-def alignment(cluster_dict: dict[str,dict], Params: dict[str,Any]) -> dict[str,dict]:
+def alignment(cluster_dict: Dict[str, dict], Params: Dict[str, Any]) -> Dict[str, dict]:
     """
         Alignment/merging of clusters
 
@@ -71,7 +71,7 @@ def alignment(cluster_dict: dict[str,dict], Params: dict[str,Any]) -> dict[str,d
     cluster_dict_alligned = cluster_dict
     return cluster_dict_alligned
 
-def join_clusters(cluster_1: dict[str,Any], cluster_2: dict[str,Any], Params: dict[str,Any]) -> dict[str,Any]:
+def join_clusters(cluster_1: Dict[str, Any], cluster_2: Dict[str, Any], Params: Dict[str, Any]) -> Dict[str, Any]:
     """
         Add two clusters together
 
@@ -126,7 +126,7 @@ def join_clusters(cluster_1: dict[str,Any], cluster_2: dict[str,Any], Params: di
 
     return cluster, cluster_remaining
 
-def append_cluster_data(cluster: dict[str,Any], cluster2: dict[str,Any], id: int) -> dict[str,Any]:
+def append_cluster_data(cluster: Dict[str, Any], cluster2: Dict[str, Any], id: int) -> Dict[str, Any]:
     """
         Add cluster data to an existing cluster
 

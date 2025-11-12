@@ -1,8 +1,8 @@
-from typing import Any
+from typing import Any, Dict
 import numpy as np
 from methods.mode_clustering_functions.create_cluster import cluster_creation
 
-def cluster_expansion(cluster: dict[str,Any], data: dict[str,Any], Params: dict[str,Any]) -> dict[str,Any]:
+def cluster_expansion(cluster: Dict[str, Any], data: Dict[str, Any], Params: Dict[str, Any]) -> Dict[str, Any]:
     """
         Expand cluster based on minima and maxima bound
 
