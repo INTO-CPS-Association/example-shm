@@ -1,0 +1,104 @@
+from typing import Dict, Any, Optional, List
+import numpy as np
+from scipy.optimize import minimize
+from methods.packages.models import beam_yafem_model as beam_new
+from methods.model_update_functions.mode_pairing import pair_modes
+# pylint: disable=C0103
+
+def update_model(cluster_dict: Dict[str,Any], model_pars: Dict[str,Any],
+                 pars_to_update: List[str], Params: Dict[str,Any]) -> Optional[Any]:
+    """
+    Estimate updated model parameters
+
+    Args:
+        cluster_dict (Dict[str,Any]): Dictionary of clustered modes
+        model_parameters (Dict[str,Any]): Model parameters (YaFEM)
+        parameters_to_update (List[str]): String of keys to update in model_parameters
+        Params (Dict[str,Any]): Update parameters
+
+    Returns:
+        X (np.ndarray[float]): Updated values
+        omegaMU (np.ndarray[float]): Eigenfrequencies in Hertz of the updated model
+        updated_model_parameters (Dict[str,Any]): Updated model parameters
+
+    """
+    X = None
+    pars_to_update = Params['pars_to_update']
+    try:
+        res = minimize(lambda x: estimate_parameters(x, cluster_dict, model_pars,
+                                                     pars_to_update, Params),
+                       Params['MU_start_values'], bounds=Params['MU_bounds'],
+                       options={'maxiter': 1000})
+        # Get the optimized parameter values
+        X = res.x
+        print(f'Updated values: {X}')
+
+        # Updated model parameter
+        idx = 0
+        for key in model_pars:
+            if str(key) in pars_to_update:
+                model_pars[key] = X[idx]
+                idx += 1
+        updated_model_parameters = model_pars
+        omegaMU, _, __, ___ = beam_new.eval_yafem_model(updated_model_parameters)
+
+    except ValueError as e:
+        print(f"Skipping model updating due to error: {e}")
+
+    if X is not None:
+        return X, omegaMU, updated_model_parameters
+    return None, None, None
+
+def estimate_parameters(theta_star: List[float], cluster_dict: Dict[str,Any],
+                        model_parameters: Dict[str,Any],
+                        parameters_to_update: List[str],Params: Dict[str,Any]) -> float:
+    """
+    Estimate updated parameters and return the objective function result
+
+    Args:
+        theta_star (np.ndarray[float]): The parameters to update
+        cluster_dict (Dict[str,Any]): Dictionary of clustered modes
+        model_parameters (Dict[str,Any]): Model parameters (YaFEM)
+        parameters_to_update (List[str]): String of keys to update in model_parameters
+        Params (Dict[str,Any]): Update parameters
+
+    Returns:
+        X (float): Resulting value from objective function
+
+    Raises:
+    ValueError:
+        The number of updating parameters more than than the number of features. 
+        One should re-try after reducing the number of updating parameters 
+
+    """
+    idx = 0
+    for key in model_parameters:
+        if str(key) in parameters_to_update:
+            model_parameters[key] = theta_star[idx]
+            idx += 1
+    # Call FE solver to get model frequencies and mode shapes
+    omegaM, _, PhiM, __ = beam_new.eval_yafem_model(model_parameters)
+
+    # Mode Pairing Start
+    (paired_frequencies, paired_mode_shapes, omegaM, PhiM
+     ) = pair_modes(omegaM, PhiM, cluster_dict, Params)
+    omegaM = omegaM.reshape(paired_frequencies.shape)
+
+    # Error message if the number of updating parameters
+    # are more than double of the paired frequencies
+    if len(theta_star) > 2 * len(paired_frequencies):
+        raise ValueError("The problem becomes undetermined." \
+        " The number of updated parameters should not be more than the number of features")
+
+    # Compute MAC
+    MACn = np.abs(np.diag(np.conj(paired_mode_shapes).T @ PhiM))**2
+    MACd = np.diag(np.conj(paired_mode_shapes).T @
+                   paired_mode_shapes) * np.diag(np.conj(PhiM).T @ PhiM)
+    MAC = MACn / MACd
+
+    # Objective function
+    resOM = (omegaM - paired_frequencies)/omegaM
+    resPhi = MAC
+    X = np.dot(resOM.T, resOM) + 1 / np.dot(resPhi.T, resPhi)
+
+    return np.real(X)

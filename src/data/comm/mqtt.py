@@ -121,3 +121,14 @@ def setup_mqtt_client(config, topic_index=0):
     mqttc.on_publish = create_on_publish_callback()
 
     return mqttc, selected_topic
+
+def reconnect_client(mqtt_client) -> bool:
+    if not mqtt_client.is_connected():
+        print("Client disconnected. Reconnecting...")
+        mqtt_client.reconnect()
+
+    if not mqtt_client.is_connected():
+        raise Exception("Clint is not connected")
+    else:
+        print("Succesfully connected")
+        return True

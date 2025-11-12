@@ -33,7 +33,7 @@ def setup_sysid(config_path, data_topic_indexes):
 
 
 def run_sysid_and_plot(config_path):
-    number_of_minutes = 1
+    number_of_minutes = 0.2
     data_topic_indexes = [0, 2, 3, 4]
     aligner, data_client, fs = setup_sysid(config_path, data_topic_indexes)
 
@@ -86,7 +86,7 @@ def run_sysid_and_publish(config_path):
     # Setting up the client for publishing sysid results
     publish_client, _ = sysID.setup_client(publish_config)  # fs not needed here
 
-    publish_result = sysID.publish_sysid_results(
+    publish_result, timestamp = sysID.publish_sysid_results(
         number_of_minutes,
         aligner,
         publish_client,
@@ -95,7 +95,7 @@ def run_sysid_and_publish(config_path):
     )
 
     if publish_result is True:
-        print(f"Publishing to topic: {publish_config['TopicsToSubscribe'][0]}")
+        print(f"Publishing to topic: {publish_config['TopicsToSubscribe'][0]} at time: {timestamp}")
     data_client.disconnect()
     sys.stdout.flush()
 
@@ -111,7 +111,7 @@ def live_sysid_and_publish(config_path):
 
     publish_result = True
     while publish_result:
-        publish_result = sysID.publish_sysid_results(
+        publish_result, timestamp = sysID.publish_sysid_results(
             number_of_minutes,
             aligner,
             publish_client,
@@ -119,4 +119,4 @@ def live_sysid_and_publish(config_path):
             fs
         )
         if publish_result is True:
-            print(f"Publishing to topic: {publish_config['TopicsToSubscribe'][0]}")
+            print(f"Publishing to topic: {publish_config['TopicsToSubscribe'][0]} at time: {timestamp}")

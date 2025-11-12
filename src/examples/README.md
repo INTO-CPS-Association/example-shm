@@ -74,11 +74,15 @@ python .\src\examples\example.py live-sysid-publish
 python .\src\examples\example.py clustering-with-local-sysid
 python .\src\examples\example.py clustering-with-remote-sysid
 python .\src\examples\example.py live-clustering-with-remote-sysid
-python .\src\examples\example.py mode-tracking-with-remote-sysid
+python .\src\examples\example.py live-clustering-with-remote-sysid-and-publish
 python .\src\examples\example.py mode-tracking-with-local-sysid
-python .\src\examples\example.py live-mode-tracking-remote-sysid
+python .\src\examples\example.py mode-tracking-with-remote-sysid
+python .\src\examples\example.py live-mode-tracking-with-remote-sysid
 python .\src\examples\example.py model-update-local-sysid
 python .\src\examples\example.py live-model-update-remote-sysid
+python .\src\examples\example.py live-model-update-remote-clustering
+python .\src\examples\example.py live-model-update-remote-clustering-and-publish
+
 ```
 
 To run the examples with specified config, use

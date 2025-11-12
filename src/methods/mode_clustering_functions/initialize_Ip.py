@@ -1,7 +1,8 @@
-from typing import Any
+from typing import Any, List, Dict
 import numpy as np
+# pylint: disable=C0103
 
-def cluster_initial(ip: list[float], data: dict[str,Any], bound: float = 2) -> dict[str,Any]:
+def cluster_initial(ip: List[float], data: Dict[str,Any], bound: float = 2) -> Dict[str,Any]:
     """
         Find the initial cluster points
 
@@ -19,18 +20,20 @@ def cluster_initial(ip: list[float], data: dict[str,Any], bound: float = 2) -> d
     ip_d = ip[2]
     ip_cov_d = ip[3]
 
-    # Confidence interval using the ±2*standard_deviation 
+    # Confidence interval using the ±2*standard_deviation
     f_lower_bound = ip_f - bound * np.sqrt(ip_cov_f)
     f_upper_bound = ip_f + bound * np.sqrt(ip_cov_f)
     z_lower_bound = ip_d - bound * np.sqrt(ip_cov_d)
     z_upper_bound = ip_d + bound * np.sqrt(ip_cov_d)
 
-    
     frequencies = data['frequencies']
     damping_ratios = data['damping_ratios']
 
     # Find elements within the current limit that are still ungrouped
-    condition_mask = (frequencies >= f_lower_bound) & (frequencies <= f_upper_bound) & (damping_ratios >= z_lower_bound) & (damping_ratios <= z_upper_bound)# & ungrouped_mask
+    condition_mask = ((frequencies >= f_lower_bound)
+                      & (frequencies <= f_upper_bound)
+                      & (damping_ratios >= z_lower_bound)
+                      & (damping_ratios <= z_upper_bound))# & ungrouped_mask
     indices = np.argwhere(condition_mask)  # Get indices satisfying the condition
 
     #Generate the data for inital points
