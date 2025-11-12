@@ -4,6 +4,11 @@ This project creates a fully-functional demo of CP-SENS project.
 The demo is to be run inside the
 [DTaaS platform](https://github.com/into-cps-association/DTaaS).
 
+## Requirements
+
+- Python 3.8 - 3.12 (Python 3.8+ is supported)
+- Poetry for dependency management
+
 ## Development Setup
 
 This is a [poetry-based project](https://python-poetry.org/docs/).

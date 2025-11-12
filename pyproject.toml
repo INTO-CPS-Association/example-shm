@@ -12,7 +12,7 @@ license = "INTO-CPS Association"
 packages = [{include = "*", from="src"}]
 
 [tool.poetry.dependencies]
-python = ">=3.8, <4.0"
+python = ">=3.8, <3.13"
 paho-mqtt = "^2.1.0"
 numpy = "^1.24.0"
 click ="^8.1.8"
@@ -20,11 +20,11 @@ pyOMA-2 = "1.0.0"
 yafem = "1.0.0"
 
 [tool.poetry.group.dev.dependencies]
-pylint = "^3.3.6"
-pytest = "^8.3.5"
-pytest-cov = "^6.1.1"
-pytest-mock = "^3.14.0"
-pytest-env = "^1.1.5"
+pylint = "^3.0.0"
+pytest = "^7.0.0"
+pytest-cov = "^4.0.0"
+pytest-mock = "^3.10.0"
+pytest-env = "^0.8.0"
 
 [build-system]
 requires = ["poetry-core"]
