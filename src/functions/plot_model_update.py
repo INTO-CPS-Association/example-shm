@@ -12,7 +12,7 @@ def plot_parameters(model_parameters: Dict[str, Any],
 
     Args:
         model_parameters (Dict[str,Any]): Model parameters (YaFEM)
-        parameters_to_update (np.ndarray[str]): String of keys to update in model_parameters
+        parameters_to_update (List[str]): String of keys to update in model_parameters
         fix_ax (tuple): fig and ax of plot to redraw
     Returns:
         fig_ax (tuple): fig and ax of plot
@@ -43,7 +43,7 @@ def plot_parameters(model_parameters: Dict[str, Any],
         else:
             ydata = []
             xdata = [1]
-        
+
         ydata.append(model_parameters[pars_to_update[ii]])
         ax.plot(xdata,ydata,'*-',color="k")
         ax.set_ylabel(pars_to_update[ii])
@@ -55,23 +55,23 @@ def plot_parameters(model_parameters: Dict[str, Any],
 
 
 
-def plot_model_frequencies(omegaM: np.ndarray,
+def plot_model_frequencies(omega_model: np.ndarray[float],
         fig_ax = None)-> Tuple[matplotlib.figure.Figure, Tuple[plt.Axes,plt.Axes]]:
     """
     Plot updated model frequencies
 
     Args:
-        omegaM (np.ndarray): array of model eigenfrequencies
-        fix_ax (tuple): fig and ax of plot to redraw
+        omega_model (np.ndarray[float]): array of model eigenfrequencies
+        fix_ax (Tuple): fig and ax of plot to redraw
     Returns:
-        fig_ax (tuple): fig and ax of plot
+        fig_ax (Tuple): fig and ax of plot
 
     """
 
     if fig_ax is None:
         plt.ion()
         fig, ax1 = plt.subplots(1,1,figsize=(6, 4), tight_layout=True)
-        ydata = omegaM
+        ydata = omega_model
         xdata = [1]
     else:
         ydata_prev = []
@@ -83,9 +83,9 @@ def plot_model_frequencies(omegaM: np.ndarray,
         ax1.clear()
 
         xdata = np.hstack((xdata_prev,np.array(xdata_prev[-1])+1))
-        ydata = np.hstack((np.asarray(ydata_prev),np.reshape(omegaM, (-1, 1))))
-    
-    for ii in range(len(omegaM)):
+        ydata = np.hstack((np.asarray(ydata_prev),np.reshape(omega_model, (-1, 1))))
+
+    for ii in range(len(omega_model)):
         ax1.plot(xdata,ydata[ii],'*-')
     ax1.set_ylabel("Model eigenfrequencies [Hz]")
     ax1.set_xlabel('Dataset [-]')

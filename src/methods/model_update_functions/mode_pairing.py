@@ -133,7 +133,8 @@ def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[floa
                     Dm_f_list.append(model_freq[id_model]-cluster['median_f'])
 
                     #Mode shape of paried model mode
-                    if np.sum(paried_model_mode_shapes) == 0: #If no paried mode shapes have been done before
+                    #If no paried mode shapes have been done before
+                    if np.sum(paried_model_mode_shapes) == 0:
                         paried_model_mode_shapes = model_mode_shapes[:,id_model].reshape(sensors,1)
                     else:
                         paried_model_mode_shapes = np.append(paried_model_mode_shapes,
@@ -147,11 +148,14 @@ def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[floa
                             MAC_max_id = idx
                     MAC_max_list.append(MAC_max)
                     #Mode shape of paried cluster
-                    if np.sum(paired_c_mode_shapes) == 0:#If no paried mode shapes have been done before
+
+                    #If no paried mode shapes have been done before
+                    if np.sum(paired_c_mode_shapes) == 0:
                         paired_c_mode_shapes = cluster['mode_shapes'][MAC_max_id,:].reshape(sensors,1)
                     else:
                         paired_c_mode_shapes = np.append(paired_c_mode_shapes,
-                                                         cluster['mode_shapes'][MAC_max_id,:].reshape(sensors,1),axis=1)
+                                                         cluster['mode_shapes'][MAC_max_id,:].reshape(sensors,1),
+                                                         axis=1)
 
             else:
                 print("Cluster",key,cluster['median_f']

@@ -12,18 +12,9 @@
           "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/2/acc/raw/data",
           "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/3/acc/raw/data",
           "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/4/acc/raw/data"
-        ]
+        ],
+        "TopicsToPublish": []
       },
-
-    "sysID": {
-      "host": "",
-      "port": ,
-      "userId": "",
-      "password": "",
-      "ClientID": "NOT_NEEDED",
-      "QoS": 2,
-      "TopicsToSubscribe": ["cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/sysid/data"]
-    },
 
     "mode_cluster": {
       "host": "",
@@ -32,7 +23,8 @@
         "password": "",
       "ClientID": "NOT_NEEDED",
       "QoS": 2,
-      "TopicsToSubscribe": ["cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/mode_cluster/data"]
+      "TopicsToSubscribe": ["cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/mode_cluster/data"],
+      "TopicsToPublish": []
     },
 
     "model_update": {
@@ -42,7 +34,8 @@
         "password": "",
       "ClientID": "NOT_NEEDED",
       "QoS": 2,
-      "TopicsToSubscribe": ["cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/model_update/data"]
+      "TopicsToSubscribe": ["cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/model_update/data"],
+      "TopicsToPublish": []
     }
 }
 

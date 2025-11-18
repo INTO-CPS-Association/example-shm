@@ -5,8 +5,8 @@ from datetime import datetime
 import json
 from methods.sysid import (
     sysid,
-    get_sysid_results,
-    publish_sysid_results,
+    get_sysid_output,
+    publish_sysid_output,
     setup_client,
 )
 from paho.mqtt.client import Client as MQTTClient
@@ -47,7 +47,7 @@ def test_get_oma_results_success(mocker):
     mock_aligner = MagicMock()
     mock_aligner.extract.return_value = (mock_data, datetime.now())
 
-    result, ts = get_sysid_results(0.1, mock_aligner, fs)
+    result, ts = get_sysid_output(0.1, mock_aligner, fs)
 
     assert result is not None
     assert "Fn_poles" in result
@@ -57,7 +57,7 @@ def test_get_oma_results_no_data(mocker):
     mock_aligner = MagicMock()
     mock_aligner.extract.return_value = (np.empty((0, 3)), datetime.now())
 
-    result, ts = get_sysid_results(1, mock_aligner, fs)
+    result, ts = get_sysid_output(1, mock_aligner, fs)
 
     assert result is None
     assert ts is None
@@ -69,7 +69,7 @@ def test_get_oma_results_not_enough_samples(mocker):
     data = np.random.randn(100, 3)
     mock_aligner.extract.return_value = (data, datetime.now())
 
-    result, ts = get_sysid_results(10, mock_aligner, fs)  # ask for too many samples
+    result, ts = get_sysid_output(10, mock_aligner, fs)  # ask for too many samples
 
     assert result is None
     assert ts is None
@@ -82,7 +82,7 @@ def test_get_oma_results_sysid_failure(mocker):
 
     mocker.patch("methods.sysid.sysid", side_effect=Exception("fail"))
 
-    result, ts = get_sysid_results(1, mock_aligner, fs)
+    result, ts = get_sysid_output(1, mock_aligner, fs)
 
     assert result is None
     assert ts is None
@@ -101,7 +101,7 @@ def test_publish_oma_results_retries_and_publishes_once(mocker):
     mocker.patch("methods.sysid.time.sleep", return_value=None)
 
     mocker.patch(
-        "methods.sysid.get_sysid_results",
+        "methods.sysid.get_sysid_output",
         side_effect=[
             (None, None),
             (dummy_result, datetime(2024, 1, 1))
@@ -118,7 +118,7 @@ def test_publish_oma_results_retries_and_publishes_once(mocker):
     aligner = MagicMock()
     aligner.client = MagicMock()
 
-    publish_sysid_results(0.1, aligner, mock_client, "test/topic", fs)
+    publish_sysid_output(0.1, aligner, mock_client, "test/topic", fs)
 
     assert mock_client.publish.called
     assert mock_client.publish.call_count == 1

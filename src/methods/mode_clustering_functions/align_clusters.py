@@ -8,10 +8,10 @@ def alignment(cluster_dict: Dict[str,dict], params: Dict[str,Any]) -> Dict[str,d
         Alignment/merging of clusters
 
         Args:
-            cluster_dict (dict): Dictionary of multiple clusters
-            params (dict): Dictionary of algorithm parameters
+            cluster_dict (Dict[str,dict]): Dictionary of multiple clusters
+            params (Dict[str,dict]): Dictionary of algorithm parameters
         Returns:
-            cluster_dict (dict): Dictionary of aligned clusters
+            cluster_dict (Dict[str,dict]): Dictionary of aligned clusters
 
     """
     median_f = []
@@ -48,7 +48,8 @@ def alignment(cluster_dict: Dict[str,dict], params: Dict[str,Any]) -> Dict[str,d
 
                 # Check mode shape for the first pole in each cluster
                 MAC = calculate_mac(cluster1['mode_shapes'][0],cluster2['mode_shapes'][0])
-                if MAC >= params['tMAC']: #If MAC complies with the criteria, then add the two clusters
+                if MAC >= params['tMAC']: # If MAC complies with the criteria,
+                                                    # then add the two clusters
                     cluster, cluster_remaining = join_clusters(cluster_dict[str(ii)],
                                                                cluster_dict[str(idx)],
                                                                params)
@@ -59,7 +60,8 @@ def alignment(cluster_dict: Dict[str,dict], params: Dict[str,Any]) -> Dict[str,d
                     else:
                         cluster_dict[str(idx)] = cluster_remaining #Save the remaining cluster
 
-                else: #Check if the mode shapes across any of the poles complies with the MAC criteria
+                else: # Check if the mode shapes across any of the poles
+                                            # complies with the MAC criteria
                     MAC = np.zeros((cluster1['mode_shapes'].shape[0],
                                     cluster2['mode_shapes'].shape[0]))
                     for jj,  ms1 in enumerate(cluster1['mode_shapes']):
@@ -84,12 +86,12 @@ def join_clusters(cluster_1: Dict[str,Any], cluster_2: Dict[str,Any],
         Add two clusters together
 
         Args:
-            cluster_1 (dict): Cluster
-            cluster_2 (dict): Cluster
-            params (dict): Dictionary of algorithm parameters
+            cluster_1 (Dict[str,dict]): Cluster
+            cluster_2 (Dict[str,dict]): Cluster
+            params (Dict[str,dict]): Dictionary of algorithm parameters
         Returns:
-            cluster (dict): Joined cluster
-            cluster_remaining (dict): The cluster that remains
+            cluster (Dict[str,dict]): Joined cluster
+            cluster_remaining (Dict[str,dict]): The cluster that remains
 
     """
     #Adding two clusters together
@@ -139,11 +141,11 @@ def append_cluster_data(cluster: Dict[str,Any], cluster2: Dict[str,Any], idx: in
         Add cluster data to an existing cluster
 
         Args:
-            cluster (dict): Existing cluster
-            cluster2 (dict): Cluster
+            cluster (Dict[str,dict]): Existing cluster
+            cluster2 (Dict[str,dict]): Cluster
             idx (int): id of data to append
         Returns:
-            cluster (dict): Cluster
+            cluster (Dict[str,dict]): Cluster
 
     """
     if len(cluster) == 0: #If it is the first pole

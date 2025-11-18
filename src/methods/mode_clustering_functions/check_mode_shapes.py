@@ -1,4 +1,15 @@
-def check_mode_shapes(cluster_dict,dofs=None):
+from typing import Any, Dict, List
+
+def check_mode_shapes(cluster_dict: Dict[str,Any],dofs: List[str] = None) -> None:
+    """
+    Check mode shapes manually by comparing modeshapes with degrees of freedom
+    
+    Args:
+        cluster_dict (Dict[str,Any]): Dictionary of clusters
+        dofs (List[str]): List of degrees of freedom
+    Returns:
+        None
+    """
     print("Check mode shapes")
 
     for key in cluster_dict.keys():
@@ -12,5 +23,5 @@ def check_mode_shapes(cluster_dict,dofs=None):
         else:
             print(mode_shape)
         print('Press enter to continue')
-        x = input()
+        input()
     print("Mode shape check done")

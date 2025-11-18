@@ -20,7 +20,7 @@ def extract_fs_from_metadata(mqtt_config: Dict[str, Any]) -> int:
             print(f"Failed to extract Fs: {e}")
 
     metadata_topic = mqtt_config["TopicsToSubscribe"][1]
-    client, _ = setup_mqtt_client(mqtt_config, topic_index=1)
+    client, _, _= setup_mqtt_client(mqtt_config, topic_subscribe_index=1)
     client.user_data_set({"metadata_topic": metadata_topic})
     client.message_callback_add(metadata_topic, _on_metadata)
     client.connect(mqtt_config["host"], mqtt_config["port"], 60)

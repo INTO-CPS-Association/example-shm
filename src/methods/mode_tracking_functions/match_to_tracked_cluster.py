@@ -32,9 +32,9 @@ def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_cluste
 
     """
     result_pairs = {}
-    for id, key in enumerate(cluster_dict): #Go through all clusters
-        if id in skip_cluster: #If this cluster is already matched skip it
-            result_pairs[str(id)] = result_pairs_prev[str(id)]
+    for idx, key in enumerate(cluster_dict): #Go through all clusters
+        if idx in skip_cluster: #If this cluster is already matched skip it
+            result_pairs[str(idx)] = result_pairs_prev[str(idx)]
             continue
 
         #Get mode shapes
@@ -47,13 +47,13 @@ def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_cluste
         R_freq = []
         MAC_max_list = []
         MAC_avg_list = []
-        for key in tracked_clusters: #Go through all tracked clusters.
+        for key_t in tracked_clusters: #Go through all tracked clusters.
             #They are identified with keys which are integers from 0 up to total number of clusters
-            if key == 'iteration':
+            if key_t == 'iteration':
                 pass
             else:
                 #Accessing all cluster in a tracked cluster group
-                tracked_cluster_list = tracked_clusters[key]
+                tracked_cluster_list = tracked_clusters[key_t]
                 n_last_tracked_clusters = np.min((len(tracked_cluster_list),6))
                 for ii in range(n_last_tracked_clusters):
                     tracked_cluster = tracked_cluster_list[-1*(ii+1)]
@@ -64,15 +64,15 @@ def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_cluste
                     phi_t_all = tracked_cluster['mode_shapes']
 
                     MAC_matrix = np.zeros((phi_all.shape[0],phi_t_all.shape[0]))
-                    for ii, phi in enumerate(phi_all):
+                    for kk, phi in enumerate(phi_all):
                         for jj, phi_t in enumerate(phi_t_all):
                             MAC = float(calculate_mac(phi_t, phi))
                             #array to compare the cluster with all tracked clusters
-                            MAC_matrix[ii,jj] = MAC
+                            MAC_matrix[kk,jj] = MAC
                     if np.max(MAC_matrix) > params['phi_cri']:
                         break
 
-                if key in skip_tracked_cluster:
+                if key_t in skip_tracked_cluster:
                     MAC_avg = np.mean(0)
                     MAC_max = np.max(0)
                     MAC_max_list.append(0)
@@ -106,7 +106,7 @@ def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_cluste
             #If one match on all three parameters:
             if pos2 == pos3:
                 pos = int(indicies[pos1][0])
-                result_pairs[str(id)] = pos #group to a tracked cluster
+                result_pairs[str(idx)] = pos #group to a tracked cluster
             else:
                 X_list_left = X_list.copy()
                 del X_list_left[pos1]
@@ -127,19 +127,19 @@ def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_cluste
                     #Cluster with the best MAC
                     if max(MAC_list_left) > max(MAC_list):
                         pos = int(indicies[pos2_2][0]) #Match with best MAC
-                        result_pairs[str(id)] = pos #group to a tracked cluster
+                        result_pairs[str(idx)] = pos #group to a tracked cluster
                     else:
                         pos = int(indicies[pos2][0]) #Match with best X
-                        result_pairs[str(id)] = pos #group to a tracked cluster
+                        result_pairs[str(idx)] = pos #group to a tracked cluster
                 else: #If none of the above choose the one with lowest opjective function
                     pos = int(indicies[pos1][0])
-                    result_pairs[str(id)] = pos #group to a tracked cluster
+                    result_pairs[str(idx)] = pos #group to a tracked cluster
 
         elif len(indicies) == 1: #If one cluster combly with the mode shape criteria
             pos = int(indicies[0][0])
-            result_pairs[str(id)] = pos #group to a tracked cluster
+            result_pairs[str(idx)] = pos #group to a tracked cluster
 
         else: #Does not comply with mode shape criteria
-            result_pairs[str(id)] = "new"
+            result_pairs[str(idx)] = "new"
 
     return result_pairs

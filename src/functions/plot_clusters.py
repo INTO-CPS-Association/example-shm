@@ -11,17 +11,18 @@ def plot_clusters(clusters: Dict[str,dict],
         sysid_results: Dict[str, Any],
         sysid_params: Dict[str, Any],
         fig_ax = None,
-        legend = True)-> Tuple[matplotlib.figure.Figure, Tuple[matplotlib.axes.Axes,matplotlib.axes.Axes]]:
+        legend = True)-> Tuple[matplotlib.figure.Figure,
+                               Tuple[matplotlib.axes.Axes,matplotlib.axes.Axes]]:
     """
     Plot stabilization of clusters
 
     Args:
         clsuters (Dict[str,dict]): Dictionary of clusters
         sysid_results (Dict[str,dict]): PyOMA results
-        sysid_params (Dict[str,dict]): sysid parameters
-        fix_ax (Tuple[matplotlib.figure.Figure, Tuple[matplotlib.axes.Axes,matplotlib.axes.Axes]]): fig and ax of plot to redraw
+        sysid_params (Dict[str,dict]): System identification parameters
+        fix_ax (Tuple[plt.Figure, Tuple[plt.Axes]]): fig and ax of plot to redraw
     Returns:
-        fig_ax (Tuple[matplotlib.figure.Figure, Tuple[matplotlib.axes.Axes,matplotlib.axes.Axes]]): fig and ax of plot
+        fig_ax (Tuple[plt.Figure, Tuple[plt.Axes]]): fig and ax of plot
 
     """
 
@@ -39,19 +40,22 @@ def plot_clusters(clusters: Dict[str,dict],
         title_number = int(iteration_number) + 1
 
     #Pre-clean
-    frequencies, cov_freq, damping_ratios, cov_damping, _ = remove_highly_uncertain_points(sysid_results,sysid_params)
+    (frequencies, _, damping_ratios,
+     _, _) = remove_highly_uncertain_points(sysid_results,sysid_params)
 
     x = frequencies.flatten(order="f")
     y_model_order = np.array([i // len(frequencies) for i in range(len(x))]) * 1
 
-    ax1 = add_scatter_data(ax1,x,y_model_order,None,error_dir="h",mark="^",lab='Non clustered',size=20)
+    ax1 = add_scatter_data(ax1,x,y_model_order,None,error_dir="h",mark="^",
+                           lab='Non clustered',size=20)
 
     for i, key in enumerate(clusters.keys()):
         cluster = clusters[key]
-        MO = cluster['model_order']
-        ax1, col = add_scatter_cluster(ax1,cluster['f'],MO,cluster['cov_f'],i,error_dir="h")
-        ax1.vlines(np.median(cluster['f']),min(MO),
-                   max(MO),color=col)
+        model_order = cluster['model_order']
+        ax1, col = add_scatter_cluster(ax1,cluster['f'],model_order,
+                                       cluster['cov_f'],i,error_dir="h")
+        ax1.vlines(np.median(cluster['f']),min(model_order),
+                   max(model_order),color=col)
 
     ax1 = add_plot_standard_flair(ax1,sysid_params)
 
@@ -72,11 +76,12 @@ def plot_clusters(clusters: Dict[str,dict],
 
     for i, key in enumerate(clusters.keys()):
         cluster = clusters[key]
-        ax2, col = add_scatter_cluster(ax2,cluster['f'],cluster['d'],cluster['cov_d'],i,error_dir="v")
+        ax2, col = add_scatter_cluster(ax2,cluster['f'],cluster['d'],
+                                       cluster['cov_d'],i,error_dir="v")
 
     ax2 = add_plot_annotation(ax2,x,y,y_model_order)
     ax2 = add_plot_standard_flair(ax2,sysid_params)
-    
+
     if y[~np.isnan(y)].shape[0] > 1:
         ax2.set_ylim(0, max(max(y[~np.isnan(y)])+0.005,0.1))
     else:
@@ -88,21 +93,23 @@ def plot_clusters(clusters: Dict[str,dict],
     return fig, (ax1,ax2)
 
 
-def add_scatter_cluster(ax: matplotlib.axes.Axes, x: np.ndarray, y: np.ndarray, cov: np.ndarray, cluster_id = int, error_dir: str = "h") -> Tuple[matplotlib.axes.Axes, Any]:
+def add_scatter_cluster(ax: matplotlib.axes.Axes, x: np.ndarray[float], y: np.ndarray[float],
+                        cov: np.ndarray[float], cluster_id = int,
+                        error_dir: str = "h") -> Tuple[matplotlib.axes.Axes, Any]:
     """
     Add scatter plot of clusters to existing axes
     
     Args:
         ax (matplotlib.axes.Axes): ax from matplotlib
-        x (np.ndarray): x-axis data
-        y (np.ndarray): y-axis data
-        cov (np.ndarray): covariance for errorbars
+        x (np.ndarray[float]): x-axis data
+        y (np.ndarray[float]): y-axis data
+        cov (np.ndarray[float]): covariance for errorbars
         cluster_id (int): Index of cluster for labeling
         error_dir (str): Direction of errorbars, either "h" horizontal or "v" vertical
 
     Returns:
-        ax (matplotlib.axes.Axes):
-        col (Any):
+        ax (matplotlib.axes.Axes): matplotlib axes
+        col (Any): Color information
     """
     sc = ax.scatter(x, y, marker="o", s=60, label=f'Cluster {cluster_id}')
     col = sc.get_facecolors().tolist()

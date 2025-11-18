@@ -1,14 +1,22 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def plot_spectral_density(y,N,params):
+def plot_spectral_density(y: np.ndarray[float],fs: float) -> None:
+    """
+    Plot spectral density
+    
+    Args:
+        y (np.ndarray[float]): Data
+        fs (float): Sampling frequency (Hz)
+    Returns:
+    """
     # Spectrum test
-    fig1, (ax1) = plt.subplots(1,1,figsize=(8, 6), tight_layout=True)
-    fs = params['Fs']  # Sampling frequency (Hz)
-    duration = N/256
+    _, (ax1) = plt.subplots(1,1,figsize=(8, 6), tight_layout=True)
+    n = max(y.shape)
+    duration = n/256
     t = np.linspace(0, duration, int(fs * duration), endpoint=False)
     # Applying FFT
-    for ii, y_data in enumerate(y[:,0]):
+    for ii, _ in enumerate(y[:,0]):
         fft_result = np.fft.fft(y[ii,:])
         freq = np.fft.fftfreq(t.shape[-1], d=1/fs)
 

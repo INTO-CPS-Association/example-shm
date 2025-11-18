@@ -1,10 +1,12 @@
 import time
 import json
-import numpy as np
-from datetime import datetime
 from typing import Any, Dict, Optional, Tuple
+from datetime import datetime
+import numpy as np
 from paho.mqtt.client import Client as MQTTClient
 from pyoma2.setup.single import SingleSetup
+from data.accel.aligner import IAligner
+from data.comm.mqtt import load_config
 from functions.util import convert_numpy_to_list
 from data.accel.metadata import extract_fs_from_metadata
 from data.comm.mqtt import (setup_mqtt_client, reconnect_client)
@@ -72,18 +74,40 @@ def setup_client(mqtt_config: Dict[str, Any]) -> Tuple[MQTTClient, float]:
     """
     try:
         fs = extract_fs_from_metadata(mqtt_config)
-        print("Extracted Fs from metadata:", fs)
     except Exception:
         print("Failed to extract FS from metadata. Using DEFAULT_FS.")
         fs = DEFAULT_FS
 
-    data_client, _ = setup_mqtt_client(mqtt_config, topic_index=0)
+    data_client, _, __ = setup_mqtt_client(mqtt_config, topic_subscribe_index=0,
+                                           topic_publish_index=0)
     data_client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     data_client.loop_start()
     return data_client, fs
 
+def setup_sysid(config_path, data_topic_indexes) -> Tuple[IAligner, MQTTClient,
+                                                          Dict[str,Any], float]:
+    """
+    Helper function to set up sysid (Operational Modal Analysis).
 
-def get_sysid_results(
+    Parameters:
+        config_path (str): Path to the configuration file.
+        data_topic_indexes (list): Indexes of topics to subscribe to.
+
+    Returns:
+        tuple: (aligner, data_client, mqtt_config, fs)
+    """
+    config = load_config(config_path)
+    mqtt_config = config["MQTT"]
+
+    # Setting up the client and extracting Fs
+    data_client, fs = setup_client(mqtt_config)
+
+    # Setting up the aligner
+    selected_topics = [mqtt_config["TopicsToSubscribe"][i] for i in data_topic_indexes]
+    aligner = Aligner(data_client, topics=selected_topics)
+    return aligner, data_client, mqtt_config, fs
+
+def get_sysid_output(
         sampling_period: int, aligner: Aligner, fs: float
         ) -> Optional[Tuple[Dict[str, Any], datetime]]:
     """
@@ -106,63 +130,66 @@ def get_sysid_results(
 
     try:
         sysid_output = sysid(data, PARAMS)
-        return sysid_output, timestamp
+        return sysid_output, timestamp.isoformat()
     except Exception as e:
         print(f"sysID failed: {e}")
         return None, None
 
-
-def publish_sysid_results(sampling_period: int, aligner: Aligner,
-                        publish_client: MQTTClient, publish_topic: str,
-                        fs: float) -> int:
+def wait_for_sysid_output(number_of_minutes: float, aligner: Aligner,
+                          fs: float) -> Optional[Tuple[Dict[str, Any],datetime]]:
     """
-    Repeatedly tries to get aligned data and publish sysid results once.
+    Extract system identidication results while printing elapsed time
 
     Args:
-        sampling_period: Duration (in minutes) of data to extract.
-        aligner: Aligner object that provides synchronized sensor data.
-        publish_client: MQTT client used for publishing results.
-        publish_topic: The MQTT topic to publish results to.
-        fs: Sampling frequency.
+        sampling_period (float): How many minutes of data to pass to sysid.
+        aligner (IAligner): An initialized Aligner object.
+        fs (float): Sampling frequency to use in the sysid algorithm.
+
+    Returns:
+        A tuple (sysid_output, timestamp) if successful, or None if data is not ready.
     """
+    aligner_time = None
     t1 = time.time()
-    timestamp = datetime.now()
-    publish_result = True
-    while True:
-        try:
+    try:
+        while aligner_time is None:
             time.sleep(0.1)
             t2 = time.time()
             t_text = f"Waiting for data for {round(t2-t1,1)} seconds"
             print(t_text,end="\r")
-            sysid_output, timestamp = get_sysid_results(sampling_period, aligner, fs)
+            sysid_output, aligner_time = get_sysid_output(number_of_minutes, aligner, fs)
+
+            if (t2-t1) > 10*number_of_minutes*60:
+                raise RuntimeError("Aligned data not recieved in time")
+
+        print("Aligned data recieved at:",aligner_time)
+        return sysid_output, aligner_time
+    except KeyboardInterrupt as exc:
+        raise RuntimeError("Keyboard interrupt") from exc
 
 
-            if sysid_output:
-                print(f"Timestamp: {timestamp}")
-                payload = {
-                    "timestamp": timestamp.isoformat(),
-                    "sysid_output": convert_numpy_to_list(sysid_output)
-                }
-                try:
-                    message = json.dumps(payload)
 
-                    reconnect_succes = reconnect_client(publish_client)
+def publish_sysid_output(publish_client: MQTTClient, publish_topic: str,
+                        sysid_output: Dict[str, Any], timestamp: str) -> None:
+    """
+    Ppublish sysid results once.
 
-                    publish_client.publish(publish_topic, message, qos=1)
-                    print(f"[{timestamp.isoformat()}] Published sysid result to {publish_topic}")
-                    publish_result = True
-                    break
-                except Exception as e:
-                    print(f"\nFailed to publish sysid result: {e}")
+    Args:
+        publish_client (MQTTClient): MQTT client used for publishing results.
+        publish_topic (str): The MQTT topic to publish results to.
+        sysid_output (Dict[str, Any]):
+        timestamp (str): Sampling frequency.
+    """
+    payload = {
+        "timestamp": timestamp,
+        "sysid_output": convert_numpy_to_list(sysid_output)
+    }
+    try:
+        message = json.dumps(payload)
 
-        except KeyboardInterrupt:
-            print("\nShutting down gracefully")
-            aligner.mqtt_client.loop_stop()
-            aligner.mqtt_client.disconnect()
-            publish_client.disconnect()
-            publish_result = False
-            break
-        except Exception as e:
-            print(f"\nUnexpected error: {e}")
+        _ = reconnect_client(publish_client)
 
-    return publish_result, timestamp.isoformat()
+        publish_client.publish(publish_topic, message, qos=1)
+        print(f"[{timestamp}] Published sysid result to {publish_topic}")
+
+    except KeyboardInterrupt as exc:
+        raise RuntimeError("Keyboard interrupt") from exc

@@ -7,7 +7,7 @@ def read_accelerometers(config_path):
     config = load_config(config_path)
     mqtt_config = config["MQTT"]
     topic_index = 0
-    mqtt_client, selected_topic = setup_mqtt_client(mqtt_config, topic_index)
+    mqtt_client, selected_topic, _ = setup_mqtt_client(mqtt_config, topic_index)
     mqtt_client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     mqtt_client.loop_start()
 

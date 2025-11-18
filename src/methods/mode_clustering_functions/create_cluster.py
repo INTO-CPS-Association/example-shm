@@ -8,10 +8,10 @@ def cluster_creation(IP: Dict[str,Any],params: Dict[str,Any]) -> Dict[str,Any]: 
         Create cluster
 
         Args:
-            IP (dict): Dictionary of data on inital points
-            params (dict): Dictionary of algorithm parameters
+            IP (Dict[str,Any]): Dictionary of data on inital points
+            params (Dict[str,Any]): Dictionary of algorithm parameters
         Returns:
-            cluster (dict): Cluster
+            cluster (Dict[str,Any]): Cluster
 
     """ #Algorithm 2
     #Extract data:
@@ -47,6 +47,7 @@ def cluster_creation(IP: Dict[str,Any],params: Dict[str,Any]) -> Dict[str,Any]: 
                     IPu['row'] = np.append(IPu['row'],row[ii])
                     IPu['col'] = np.append(IPu['col'],col[ii])
 
+        non_clustered_IPu = {'row':[]}
         if len(IPu) > 0: #If there exist model orders with unique poles
             if isinstance(IPu['f'],float):
                 cluster = {'f':np.array([IPu['f']]),
@@ -97,9 +98,8 @@ def cluster_creation(IP: Dict[str,Any],params: Dict[str,Any]) -> Dict[str,Any]: 
                         mode_shapes = np.delete(mode_shapes,ii,axis=0)
                         row = np.delete(row,ii)
                         col = np.delete(col,ii)
-                    except:
-                        raise ValueError("Multiple rows exist")
-            non_clustered_IPu = {'row':[]}
+                    except Exception as exc:
+                        raise ValueError("Multiple rows exist") from exc
         if len(row) != len(set(row)): #If there still are points at the same model order in IP
             IPm = {}
             for ii, idx in enumerate(row): #Go through all rows/model orders

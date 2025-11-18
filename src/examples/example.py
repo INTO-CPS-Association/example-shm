@@ -20,10 +20,9 @@ from examples.run_mode_tracking import (
     run_live_mode_tracking_with_remote_sysid
 )
 from examples.run_model_update import (
-    run_model_update_local_sysid, 
+    run_model_update_local_sysid,
     run_model_update_remote_sysid,
-    run_live_model_update_remote_clustering,
-    run_live_model_update_with_remote_clustering_and_publish,
+    run_live_model_update_remote_clustering
 )
 
 @click.group()
@@ -100,24 +99,18 @@ def live_mode_tracking_with_remote_sysid(ctx):
 
 @cli.command()
 @click.pass_context
-def model_update_local_sysid(ctx):
+def model_update_with_local_sysid(ctx):
     run_model_update_local_sysid(ctx.obj["CONFIG"])
 
 @cli.command()
 @click.pass_context
-def live_model_update_remote_sysid(ctx):
+def live_model_update_with_remote_sysid(ctx):
     run_model_update_remote_sysid(ctx.obj["CONFIG"])
 
 @cli.command()
 @click.pass_context
-def live_model_update_remote_clustering(ctx):
+def live_model_update_with_remote_clustering(ctx):
     run_live_model_update_remote_clustering(ctx.obj["CONFIG"])
-
-@cli.command()
-@click.pass_context
-def live_model_update_remote_clustering_and_publish(ctx):
-    run_live_model_update_with_remote_clustering_and_publish(ctx.obj["CONFIG"])
-
 
 if __name__ == "__main__":
     cli(obj={})

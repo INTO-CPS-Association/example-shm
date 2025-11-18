@@ -7,11 +7,11 @@ def cluster_initial(ip: List[float], data: Dict[str,Any], bound: float = 2) -> D
         Find the initial cluster points
 
         Args:
-            ip (list): Frequency, damping and covariance for the inital point (ip)
-            data (dict): OMA points data
+            ip (List[float]): Frequency, damping and covariance for the inital point (ip)
+            data (Dict[str,Any]): OMA points data
             bound (float): Multiplier on standard deviation
         Returns:
-            initial_points (float): Initial points to create cluster from
+            initial_points (Dict[str,Any]): Initial points to create cluster from
 
     """
     #Extract data of initial point

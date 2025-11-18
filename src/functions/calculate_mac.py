@@ -1,6 +1,6 @@
 import numpy as np
 
-def calculate_mac(reference_mode_shape: np.array, second_mode_shape: np.array) -> float:
+def calculate_mac(reference_mode_shape: np.ndarray, second_mode_shape: np.ndarray) -> float:
     """
         Calculate Modal Assurance Criterion (MAC)
 

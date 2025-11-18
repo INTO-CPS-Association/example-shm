@@ -6,7 +6,7 @@ from methods.model_update_functions.mode_pairing import pair_modes
 # pylint: disable=C0103
 
 def update_model(cluster_dict: Dict[str,Any], model_pars: Dict[str,Any],
-                 pars_to_update: List[str], Params: Dict[str,Any]) -> Optional[Any]:
+                 pars_to_update: List[str], params: Dict[str,Any]) -> Optional[Any]:
     """
     Estimate updated model parameters
 
@@ -14,7 +14,7 @@ def update_model(cluster_dict: Dict[str,Any], model_pars: Dict[str,Any],
         cluster_dict (Dict[str,Any]): Dictionary of clustered modes
         model_parameters (Dict[str,Any]): Model parameters (YaFEM)
         parameters_to_update (List[str]): String of keys to update in model_parameters
-        Params (Dict[str,Any]): Update parameters
+        params (Dict[str,Any]): Update parameters
 
     Returns:
         X (np.ndarray[float]): Updated values
@@ -23,15 +23,17 @@ def update_model(cluster_dict: Dict[str,Any], model_pars: Dict[str,Any],
 
     """
     X = None
-    pars_to_update = Params['pars_to_update']
+    pars_to_update = params['pars_to_update']
     try:
         res = minimize(lambda x: estimate_parameters(x, cluster_dict, model_pars,
-                                                     pars_to_update, Params),
-                       Params['MU_start_values'], bounds=Params['MU_bounds'],
+                                                     pars_to_update, params),
+                       params['MU_start_values'], bounds=params['MU_bounds'],
                        options={'maxiter': 1000})
         # Get the optimized parameter values
         X = res.x
-        print(f'Updated values: {X}')
+        print("Updated parameters are:")
+        for ii, name in enumerate(params['pars_to_update']):
+            print(name+":",X[ii])
 
         # Updated model parameter
         idx = 0
@@ -51,7 +53,7 @@ def update_model(cluster_dict: Dict[str,Any], model_pars: Dict[str,Any],
 
 def estimate_parameters(theta_star: List[float], cluster_dict: Dict[str,Any],
                         model_parameters: Dict[str,Any],
-                        parameters_to_update: List[str],Params: Dict[str,Any]) -> float:
+                        parameters_to_update: List[str],params: Dict[str,Any]) -> float:
     """
     Estimate updated parameters and return the objective function result
 
@@ -60,7 +62,7 @@ def estimate_parameters(theta_star: List[float], cluster_dict: Dict[str,Any],
         cluster_dict (Dict[str,Any]): Dictionary of clustered modes
         model_parameters (Dict[str,Any]): Model parameters (YaFEM)
         parameters_to_update (List[str]): String of keys to update in model_parameters
-        Params (Dict[str,Any]): Update parameters
+        params (Dict[str,Any]): Update parameters
 
     Returns:
         X (float): Resulting value from objective function
@@ -81,7 +83,7 @@ def estimate_parameters(theta_star: List[float], cluster_dict: Dict[str,Any],
 
     # Mode Pairing Start
     (paired_frequencies, paired_mode_shapes, omegaM, PhiM
-     ) = pair_modes(omegaM, PhiM, cluster_dict, Params)
+     ) = pair_modes(omegaM, PhiM, cluster_dict, params)
     omegaM = omegaM.reshape(paired_frequencies.shape)
 
     # Error message if the number of updating parameters

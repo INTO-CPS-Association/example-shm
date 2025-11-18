@@ -3,16 +3,17 @@ import numpy as np
 from methods.mode_clustering_functions.create_cluster import cluster_creation
 # pylint: disable=C0103
 
-def cluster_expansion(cluster: Dict[str,Any], data: Dict[str,Any], params: Dict[str,Any]) -> Dict[str,Any]:
+def cluster_expansion(cluster: Dict[str,Any], data: Dict[str,Any],
+                      params: Dict[str,Any]) -> Dict[str,Any]:
     """
         Expand cluster based on minima and maxima bound
 
         Args:
-            cluster (dict): Intermediate cluster
-            data (dict): OMA points data
-            params (dict): Dictionary of algorithm parameters
+            cluster (Dict[str,Any]): Intermediate cluster
+            data (Dict[str,Any]): OMA points data
+            params (Dict[str,Any]): Dictionary of algorithm parameters
         Returns:
-            cluster (dict): Expanded cluster
+            cluster (Dict[str,Any]): Expanded cluster
         
         Raises:
             Double orders exist

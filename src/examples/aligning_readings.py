@@ -12,7 +12,7 @@ def align_acceleration_readings(config_path):
     all_topics = mqtt_config["TopicsToSubscribe"]
     selected_topics = [all_topics[i] for i in topic_indexes]
 
-    mqtt_client, _ = setup_mqtt_client(mqtt_config, topic_index=topic_indexes[0])
+    mqtt_client, _, _ = setup_mqtt_client(mqtt_config, topic_subscribe_index=0)
     mqtt_client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     mqtt_client.loop_start()
 

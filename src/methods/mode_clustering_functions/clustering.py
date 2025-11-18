@@ -17,12 +17,12 @@ def cluster_func(sysid_output: Dict[str,Any],
         Clustering of OMA results
 
         Args:
-            sysid_output (dict): PyOMA results
-            params (dict): Algorihm parameters
+            sysid_output (Dict[str,Any]): PyOMA results
+            params (Dict[str,Any]): Algorihm parameters
         Returns:
-            cluster_dict_1 (dict): Dictionary of clusters after clustering
-            cluster_dict_2 (dict): Dictionary of clusters after alignment
-            cluster_dict_3 (dict): Dictionary of clusters after cardinailty check
+            cluster_dict_1 (Dict[str,Any]): Dictionary of clusters after clustering
+            cluster_dict_2 (Dict[str,Any]): Dictionary of clusters after alignment
+            cluster_dict_3 (Dict[str,Any]): Dictionary of clusters after cardinailty check
 
     """
 
@@ -48,7 +48,7 @@ def cluster_func(sysid_output: Dict[str,Any],
             'col':col}
     cluster_dict = {}
     cluster_counter = 0
-    for count, f in enumerate(frequencies.flatten(order="f")):
+    for count, _ in enumerate(frequencies.flatten(order="f")):
         #Extract data
         frequencies = data1['frequencies']
         damping_ratios = data1['damping_ratios']
@@ -66,7 +66,7 @@ def cluster_func(sysid_output: Dict[str,Any],
             initial_points = cluster_initial(ip,data1) #Algorithm. 1 step 3 - Initialization
 
             #Creating clusters
-            cluster1 = cluster_creation(initial_points,params)
+            clusters = cluster_creation(initial_points,params)
 
             data2 = data1.copy()
 
@@ -77,36 +77,36 @@ def cluster_func(sysid_output: Dict[str,Any],
                 kk += 1
                 if kk > 10:
                     raise RuntimeError("Expansion never ends, something is wrong.")
-                pre_cluster = cluster1
-                cluster2 = cluster_expansion(cluster1,data2,params)
-                if cluster2['f'].shape == pre_cluster['f'].shape:
-                    if (cluster2['f'] == pre_cluster['f']).all():
+                pre_cluster = clusters
+                clusters_expan = cluster_expansion(clusters,data2,params)
+                if clusters_expan['f'].shape == pre_cluster['f'].shape:
+                    if (clusters_expan['f'] == pre_cluster['f']).all():
                         expansion = False
                     else:
-                        cluster1 = cluster2
+                        clusters = clusters_expan
                 else:
-                    cluster1 = cluster2
+                    clusters = clusters_expan
 
             #Sort if more than one pole exist in the cluster
-            if isinstance(cluster2['f'],np.ndarray):
-                cluster2 = sort_cluster(cluster2)
+            if isinstance(clusters_expan['f'],np.ndarray):
+                clusters_expan = sort_cluster(clusters_expan)
 
             #Save cluster
-            if isinstance(cluster2['f'],np.ndarray): #Must atleast have two poles
-                cluster_dict[str(cluster_counter)] = cluster2
+            if isinstance(clusters_expan['f'],np.ndarray): #Must atleast have two poles
+                cluster_dict[str(cluster_counter)] = clusters_expan
                 cluster_counter += 1
-                data1 = remove_data_from_S(data2,cluster2) #Remove clustered poles from data
+                data1 = remove_data_from_S(data2,clusters_expan) #Remove clustered poles from data
             else:
-                print("cluster2 too short:",1,"But must be:",params['mstab'])
+                print("cluster too short:",1,"But must be:",params['mstab'])
 
     #Allignment or merging of stacked clusters
-    cluster_dict2 = alignment(cluster_dict.copy(),params)
+    cluster_dict_aligned = alignment(cluster_dict.copy(),params)
 
     #Custom cardinality check
-    cluster_dict3 = {}
+    cluster_dict_cardinality = {}
     cluster_counter = 0
-    for ii, key in enumerate(cluster_dict2.keys()):
-        cluster = cluster_dict2[key]
+    for ii, key in enumerate(cluster_dict_aligned.keys()):
+        cluster = cluster_dict_aligned[key]
         if isinstance(cluster['f'],np.ndarray):
             if cluster['f'].shape[0] < params['mstab']:
                 print("Cluster", np.median(cluster['f']),
@@ -114,16 +114,16 @@ def cluster_func(sysid_output: Dict[str,Any],
                       "Must be: >",params['mstab'])
             else:
                 print("Cluster saved:", np.median(cluster['f']))
-                cluster_dict3[str(ii)] = cluster
+                cluster_dict_cardinality[str(ii)] = cluster
                 cluster_counter += 1
                 data1 = remove_data_from_S(data2,cluster) #Remove clustered poles from data
         else:
             print("cluster too short:",1,"But must be:",params['mstab'])
-            cluster_dict2.pop(key)
+            cluster_dict_aligned.pop(key)
 
     #Add median and confidence intervals (one sided) to cluster data
-    for key in cluster_dict3.keys():
-        cluster = cluster_dict3[key]
+    for key in cluster_dict_cardinality.keys():
+        cluster = cluster_dict_cardinality[key]
         cluster['median_f'] = np.median(cluster['f'])
         ci_f = np.sqrt(cluster['cov_f']) * params['bound_multiplier']
         ci_d = np.sqrt(cluster['cov_d']) * params['bound_multiplier']
@@ -131,28 +131,28 @@ def cluster_func(sysid_output: Dict[str,Any],
         cluster['ci_d'] = ci_d
 
     #Sort the clusters into accending order of median frequency
-    median_frequencies = np.zeros(len(cluster_dict3))
-    for ii, key in enumerate(cluster_dict3.keys()):
-        cluster = cluster_dict3[key]
+    median_frequencies = np.zeros(len(cluster_dict_cardinality))
+    for ii, key in enumerate(cluster_dict_cardinality.keys()):
+        cluster = cluster_dict_cardinality[key]
         median_frequencies[ii] = cluster['median_f']
 
     indices = np.argsort(median_frequencies)
-    cluster_dict4 = {}
+    cluster_dict_renamed = {}
     #Rename all cluster dict from 0 to len(cluster_dict2)
-    for ii, key in enumerate(np.array(list(cluster_dict3.keys()))[indices]):
-        cluster_dict4[ii] = cluster_dict3[key] #Insert a cluster into a key
+    for ii, key in enumerate(np.array(list(cluster_dict_cardinality.keys()))[indices]):
+        cluster_dict_renamed[ii] = cluster_dict_cardinality[key] #Insert a cluster into a key
 
-    return cluster_dict4
+    return cluster_dict_renamed
 
 def remove_data_from_S(data: Dict[str,Any],cluster: Dict[str,Any]) -> Dict[str,Any]:
     """
         Remove cluster from data or S
 
         Args:
-            data (dict): OMA points data
-            cluster (dict): cluster
+            data (Dict[str,Any]): OMA points data
+            cluster (Dict[str,Any]): cluster
         Returns:
-            data2 (dict): Filtered OMA points data
+            data2 (Dict[str,Any]): Filtered OMA points data
 
     """
     #Copy data
@@ -189,9 +189,9 @@ def sort_cluster(cluster: Dict[str,Any]) -> Dict[str,Any]:
         Sort cluster based on row/model order
 
         Args:
-            cluster (dict): Cluster
+            cluster (Dict[str,Any]): Cluster
         Returns:
-            cluster (dict): Sorted cluster
+            cluster (Dict[str,Any]): Sorted cluster
 
     """
     sort_id = np.argsort(cluster['row'])
