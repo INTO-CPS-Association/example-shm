@@ -197,9 +197,6 @@ def live_mode_clustering(config: Dict[str,Any], params: Dict[str,Any],
         plot (list[bool]): Array describing what plots to show
 
     Returns:
-        sysid_output_global (Dict[str,Any]): sysid output
-        clusters (Dict[str,Any]]): Clusters
-        tracked_clusters (Dict[str,Any]]): Tracked clusters
     """
     fig_axes = [None, None]
     try:

@@ -8,8 +8,9 @@ import matplotlib.pyplot as plt
 from paho.mqtt.client import Client as MQTTClient, MQTTMessage
 from data.comm.mqtt import (shutdown,start_mqtt, publish_to_mqtt)
 from functions.util import (convert_numpy_to_list, _convert_list_to_dict_or_array)
-from methods.model_update_functions.plot_model_update import (plot_parameters,plot_model_frequencies)
-from methods.mode_clustering import (subscribe_and_cluster)
+from methods.model_update_functions.plot_model_update import (plot_parameters,
+                                                              plot_model_frequencies)
+from methods.mode_clustering import subscribe_and_cluster
 from methods.model_update_functions import model_update_func
 from methods.constants import MODEL_PARAMETERS
 from methods.mode_clustering import _on_connect
@@ -202,7 +203,7 @@ def load_model_parameters() -> Optional[Tuple[str, Dict[str,Any]]]:
             print(f"File not found: {path}. Proceed with standard parameters.")
             model_parameters = MODEL_PARAMETERS
             timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
-            return timestamp, MODEL_PARAMETERS
+            return timestamp, model_parameters
         else:
             with open(path, 'r') as json_file:
                 data = json.loads(json_file.readlines()[-1])

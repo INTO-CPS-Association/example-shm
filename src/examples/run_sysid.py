@@ -1,12 +1,11 @@
-import sys
 import matplotlib.pyplot as plt
 from functions.plot_sysid import (plot_stabilization_diagram, plot_pre_stabilization_diagram)
 from methods import sysid as sysID
 from methods.constants import PARAMS
-from data.comm.mqtt import (shutdown)
+from data.comm.mqtt import shutdown
 
 def run_sysid_and_plot(config_path):
-    number_of_minutes = 0.2
+    number_of_minutes = 0.05
 
     mqtt_client, sysid_output, _ = sysID.local_sysid(config_path,
                                                               number_of_minutes)

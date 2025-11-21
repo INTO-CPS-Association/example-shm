@@ -106,7 +106,7 @@ def setup_sysid(config_path, data_topic_indexes: List[int] = None) -> Tuple[IAli
 
 def get_sysid_output(
         sampling_period: int, aligner: Aligner, fs: float
-        ) -> Optional[Tuple[Dict[str, Any], datetime]]:
+        ) -> Optional[Tuple[Dict[str, Any], str]]:
     """
     Extracts aligned sensor data and runs system identification (sysID).
 
@@ -133,7 +133,7 @@ def get_sysid_output(
         return None, None
 
 def wait_for_sysid_output(number_of_minutes: float, aligner: Aligner,
-                          fs: float) -> Optional[Tuple[Dict[str, Any],datetime]]:
+                          fs: float) -> Optional[Tuple[Dict[str, Any],str]]:
     """
     Extract system identidication results while printing elapsed time
 
@@ -155,7 +155,7 @@ def wait_for_sysid_output(number_of_minutes: float, aligner: Aligner,
             print(t_text,end="\r")
             sysid_output, aligner_time = get_sysid_output(number_of_minutes, aligner, fs)
 
-            if (t2-t1) > 10*number_of_minutes*60:
+            if (t2-t1) > 20*number_of_minutes*60:
                 raise RuntimeError("Aligned data not recieved in time")
 
         print("Aligned data recieved at:",aligner_time)
@@ -214,11 +214,17 @@ def live_sysid(config_path: str, number_of_minutes: float, topic_indexes: List[i
     """
     aligner, mqtt_client, mqtt_config, fs = setup_sysid(config_path, topic_indexes)
     try:
+        aligner_time_last = datetime.fromisoformat("2025-01-01 01:01:00.00000")
         while True:
             sysid_output, aligner_time = wait_for_sysid_output(number_of_minutes,
                                                                       aligner, fs)
             publish_sysid_output(mqtt_client, mqtt_config["TopicsToPublish"],
                                         sysid_output, aligner_time)
+            
+            dt = datetime.fromisoformat(aligner_time)-aligner_time_last
+            print(dt)
+            aligner_time_last = datetime.fromisoformat(aligner_time)
+            
             if loop is False:
                 break
     except KeyboardInterrupt:

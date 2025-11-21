@@ -48,14 +48,14 @@ There are 5 examples.
     1. **sysid-and-publish**: publishes one set of sysid output via MQTT to the config given under [sysid] config.
     1. **live-sysid-and-publish**: Continuously publishes sysid output via MQTT to the config given under [sysid] config.
 
-* **mode-clustering** demonstrates the use of `mode_clustering` with three cases:
-    1. **mode-clustering-with-local-sysid**: gets the sysid output by runing sysid
+* **Clustering** demonstrates the use of `clustering` with three cases:
+    1. **clustering-with-local-sysid**: gets the sysid output by runing sysid
        locally, then runs the mode clustering.
-    1. **mode-clustering-with-remote-sysid**: gets sysid output by subscribing,
+    1. **clustering-with-remote-sysid**: gets sysid output by subscribing,
        then runs the mode clustering. This is a one time operation.
-    1. **live-mode-clustering-with-remote-sysid**: gets sysid output by subscribing,
+    1. **live-clustering-with-remote-sysid**: gets sysid output by subscribing,
        then runs the mode clustering. This operation runs in loop.
-    1. **live-mode-clustering-with-remote-sysid-and-publish**: gets sysid output by subscribing,
+    1. **live-clustering-with-remote-sysid-and-publish**: gets sysid output by subscribing,
        then runs the mode clustering. The cluster results are published. This operation runs in loop.
 
 * **mode-tracking** demonstrates the use of `mode_tracking` with three cases:

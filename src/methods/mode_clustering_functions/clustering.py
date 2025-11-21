@@ -77,10 +77,10 @@ def cluster_func(sysid_output: Dict[str,Any],
                 kk += 1
                 if kk > 10:
                     raise RuntimeError("Expansion never ends, something is wrong.")
-                pre_cluster = clusters
+                prev_cluster = clusters
                 clusters_expan = cluster_expansion(clusters,data2,params)
-                if clusters_expan['f'].shape == pre_cluster['f'].shape:
-                    if (clusters_expan['f'] == pre_cluster['f']).all():
+                if clusters_expan['f'].shape == prev_cluster['f'].shape:
+                    if (clusters_expan['f'] == prev_cluster['f']).all():
                         expansion = False
                     else:
                         clusters = clusters_expan
