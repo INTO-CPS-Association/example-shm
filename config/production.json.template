@@ -1,5 +1,5 @@
 {
-    "MQTT": {
+    "sysid": {
         "host": "",
         "port": 0,
         "userId": "",
@@ -26,8 +26,8 @@
         "password": "",
       "ClientID": "NOT_NEEDED",
       "QoS": 2,
-      "TopicsToSubscribe": ["cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/mode_cluster/data"],
-      "TopicsToPublish": []
+      "TopicsToSubscribe": ["cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/sysid/data"],
+      "TopicsToPublish": ["cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/mode_cluster/data"]
     },
 
     "model_update": {
@@ -37,8 +37,8 @@
         "password": "",
       "ClientID": "NOT_NEEDED",
       "QoS": 2,
-      "TopicsToSubscribe": ["cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/model_update/data"],
-      "TopicsToPublish": []
+      "TopicsToSubscribe": ["cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/mode_cluster/data"],
+      "TopicsToPublish": ["cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/model_update/data"]
     }
 }
 
