@@ -9,15 +9,17 @@ RECORDINGS_DIR = "record/mqtt_recordings"
 TOPIC_MAPPING = {
     "data1.jsonl": "cpsens/recorded/1/data",
     "metadata.jsonl": "cpsens/recorded/1/metadata",
-    "data2.jsonl": "cpsens/recorded/2/data"
+    "data2.jsonl": "cpsens/recorded/2/data",
+    "data3.jsonl": "cpsens/recorded/3/data",
+    "data4.jsonl": "cpsens/recorded/4/data"
 }
 
 PUBLISH_BROKER = {
-    "host": "test.mosquitto.org",
-    "port": 1883,
+    "host": " ",
+    "port": 0,
     "userId": "",
     "password": "",
-    "ClientID": "ReplayPublisherTest"
+    "ClientID": "ReplayPublisher"
 }
 
 def setup_publish_client(config: dict) -> MQTTClient:

@@ -2,24 +2,26 @@ import os
 import time
 import json
 import threading
-from datetime import datetime
+from datetime import datetime, timezone
 from paho.mqtt.client import Client as MQTTClient, CallbackAPIVersion, MQTTv311
 # MQTT Configuration
 MQTT_CONFIG = {
-    "host": "test.mosquitto.org",
-    "port": 1883,
-    "userId": "xxxx",
-    "password": "xxxx",
-    "ClientID": "xxxx",
+    "host": "",
+    "port":  0,
+    "userId": "",
+    "password": "",
+    "ClientID": "",
     "QoS": 1,
     "TopicsToSubscribe": {
-        "cpsens/d8-3a-dd-37-d2-7e/3160-A-042_sn_999998/1/acc/raw/data": "record/mqtt_recordings/data1.jsonl",
-        "cpsens/d8-3a-dd-37-d2-7e/3160-A-042_sn_999998/1/acc/raw/metadata": "record/mqtt_recordings/metadata.jsonl",
-        "cpsens/d8-3a-dd-37-d2-7e/3160-A-042_sn_999998/2/acc/raw/data": "record/mqtt_recordings/data2.jsonl"
+        "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/raw/data": "record/mqtt_recordings/data1.jsonl",
+        "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/raw/metadata": "record/mqtt_recordings/metadata.jsonl",
+        "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/2/acc/raw/data": "record/mqtt_recordings/data2.jsonl",
+        "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/3/acc/raw/data": "record/mqtt_recordings/data3.jsonl",
+        "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/4/acc/raw/data": "record/mqtt_recordings/data4.jsonl"
     }
 }
 
-DURATION_SECONDS = 3000 
+DURATION_SECONDS = 600  # Recording duration in seconds 
 
 # Ensure output directory exists
 os.makedirs("record/mqtt_recordings", exist_ok=True)
