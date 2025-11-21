@@ -4,14 +4,14 @@ from functions.calculate_mac import calculate_mac
 # pylint: disable=C0103
 
 def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[float],
-               cluster_dict: Dict[str,Any], Params) -> Tuple[np.ndarray,
+               cluster_dict: Dict[str,Any], params) -> Tuple[np.ndarray,
                                                              np.ndarray,np.ndarray,np.ndarray]:
     """
     Args:
     model_freq (np.ndarray[float]): Model frequencies in Hz
     model_mode_shapes (np.ndarray[float]): Model mode shape 
     cluster_dict (Dict[str,Any]): Dictionary of clusters
-    Params: Update parameters
+    params: Update parameters
 
     Returns:
     paired_c_freq (): Paired cluster median frequencies
@@ -70,7 +70,7 @@ def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[floa
                 # Store the average MAC for the current mode in the current dictionary
                 average_MAC[i, j] = avg_mac
 
-    MAC_THRESHOLD = Params['tMAC_MU']
+    MAC_THRESHOLD = params['tMAC_MU']
     paired_c_freq = []
     paired_c_mode_shapes = np.zeros((sensors,1))
     paired_model_freq = []

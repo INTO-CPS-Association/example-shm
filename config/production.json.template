@@ -1,11 +1,14 @@
 {
     "MQTT": {
         "host": "",
-        "port": ,
+        "port": 0,
         "userId": "",
         "password": "",
         "ClientID": "NOT_NEEDED",
         "QoS": 1,
+        "MetadataToSubscribe": [
+          "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/raw/metadata"
+        ],
         "TopicsToSubscribe": [
           "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/raw/data",
           "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/raw/metadata",
@@ -13,12 +16,12 @@
           "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/3/acc/raw/data",
           "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/4/acc/raw/data"
         ],
-        "TopicsToPublish": []
+        "TopicsToPublish": ["cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/sysid/data"]
       },
 
     "mode_cluster": {
       "host": "",
-      "port": ,
+      "port": 0,
       "userId": "",
         "password": "",
       "ClientID": "NOT_NEEDED",
@@ -29,7 +32,7 @@
 
     "model_update": {
       "host": "",
-      "port": ,
+      "port": 0,
       "userId": "",
         "password": "",
       "ClientID": "NOT_NEEDED",

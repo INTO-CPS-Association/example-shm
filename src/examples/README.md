@@ -42,27 +42,39 @@ There are 5 examples.
 * **aligning_readings** demonstrates the use of `Aligner` class to collect and
   align accelerometer measurements from multiple MQTT data streams.
 
-* **sysid** demonstrates the use of `sys_id` with four cases:
+* **sysid** demonstrates the use of `sysid` with four cases:
     1. **sysid-and-plot**: plots natural frequencies.
-    1. **sysid-and-print**: prints SysID results to console.
-    1. **sysid-and-publish**: publishes one set of SysID results via MQTT to the config given under [sysid] config.
-    1. **live-sysid-and-publish**: Continuously publishes SysID results via MQTT to the config given under [sysid] config.
+    1. **sysid-and-print**: prints sysid output to console.
+    1. **sysid-and-publish**: publishes one set of sysid output via MQTT to the config given under [sysid] config.
+    1. **live-sysid-and-publish**: Continuously publishes sysid output via MQTT to the config given under [sysid] config.
 
-* **mode-tracking** demonstrates the use of `mode_track` with three cases:
-    1. **mode-tracking-with-local-sysid**: gets the pyOMA results by runing sysid
-       locally, then runs the mode track.
-    1. **mode-tracking-with-remote-sysid**: gets pyOMA results by subscribing,
-       then runs the mode track. This is a one time operation.
-    1. **live-mode-tracking-with-remote-sysid**: gets pyOMA results by subscribing,
-       then runs the mode track. This operation runs in loop.
+* **mode-clustering** demonstrates the use of `mode_clustering` with three cases:
+    1. **mode-clustering-with-local-sysid**: gets the sysid output by runing sysid
+       locally, then runs the mode clustering.
+    1. **mode-clustering-with-remote-sysid**: gets sysid output by subscribing,
+       then runs the mode clustering. This is a one time operation.
+    1. **live-mode-clustering-with-remote-sysid**: gets sysid output by subscribing,
+       then runs the mode clustering. This operation runs in loop.
+    1. **live-mode-clustering-with-remote-sysid-and-publish**: gets sysid output by subscribing,
+       then runs the mode clustering. The cluster results are published. This operation runs in loop.
+
+* **mode-tracking** demonstrates the use of `mode_tracking` with three cases:
+    1. **mode-tracking-with-local-sysid**: gets the sysid output by runing sysid
+       locally, then runs mode clustering and mode tracking.
+    1. **mode-tracking-with-remote-sysid**: gets sysid output by subscribing,
+       then runs mode clustering and mode tracking. This is a one time operation.
+    1. **live-mode-tracking-with-remote-sysid**: gets sysid output by subscribing,
+       then runs mode clustering and mode tracking. This operation runs in loop.
 
 * **model-update** demonstrates the use of `model_update` with two cases:
-    1 **model-update-local-sysid**: gets the mode track output, then uses it to
+    1. **model-update-local-sysid**: gets the sysid output, then uses it to
       run update model and get updated system parameters.
-    1 **live-model-update-remote-sysid**: gets the mode track output by subscribing to
-      MQTT topic, then uses the mode track output to run update model and get updated system parameters.
+    1. **live-model-update-with-remote-sysid**: gets the sysid output by subscribing to
+      MQTT topic, then runs mode clustering to run update model and get updated system parameters.
+    1. **live-model-update-with-remote-clustering**: gets the mode clustering output by subscribing to
+      MQTT topic, then uses the mode clustering output to run update model and get updated system parameters.
 
-To run the examples with the default config, use:
+To run the examples with the default config, use: (It may be necessary to change backslash "\" to slash "/")
 
 ```bash
 python .\src\examples\example.py accelerometers

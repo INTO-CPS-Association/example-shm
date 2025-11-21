@@ -4,7 +4,7 @@ MQTT Client Setup and Utility Functions.
 This module provides functions to set up an MQTT client, handle connections,
 subscriptions, and message publishing using the Paho MQTT library.
 """
-from typing import Any, Dict
+from typing import Any, Dict, List
 import json
 import uuid
 from paho.mqtt.client import Client as MQTTClient, CallbackAPIVersion, MQTTv5  # type: ignore
@@ -86,17 +86,16 @@ def create_on_publish_callback():
     return on_publish
 
 
-def setup_mqtt_client(config: Dict[str,Any], topic_subscribe_index: int = 0, topic_publish_index: int = 0):
+def setup_mqtt_client(config: Dict[str,Any], topic_to_subscribe: str):
     """
     Initializes an MQTT client using a specific topic index from the subscription list.
 
     Args:
         config (Dict[str,Any]): MQTT client configuration.
-        topic_subscribe_index (int, optional): Index of the topic to subscribe to. Defaults to 0.
-        topic_publish_index (int, optional): Index of the topic to pubish to. Defaults to 0.
+        topic_to_subscribe (str): Topic to subscribe to.
 
     Returns:
-        tuple: (MQTTClient, subscribe_topic, publish_topic)
+        tuple: (MQTTClient, selected_topic)
     """
     mqttc = MQTTClient(
         client_id=f"{config['ClientID']}_{uuid.uuid4().hex[:6]}",
@@ -107,27 +106,33 @@ def setup_mqtt_client(config: Dict[str,Any], topic_subscribe_index: int = 0, top
     if config["userId"]:
         mqttc.username_pw_set(config["userId"], config["password"])
 
-    topics_subscribe_list = config["TopicsToSubscribe"]
-    if topic_subscribe_index < 0 or topic_subscribe_index >= len(topics_subscribe_list):
-        raise ValueError(
-            f"Invalid topic index: {topic_subscribe_index}. Available range: 0-{len(topics_subscribe_list) - 1}"
-        )
-    selected_subscribe_topic = topics_subscribe_list[topic_subscribe_index]
-
-    topics_publish_list = config["TopicsToPublish"]
-    if topic_publish_index < 0 or topic_publish_index >= len(topics_publish_list):
-        raise ValueError(
-            f"Invalid topic index: {topic_publish_index}. Available range: 0-{len(topics_publish_list) - 1}"
-        )
-    selected_publish_topic = topics_publish_list[topic_publish_index]
-
     mqttc.on_connect = create_on_connect_callback(
-        [selected_subscribe_topic], config["QoS"])
+        [topic_to_subscribe], config["QoS"])
     mqttc.on_subscribe = create_on_subscribe_callback()
     mqttc.on_message = create_on_message_callback()
     mqttc.on_publish = create_on_publish_callback()
 
-    return mqttc, selected_subscribe_topic, selected_publish_topic
+    return mqttc
+
+def start_mqtt(config: Dict[str,Any], _on_connect, _on_message = None) -> MQTTClient:
+    """
+    Args:
+    Returns:
+    """
+    mqtt_client = setup_mqtt_client(config,config["TopicsToSubscribe"][0])
+    mqtt_client.connect(config["host"], config["port"], 60)
+    mqtt_client.loop_start()
+    mqtt_client.user_data_set({"topic": config["TopicsToSubscribe"][0], "qos": 1})
+    mqtt_client.on_connect = _on_connect
+    if _on_message is not None:
+        mqtt_client.on_message = _on_message
+    mqtt_client.connect(config["host"],
+                        config["port"], keepalive=60)
+    mqtt_client.loop_start()
+
+    subcribe_topics = config["TopicsToSubscribe"]
+    publish_topics = config["TopicsToPublish"]
+    return mqtt_client, subcribe_topics, publish_topics
 
 def reconnect_client(mqtt_client: MQTTClient) -> bool:
     """
@@ -139,22 +144,48 @@ def reconnect_client(mqtt_client: MQTTClient) -> bool:
     if not mqtt_client.is_connected():
         print("Client disconnected. Reconnecting...")
         mqtt_client.reconnect()
-    # if not mqtt_client.is_connected():
-    #     raise RuntimeError("Client is not connected")
-    # else:
-    #     print("Is connected")
-    #     return True
     return True
 
-def shutdown(mqtt_client: MQTTClient,title: str):
+def publish_to_mqtt(publish_client: MQTTClient, publish_topics: List[str],
+                    payload: Dict[str,Any],
+                    name: str) -> None:
+    """
+    Publish payload to publish topic
+
+    Args:
+        publish_client (MQTTClient):
+        publish_topics (str): Timestamp of data
+        payload (Dict[str,Any]): Payload to publish
+        name (str): What is being published
+
+    Returns:
+    """
+
+    try:
+        if publish_topics is None or publish_topics == [] or publish_topics[0] == "":
+            raise ValueError("No publish topic specified. Skipping publish.")
+
+        message = json.dumps(payload)
+
+        _ = reconnect_client(publish_client)
+
+        for topic in publish_topics:
+            publish_client.publish(topic, message, qos=1)
+            print(f"Published {name} to {topic}")
+
+    except Exception as e:
+        print(f"\nFailed to publish {name}: {e}")
+
+def shutdown(mqtt_client: MQTTClient,name: str = None):
     """
     Shutdown mqtt client
     Args:
         mqtt_client (MQTTClient):
-        title (str): What is shutting down
+        name (str): What is shutting down
     Returns:
     """
-    print("Shutting down",title)
+    if name is not None:
+        print("Shutting down",name)
     mqtt_client.loop_stop()
     mqtt_client.disconnect()
     sys.stdout.flush()

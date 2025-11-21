@@ -46,6 +46,7 @@ def plot_parameters(model_parameters: Dict[str, Any],
 
         ydata.append(model_parameters[pars_to_update[ii]])
         ax.plot(xdata,ydata,'*-',color="k")
+        ax.set_title(f'Model parameter: {pars_to_update[ii]}')
         ax.set_ylabel(pars_to_update[ii])
         ax.set_xlabel('Dataset [-]')
 
@@ -87,6 +88,7 @@ def plot_model_frequencies(omega_model: np.ndarray[float],
 
     for ii in range(len(omega_model)):
         ax1.plot(xdata,ydata[ii],'*-')
+    ax1.set_title('Model eigenfrequencies')
     ax1.set_ylabel("Model eigenfrequencies [Hz]")
     ax1.set_xlabel('Dataset [-]')
 

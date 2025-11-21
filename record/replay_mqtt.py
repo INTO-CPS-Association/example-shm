@@ -15,19 +15,19 @@ TOPIC_MAPPING = {
 PUBLISH_BROKER = {
     "host": "test.mosquitto.org",
     "port": 1883,
-    "username": "",
+    "userId": "",
     "password": "",
-    "client_id": "ReplayPublisherTest"
+    "ClientID": "ReplayPublisherTest"
 }
 
 def setup_publish_client(config: dict) -> MQTTClient:
     client = MQTTClient(
-        client_id=config["client_id"],
+        client_id=config["ClientID"],
         protocol=MQTTv5,
         callback_api_version=CallbackAPIVersion.VERSION2
     )
-    if config["username"]:
-        client.username_pw_set(config["username"], config["password"])
+    if config["userId"]:
+        client.username_pw_set(config["userId"], config["password"])
     client.connect(config["host"], config["port"], keepalive=60)
     return client
 

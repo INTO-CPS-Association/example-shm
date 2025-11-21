@@ -48,6 +48,7 @@ def plot_tracked_modes(
             max_x.append(max(x))
             ii += 1
 
+    ax1.set_title("Tracked modes over datasets")
     ax1.set_ylabel("Eigenfrequency [Hz]", fontsize=20, color = 'black')
     ax1.set_xlabel("Dataset", fontsize=20, color = 'black')
     ax1.tick_params(axis='both', which='major', labelsize=17)

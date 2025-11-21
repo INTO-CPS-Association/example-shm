@@ -1,7 +1,10 @@
+import sys
+import os
 from typing import Dict, Any, Optional, List
 import numpy as np
 from scipy.optimize import minimize
-from methods.packages.models import beam_yafem_model as beam_new
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+from models.beam import beam_yafem_model as beam_new
 from methods.model_update_functions.mode_pairing import pair_modes
 # pylint: disable=C0103
 
@@ -31,9 +34,6 @@ def update_model(cluster_dict: Dict[str,Any], model_pars: Dict[str,Any],
                        options={'maxiter': 1000})
         # Get the optimized parameter values
         X = res.x
-        print("Updated parameters are:")
-        for ii, name in enumerate(params['pars_to_update']):
-            print(name+":",X[ii])
 
         # Updated model parameter
         idx = 0
@@ -48,6 +48,9 @@ def update_model(cluster_dict: Dict[str,Any], model_pars: Dict[str,Any],
         print(f"Skipping model updating due to error: {e}")
 
     if X is not None:
+        print("Updated parameters are:")
+        for ii, name in enumerate(params['pars_to_update']):
+            print(name+":",X[ii])
         return X, omegaMU, updated_model_parameters
     return None, None, None
 

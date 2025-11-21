@@ -11,16 +11,17 @@ def plot_clusters(clusters: Dict[str,dict],
         sysid_results: Dict[str, Any],
         sysid_params: Dict[str, Any],
         fig_ax = None,
-        legend = True)-> Tuple[matplotlib.figure.Figure,
+        legend: bool = True)-> Tuple[matplotlib.figure.Figure,
                                Tuple[matplotlib.axes.Axes,matplotlib.axes.Axes]]:
     """
     Plot stabilization of clusters
 
     Args:
-        clsuters (Dict[str,dict]): Dictionary of clusters
+        clusters (Dict[str,dict]): Dictionary of clusters
         sysid_results (Dict[str,dict]): PyOMA results
         sysid_params (Dict[str,dict]): System identification parameters
         fix_ax (Tuple[plt.Figure, Tuple[plt.Axes]]): fig and ax of plot to redraw
+        legend
     Returns:
         fig_ax (Tuple[plt.Figure, Tuple[plt.Axes]]): fig and ax of plot
 
@@ -61,6 +62,7 @@ def plot_clusters(clusters: Dict[str,dict],
 
     ax1.set_ylabel("Model order", fontsize=20, color = 'black')
     ax1.set_ylim(0, sysid_params['model_order'] + 1)
+    ax1.set_title("Clustered stabilization diagram")
     if legend is True:
         ax1.legend(prop={'size': 10})
     ax1.set_title(f"Data set: {title_number}")
@@ -81,7 +83,8 @@ def plot_clusters(clusters: Dict[str,dict],
 
     ax2 = add_plot_annotation(ax2,x,y,y_model_order)
     ax2 = add_plot_standard_flair(ax2,sysid_params)
-
+    
+    ax2.set_title("Clustered damping ratios")
     if y[~np.isnan(y)].shape[0] > 1:
         ax2.set_ylim(0, max(max(y[~np.isnan(y)])+0.005,0.1))
     else:

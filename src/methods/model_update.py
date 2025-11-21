@@ -1,4 +1,3 @@
-import sys
 import datetime
 import os
 import threading
@@ -6,11 +5,10 @@ import json
 from typing import Any, List, Dict, Optional, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
-import paho.mqtt.client as mqtt
-from paho.mqtt.client import Client as MQTTClient
-from data.comm.mqtt import (reconnect_client,shutdown)
+from paho.mqtt.client import Client as MQTTClient, MQTTMessage
+from data.comm.mqtt import (shutdown,start_mqtt, publish_to_mqtt)
 from functions.util import (convert_numpy_to_list, _convert_list_to_dict_or_array)
-from functions.plot_model_update import (plot_parameters,plot_model_frequencies)
+from methods.model_update_functions.plot_model_update import (plot_parameters,plot_model_frequencies)
 from methods.mode_clustering import (subscribe_and_cluster)
 from methods.model_update_functions import model_update_func
 from methods.constants import MODEL_PARAMETERS
@@ -23,7 +21,7 @@ result_ready = threading.Event()
 cluster_global = None  # will store received cluster data inside callback
 timestamp_global = None
 
-def _on_message(_client: mqtt.Client, _userdata: dict, msg: mqtt.MQTTMessage) -> None:
+def _on_message(_client: MQTTClient, _userdata: Dict, msg: MQTTMessage) -> None:
     """Callback when a message is received."""
     global cluster_global
     global timestamp_global
@@ -40,13 +38,10 @@ def _on_message(_client: mqtt.Client, _userdata: dict, msg: mqtt.MQTTMessage) ->
     except Exception as e:
         print(f"Error processing sysid message: {e}")
 
-def subscribe_cluster_results(mqtt_client: mqtt.Client, config: Dict[str,Any],
-                              subscribe_topic) -> Optional[Tuple[str, Dict[str,Any]]]:
+def subscribe_cluster_output(config: Dict[str,Any]) -> Optional[Tuple[str, Dict[str,Any]]]:
     """
     Args:
-        publish_client (mqtt.Client): MQTT client
         config (Dict[str,Any]): Configuration dictionary
-        subscribe_topic (str): Topic to subscribe to
     Returns:
         timestamp (str): timestamp string
         clusters (Dict[str,Any]) Dictionary of clusters
@@ -58,19 +53,12 @@ def subscribe_cluster_results(mqtt_client: mqtt.Client, config: Dict[str,Any],
     timestamp_global = None
     result_ready.clear()
 
-    mqtt_client.user_data_set({"topic": subscribe_topic, "qos": 1})
-    mqtt_client.on_connect = _on_connect
-    mqtt_client.on_message = _on_message
-    mqtt_client.connect(config["model_update"]["host"],
-                        config["model_update"]["port"], keepalive=60)
-    mqtt_client.loop_start()
+    mqtt_client = start_mqtt(config["model_update"], _on_connect, _on_message=_on_message)
     print("Waiting for mode clustering data...")
 
     while True:
         try:
             result_ready.wait() # Wait until message arrives
-            mqtt_client.loop_stop()
-            mqtt_client.disconnect()
 
             if cluster_global is None:
                 raise RuntimeError("Failed to receive cluster data.")
@@ -78,40 +66,34 @@ def subscribe_cluster_results(mqtt_client: mqtt.Client, config: Dict[str,Any],
             timestamp = timestamp_global
             print(f"Cluster data received at {timestamp}. Running model update...")
 
+            shutdown(mqtt_client)
             return timestamp, clusters
 
         except KeyboardInterrupt as exc:
+            shutdown(mqtt_client,"model updating")
             raise RuntimeError("Keyboard interrupt") from exc
 
-
-def publish_model_parameters(publish_client: mqtt.Client, publish_topic: str,
+def publish_model_parameters(config: Dict[str,Any],
                              timestamp: str, model_parameters: Dict[str,Any]):
     """
     Publish model parameters to MQTT broker
 
     Args:
-        publish_client (mqtt.Client): MQTT client
-        publish_topic (str): Topic to publish to
+        config (Dict[str,Any]): Configuration dictionary
         timestamp (str): Timestamp of data
         model_parameters (Dict[str,Any]): Model parameters
     Returns:
         
     """
-    if publish_topic is not None:
-        print(f"Timestamp: {timestamp}")
-        payload = {
+    publish_client, _, publish_topics = start_mqtt(config["model_update"], _on_connect)
+
+    payload = {
             "timestamp": timestamp,
             "model_parameters": convert_numpy_to_list(model_parameters)
         }
-        try:
-            message = json.dumps(payload)
 
-            _ = reconnect_client(publish_client)
-
-            publish_client.publish(publish_topic, message, qos=1)
-            print(f"[{timestamp}] Published model parameters to {publish_topic}")
-        except Exception as e:
-            print(f"\nFailed to publish model parameters: {e}")
+    publish_to_mqtt(publish_client, publish_topics, payload, "model parameters")
+    shutdown(publish_client,"model parameter publish client")
 
 def estimate_updated_model(clusters: Dict[str,Any], model_parameters: Dict[str,Any],
                            params: Dict[str,Any]) -> Optional[Tuple[List[float],
@@ -134,7 +116,8 @@ def estimate_updated_model(clusters: Dict[str,Any], model_parameters: Dict[str,A
          updated_model_parameters) = model_update_func.update_model(clusters, model_parameters,
                                                                     params['pars_to_update'],
                                                                     params)
-        print("Model frequencies:",omega_model,"[Hz]")
+        if omega_model is not None:
+            print("Model frequencies:",omega_model,"[Hz]")
 
         return (X, omega_model, updated_model_parameters)
     except Exception as e:
@@ -170,7 +153,6 @@ def model_update_plots(plot: List[bool], model_parameters: Dict[str,Any],
     plt.show(block=hold)
     return [fig_ax1,fig_ax2]
 
-
 def save_model_parameters(config: Dict[str,Any], timestamp: str,
                           model_parameters: Dict[str,Any]) -> None:
     """
@@ -185,7 +167,7 @@ def save_model_parameters(config: Dict[str,Any], timestamp: str,
     """
     if model_parameters is not None:
         # Ensure output directory exists
-        os.makedirs("src/methods/packages/models/beam_parameters", exist_ok=True)
+        os.makedirs("models/beam", exist_ok=True)
 
         # Thread-safe file locks
         file_locks = {topic: threading.Lock() for topic in config["model_update"]["TopicsToSubscribe"]}
@@ -194,7 +176,7 @@ def save_model_parameters(config: Dict[str,Any], timestamp: str,
             "timestamp": timestamp,
             "parameters": convert_numpy_to_list(model_parameters)
         }
-        file_path = "src/methods/packages/models/beam_parameters/beam_pars.jsonl"
+        file_path = "models/beam/beam_pars.jsonl"
         with file_locks["cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/mode_cluster/data"]:
             with open(file_path, "a", encoding="utf-8") as f:
                 f.write(json.dumps(record) + "\n")
@@ -213,11 +195,11 @@ def load_model_parameters() -> Optional[Tuple[str, Dict[str,Any]]]:
 
     """
     try:
-        RECORDINGS_DIR = "src/methods/packages/models/beam_parameters"
+        RECORDINGS_DIR = "models/beam"
         fname = "beam_pars.jsonl"
         path = os.path.join(RECORDINGS_DIR, fname)
         if not os.path.exists(path):
-            print(f"File not found: {path}")
+            print(f"File not found: {path}. Proceed with standard parameters.")
             model_parameters = MODEL_PARAMETERS
             timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
             return timestamp, MODEL_PARAMETERS
@@ -229,51 +211,49 @@ def load_model_parameters() -> Optional[Tuple[str, Dict[str,Any]]]:
             if model_parameters is None:
                 print("Stored model_parameters are None. Proceed with standard parameters.")
                 model_parameters = MODEL_PARAMETERS
-            print("Model parameters loaded successfully from:", timestamp)
+            print("Model parameters loaded successfully from:", path,"at:", timestamp)
 
             return timestamp, model_parameters
     except Exception as e:
         print('Could not find previous model data.',e)
         return None, None
 
-
-
-def live_model_update_with_remote_sysid(mqtt_client: mqtt.Client, config: Dict[str,Any],
-                                        publish_topic: str,
-                                        params: Dict[str,Any]) -> None:
+def live_model_update_with_remote_sysid(config: Dict[str,Any],
+                                        params: Dict[str,Any],
+                                        publish: bool = False) -> None:
     fig_axes = [None, None]
     try:
         while True:
-            _, clusters, __, timestamp = subscribe_and_cluster(mqtt_client, config, params)
+            _, model_parameters = load_model_parameters()
+            _, clusters, __, timestamp = subscribe_and_cluster(config, params)
 
             if clusters is not None:
-                _, model_parameters = load_model_parameters()
                 _, omega_model, model_parameters = estimate_updated_model(clusters,
                                                                           model_parameters,
                                                                           params)
 
                 if model_parameters is not None:
                     save_model_parameters(config,timestamp,model_parameters)
-                    publish_model_parameters(mqtt_client,publish_topic,
+                    if publish:
+                        publish_model_parameters(config,
                                             timestamp,model_parameters)
 
                     fig_axes = model_update_plots([1,1], model_parameters, params['pars_to_update'],
                                                 omega_model, fig_axes)
     except KeyboardInterrupt:
-        shutdown(mqtt_client,"model updating")
+        print("Keyboard interrupt in live model updating\n")
     except Exception as e:
         print(f"Unexpected error: {e}")
-        shutdown(mqtt_client,"model updating")
 
-def live_model_update_with_remote_clustering(mqtt_client: MQTTClient, config: Dict[str,Any],
-                                            subscribe_topic: str, publish_topic: str,
-                                            params: Dict[str,Any]) -> None:
+def live_model_update_with_remote_clustering(config: Dict[str,Any],
+                                            params: Dict[str,Any],
+                                            publish: bool = False) -> None:
     model_parameters = MODEL_PARAMETERS
     fig_axes = [None, None]
 
     try:
         while True:
-            timestamp, clusters = subscribe_cluster_results(mqtt_client, config, subscribe_topic)
+            timestamp, clusters = subscribe_cluster_output(config)
 
             if clusters is not None:
                 _, model_parameters = load_model_parameters()
@@ -283,15 +263,14 @@ def live_model_update_with_remote_clustering(mqtt_client: MQTTClient, config: Di
 
                 if model_parameters is not None:
                     save_model_parameters(config,timestamp,model_parameters)
-                    publish_model_parameters(mqtt_client,publish_topic,
+                    if publish:
+                        publish_model_parameters(config,
                                              timestamp,model_parameters)
 
                     fig_axes = model_update_plots([1,1], model_parameters,
                                                   params['pars_to_update'], omega_model, fig_axes)
 
     except KeyboardInterrupt:
-        plt.close()
-        shutdown(mqtt_client,"model updating")
+        print("Keyboard interrupt of live model updating\n")
     except Exception as e:
         print(f"Unexpected error: {e}")
-        shutdown(mqtt_client,"model updating")

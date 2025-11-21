@@ -3,8 +3,7 @@ import time
 import json
 import threading
 from datetime import datetime
-import paho.mqtt.client as mqtt
-
+from paho.mqtt.client import Client as MQTTClient, CallbackAPIVersion, MQTTv311
 # MQTT Configuration
 MQTT_CONFIG = {
     "host": "test.mosquitto.org",
@@ -23,7 +22,7 @@ MQTT_CONFIG = {
 DURATION_SECONDS = 3000 
 
 # Ensure output directory exists
-os.makedirs("mqtt_recordings", exist_ok=True)
+os.makedirs("record/mqtt_recordings", exist_ok=True)
 
 # Thread-safe file locks
 file_locks = {topic: threading.Lock() for topic in MQTT_CONFIG["TopicsToSubscribe"]}
@@ -51,7 +50,7 @@ def on_message(client, userdata, msg):
 
 
 def record_mqtt():
-    client = mqtt.Client(client_id=MQTT_CONFIG["ClientID"], protocol=mqtt.MQTTv311, callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
+    client = MQTTClient(client_id=MQTT_CONFIG["ClientID"], protocol=MQTTv311, callback_api_version=CallbackAPIVersion.VERSION2)
     client.username_pw_set(MQTT_CONFIG["userId"], MQTT_CONFIG["password"])
     client.on_connect = on_connect
     client.on_message = on_message

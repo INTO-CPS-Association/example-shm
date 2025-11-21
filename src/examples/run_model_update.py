@@ -5,10 +5,9 @@ from methods.constants import PARAMS, MODEL_PARAMETERS
 # pylint: disable=R0914, C0103
 
 def run_model_update_local_sysid(config_path):
-    number_of_minutes = 1
-    data_topic_indexes = [0, 2, 3, 4]
+    number_of_minutes = 0.2
 
-    _, clusters, _ = MC.cluster_of_local_sysid(config_path, number_of_minutes, data_topic_indexes)
+    _, clusters, _ = MC.cluster_from_local_sysid(config_path, number_of_minutes, PARAMS)
 
     # Run model update
     _, omega_model, model_parameters = MU.estimate_updated_model(clusters,MODEL_PARAMETERS,PARAMS)
@@ -17,11 +16,12 @@ def run_model_update_local_sysid(config_path):
 
 def run_model_update_remote_sysid(config_path):
     config = load_config(config_path)
-    mqtt_client, _, _ = MC.setup_client(config["model_update"])
-    MU.live_model_update_with_remote_sysid(mqtt_client,config,None,PARAMS)
+    MU.live_model_update_with_remote_sysid(config,PARAMS,publish=False)
+
+def run_model_update_remote_sysid_and_publish(config_path):
+    config = load_config(config_path)
+    MU.live_model_update_with_remote_sysid(config,PARAMS,publish=True)
 
 def run_live_model_update_remote_clustering(config_path):
     config = load_config(config_path)
-    mqtt_client, subscrube_topic, publish_topic = MC.setup_client(config["model_update"])
-    MU.live_model_update_with_remote_clustering(mqtt_client,config,subscrube_topic,
-                                                publish_topic,PARAMS)
+    MU.live_model_update_with_remote_clustering(config,PARAMS,publish=False)

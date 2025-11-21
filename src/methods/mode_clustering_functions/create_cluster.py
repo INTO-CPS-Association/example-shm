@@ -238,9 +238,9 @@ def cluster_from_mac(cluster: Dict[str,Any], IP: Dict[str,Any],
 
 
     clustered_id = []
-    for r2 in cluster['row']: #For every entry in row cluster
-        for ii, r1 in enumerate(IP['row']): #For every entry in row IPu
-            if r1 == r2: #If r1 is a entry of "row" in the cluster, then save that row for later.
+    for row_c in cluster['row']: #For every entry in row cluster
+        for ii, row_IP in enumerate(IP['row']): #For every entry in row IPu
+            if row_IP == row_c: #If row_IP is a entry of "row" in the cluster, then save that row for later.
                 clustered_id.append(ii)
 
     all_id = np.array(list(range(len(IP['row']))))
@@ -381,10 +381,10 @@ def cluster_from_mac_IPm(cluster: Dict[str,Any], IPm: Dict[str,Any],
                 skip_id.append(oo)
 
     clustered_id = []
-    for r2 in cluster['row']: #For every entry in row cluster
-        for ii, r1 in enumerate(IPm['row']): #For every entry in row IPm
-            #If r1 is a entry of "row" in the cluster, then save that row for later.
-            if r1 == r2:
+    for row_c in cluster['row']: #For every entry in row cluster
+        for ii, row_IPm in enumerate(IPm['row']): #For every entry in row IPm
+            #If row_IPm is a entry of "row" in the cluster, then save that row for later.
+            if row_IPm == row_c:
                 clustered_id.append(ii)
 
     all_id = np.array(list(range(len(IPm['row']))))

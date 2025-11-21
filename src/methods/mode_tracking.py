@@ -1,13 +1,9 @@
-import sys
 from typing import Any, List, Dict, Tuple, Optional
 import matplotlib.pyplot as plt
-import paho.mqtt.client as mqtt
-from methods.constants import PARAMS
-from methods.mode_clustering import (subscribe_and_cluster)
+import methods.mode_clustering as MC
 from methods.mode_tracking_functions.mode_tracking import cluster_tracking
-from functions.plot_mode_tracking import plot_tracked_modes
+from methods.mode_tracking_functions.plot_mode_tracking import plot_tracked_modes
 from functions.plot_clusters import plot_clusters
-from data.comm.mqtt import (shutdown)
 # pylint: disable=C0103, W0603
 
 def track_clusters(cluster_dict: Dict[str,Any], tracked_clusters: Dict[str,Any],
@@ -56,7 +52,7 @@ def tracked_cluster_plots(plot: List[bool],tracked_clusters: Dict[str,Any],
     plt.show(block=hold)
     return [fig_ax1, fig_ax2]
 
-def subscribe_and_track_clusters(mqtt_client: mqtt.Client, config: Dict[str,Any],
+def subscribe_and_track_clusters(config: Dict[str,Any],
                                  tracked_clusters: Dict[str,Any],
                                  params: Dict[str,Any]) -> Optional[Tuple[List[Dict],
                                                                           Dict[str,Any],
@@ -65,7 +61,6 @@ def subscribe_and_track_clusters(mqtt_client: mqtt.Client, config: Dict[str,Any]
     Subscribes to MQTT broker, receives one OMA message, runs mode tracking, and returns results.
 
     Args:
-        mqtt_config (mqtt.Client): Configuration dictionary for the MQTT client.
         config (Dict[str,Any]): Configuration dictionary
         tracked_clusters (Dict[str,Any]): Previously tracked clusters
         params (Dict[str,Any]): clustering parameters
@@ -75,12 +70,12 @@ def subscribe_and_track_clusters(mqtt_client: mqtt.Client, config: Dict[str,Any]
         clusters (Dict[str,Any]): Clusters
         tracked_clusters (Dict[str,Any]): Tracked clusters
     """
-    sysid_output, clusters, _, __ = subscribe_and_cluster(mqtt_client,config,params)
+    sysid_output, clusters, _, __ = MC.subscribe_and_cluster(config,params)
     tracked_clusters = track_clusters(clusters, tracked_clusters,params)
     return sysid_output, clusters, tracked_clusters
 
-def live_mode_tracking(mqtt_client: mqtt.Client, config: Dict[str,Any],
-                        plot: List[bool] = [1,1]
+def live_mode_tracking(config: Dict[str,Any],
+                        params: Dict[str,Any], plot: List[bool] = [1,1]
                         ) -> None:
     """
     Subscribes to MQTT broker, receives one OMA message, runs mode tracking, plot results.
@@ -102,17 +97,13 @@ def live_mode_tracking(mqtt_client: mqtt.Client, config: Dict[str,Any],
     fig_axes = [None,None]
     try:
         while True:
-            sysid_output, clusters, tracked_clusters = subscribe_and_track_clusters(mqtt_client,
-                                                                config, tracked_clusters, PARAMS)
+            sysid_output, clusters, tracked_clusters = subscribe_and_track_clusters(config,
+                                                                tracked_clusters, params)
             if clusters is not None:
                 fig_axes = tracked_cluster_plots(plot,tracked_clusters,
-                                                 clusters,sysid_output,PARAMS,fig_axes)
-            sys.stdout.flush()
+                                                 clusters,sysid_output,params,fig_axes)
 
     except KeyboardInterrupt:
-        shutdown(mqtt_client,"clustering")
-        plt.close()
+        print("Keyboard interrupt of live mode tracking\n")
     except Exception as e:
         print(f"Unexpected errorat: {e}")
-        shutdown(mqtt_client,"clustering")
-        plt.close()

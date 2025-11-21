@@ -1,17 +1,16 @@
 import json
-import sys
 import threading
 from typing import Any, List, Dict, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
-import paho.mqtt.client as mqtt
-from methods.constants import PARAMS
+from paho.mqtt.client import Client as MQTTClient, MQTTMessage, Properties
+from data.comm.mqtt import (start_mqtt, publish_to_mqtt, shutdown)
 from methods import sysid as sysID
 from methods.mode_clustering_functions.clustering import cluster_func
 from functions.util import (convert_numpy_to_list, _convert_list_to_dict_or_array)
 from functions.plot_sysid import plot_stabilization_diagram
 from functions.plot_clusters import plot_clusters
-from data.comm.mqtt import (setup_mqtt_client, reconnect_client, shutdown)
+
 # pylint: disable=C0103, W0603
 
 # Global threading event to wait for sysid data
@@ -19,8 +18,8 @@ result_ready = threading.Event()
 sysid_output_global = None  # will store received sysid data inside callback
 timestamp_global = None
 
-def _on_connect(client: mqtt.Client, userdata: dict, flags: dict,
-                reason_code: int, properties: mqtt.Properties) -> None:
+def _on_connect(client: MQTTClient, userdata: Dict, flags: Dict,
+                reason_code: int, properties: Properties) -> None:
     """Callback when MQTT client connects."""
     if reason_code == 0:
         print("Connected to MQTT broker.")
@@ -29,8 +28,7 @@ def _on_connect(client: mqtt.Client, userdata: dict, flags: dict,
     else:
         print(f"Failed to connect to MQTT broker. Code: {reason_code}")
 
-
-def _on_message(_client: mqtt.Client, _userdata: dict, msg: mqtt.MQTTMessage) -> None:
+def _on_message(_client: MQTTClient, _userdata: Dict, msg: MQTTMessage) -> None:
     """Callback when a message is received."""
     global sysid_output_global
     global timestamp_global
@@ -45,24 +43,6 @@ def _on_message(_client: mqtt.Client, _userdata: dict, msg: mqtt.MQTTMessage) ->
         result_ready.set()
     except Exception as e:
         print(f"Error processing sysid message: {e}")
-
-def setup_client(mqtt_config: Dict[str, Any]) -> Tuple[mqtt.Client, float]:
-    """
-    Sets up and starts the MQTT client for subscribing to sensor data.
-
-    Args:
-        mqtt_config: Configuration dictionary for the MQTT client.
-
-    Returns:
-        A tuple of the connected MQTTClient instance and the extracted sampling frequency.
-    """
-
-    (data_client, subcribe_topic,
-     publish_topic) = setup_mqtt_client(mqtt_config)
-    data_client.connect(mqtt_config["host"], mqtt_config["port"], 60)
-    data_client.loop_start()
-
-    return data_client, subcribe_topic, publish_topic
 
 def cluster_sysid_output(sysid_output: Any, params: Dict[str,Any]) -> Tuple[Dict[str,Any],
                                                                             np.ndarray[float]]:
@@ -80,6 +60,29 @@ def cluster_sysid_output(sysid_output: Any, params: Dict[str,Any]) -> Tuple[Dict
     median_frequencies = np.array([dictionary_clusters[key]["median_f"]
                                    for key in dictionary_clusters.keys()])
     return dictionary_clusters, median_frequencies
+
+def publish_clusters(config: Dict[str,Any], timestamp: str,
+                     clusters: Dict[str,Any]) -> None:
+    """
+    Publish clusters to publish topic
+
+    Args:
+        config (Dict[str,Any]): Configuration dictionary
+        timestamp (str): Timestamp of data
+        clusters (Dict[str,Any]): Dictionary of clusters
+
+    Returns:
+    """
+   
+    publish_client, _, publish_topics = start_mqtt(config["mode_cluster"], _on_connect)
+
+    payload = {
+                    "timestamp": timestamp,
+                    "cluster_dictionary": convert_numpy_to_list(clusters)
+                }
+    
+    publish_to_mqtt(publish_client,publish_topics, payload, "clusters")
+    shutdown(publish_client)
 
 def cluster_plots(plot: List[bool], clusters: Dict[str,Any], sysid_output: Dict[str, Any],
                   params: Dict[str, Any], fig_axes: List[Tuple[plt.Figure,plt.Axes]],
@@ -110,16 +113,19 @@ def cluster_plots(plot: List[bool], clusters: Dict[str,Any], sysid_output: Dict[
     plt.show(block=hold)
     return [fig_ax1, fig_ax2]
 
-def cluster_of_local_sysid(config_path: str, number_of_minutes: float,
-                           data_topic_indexes: List[int]) -> Tuple[Dict[str,Any],Dict[str,Any],
-                                                                   List[float]]:
+def cluster_from_local_sysid(config_path: str, number_of_minutes: float,
+                           params: Dict[str,Any],
+                           data_topic_indexes: List[int] = None) -> Tuple[Dict[str,Any],
+                                                                        Dict[str,Any],
+                                                                        List[float]]:
     """
     Run local sysid and mode clustering
 
     Args:
         config_path (str): Path to config JSON.
         number_of_minutes (float): Number of mintues of data to align
-        data_topic_indexes (List[int])
+        data_topic_indexes (List[int]): Indexes of topics to subscribe to
+        params (Dict[str,Any]): clustering parameters
 
     Returns:
         sysid_output (Dict[str,Any]): sysid output
@@ -127,24 +133,22 @@ def cluster_of_local_sysid(config_path: str, number_of_minutes: float,
         median_frequencies (List[float]): Median frequencies of clusters
     """
 
-    aligner, data_client, _, fs = sysID.setup_sysid(config_path, data_topic_indexes)
-
-    sysid_output, _ = sysID.wait_for_sysid_output(number_of_minutes, aligner, fs)
-    data_client.disconnect()
+    mqtt_client, sysid_output, _ = sysID.local_sysid(config_path, number_of_minutes,
+                                                              data_topic_indexes)
+    shutdown(mqtt_client)
 
     # Mode clustering
-    dictionary_of_clusters, median_frequencies = cluster_sysid_output(sysid_output,PARAMS)
+    dictionary_of_clusters, median_frequencies = cluster_sysid_output(sysid_output,params)
 
     return sysid_output, dictionary_of_clusters, median_frequencies
 
-def subscribe_and_cluster(mqtt_client: mqtt.Client, config: Dict[str,Any], params: Dict[str,Any]
+def subscribe_and_cluster(config: Dict[str,Any], params: Dict[str,Any]
                           ) -> Tuple[Dict[str,Any], Dict[str,Any]]:
     """
     Subscribes to MQTT broker, receives one sysid message,
     runs mode clustering, and returns results.
 
     Args:
-        mqtt_config (mqtt.Client): Configuration dictionary for the MQTT client.
         config (Dict[str,Any]): Configuration dictionary
         params (Dict[str,Any]): clustering parameters
 
@@ -161,18 +165,10 @@ def subscribe_and_cluster(mqtt_client: mqtt.Client, config: Dict[str,Any], param
     timestamp_global = None
     result_ready.clear()
 
-    mqtt_client.user_data_set({"topic": config["mode_cluster"]["TopicsToSubscribe"][0], "qos": 1})
-    mqtt_client.on_connect = _on_connect
-    mqtt_client.on_message = _on_message
-    mqtt_client.connect(config["mode_cluster"]["host"],
-                        config["mode_cluster"]["port"], keepalive=60)
-    mqtt_client.loop_start()
+    mqtt_client, _, __ = start_mqtt(config["mode_cluster"], _on_connect, _on_message=_on_message)
     print("Waiting for sysid data...")
     try:
         result_ready.wait()  # Wait until message arrives
-        mqtt_client.loop_stop()
-        mqtt_client.disconnect()
-
         if sysid_output_global is None:
             raise RuntimeError("Failed to receive sysid data.")
 
@@ -180,51 +176,24 @@ def subscribe_and_cluster(mqtt_client: mqtt.Client, config: Dict[str,Any], param
         clusters, median_frequencies = cluster_sysid_output(sysid_output_global,params)
         print("Clustered frequencies", median_frequencies)
 
+        shutdown(mqtt_client)
         return sysid_output_global, clusters, median_frequencies, timestamp_global
 
     except KeyboardInterrupt as exc:
+        shutdown(mqtt_client,"clustering")
         raise RuntimeError("Keyboard interrupt") from exc
 
-
-def publish_clusters(publish_client: mqtt.Client, publish_topic: str, timestamp: str,
-                     clusters: Dict[str,Any]) -> None:
-    """
-    Publish clusters to publish topic
-
-    Args:
-        publish_client (mqtt.Client): MQTT client
-        publish_topic (str): Topic to publish
-        timestamp (str): Timestamp of data
-        clusters (Dict[str,Any]): Dictionary of clusters
-
-    Returns:
-    """
-    payload = {
-                "timestamp": timestamp,
-                "cluster_dictionary": convert_numpy_to_list(clusters)
-            }
-    try:
-        message = json.dumps(payload)
-
-        _ = reconnect_client(publish_client)
-
-        publish_client.publish(publish_topic, message, qos=1)
-        print(f"[{timestamp}] Published mode clusters to {publish_topic}")
-
-    except Exception as e:
-        print(f"\nFailed to publish mode clusters: {e}")
-
-def live_mode_clustering(mqtt_client: mqtt.Client, config: Dict[str,Any],
-                        publish_topic: str, plot: List[bool] = [1,1]
+def live_mode_clustering(config: Dict[str,Any], params: Dict[str,Any],
+                        publish: bool = False, plot: List[bool] = [1,1]
                         ) -> None:
     """
     Subscribes to MQTT broker, receives one sysid message, runs mode clustering, plots results.
                                                                         Continue until stopped.
 
     Args:
-        config (Dict): Config JSON.
-        mqtt_client (mqtt.Client): MQTT client
-        publish_topic (str): Topic to publish
+        config (Dict[str,Any]): Configuration dictionary
+        params (Dict[str,Any]): clustering parameters
+        publish (bool): Whether to publish clustering results
         plot (list[bool]): Array describing what plots to show
 
     Returns:
@@ -236,13 +205,12 @@ def live_mode_clustering(mqtt_client: mqtt.Client, config: Dict[str,Any],
     try:
         while True:
             (sysid_output, clusters,
-             _, timestamp) = subscribe_and_cluster(mqtt_client,config,PARAMS)
+             _, timestamp) = subscribe_and_cluster(config,params)
 
-            fig_axes = cluster_plots(plot, clusters, sysid_output, PARAMS, fig_axes)
-            if publish_topic is not None:
-                publish_clusters(mqtt_client, publish_topic, timestamp, clusters)
+            fig_axes = cluster_plots(plot, clusters, sysid_output, params, fig_axes)
+            if publish:
+                publish_clusters(config, timestamp, clusters)
     except KeyboardInterrupt:
-        shutdown(mqtt_client,"clustering")
+        print("Keyboard interrupt of live clustering\n")
     except Exception as e:
         print(f"Unexpected error: {e}")
-        shutdown(mqtt_client,"clustering")
