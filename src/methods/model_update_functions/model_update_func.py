@@ -1,9 +1,10 @@
 import sys
 import os
 from typing import Dict, Any, Optional, List
+from pathlib import Path
 import numpy as np
 from scipy.optimize import minimize
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+sys.path.append(Path.cwd().__str__())
 from models.beam import beam_yafem_model as beam_new
 from methods.model_update_functions.mode_pairing import pair_modes
 # pylint: disable=C0103

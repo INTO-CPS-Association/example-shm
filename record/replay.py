@@ -1,17 +1,20 @@
 import os
 import json
+import sys
+import threading
 import time
 from datetime import datetime
 from paho.mqtt.client import Client as MQTTClient, CallbackAPIVersion, MQTTv5  # type: ignore
 
 RECORDINGS_DIR = "record/mqtt_recordings"
+FILE_NAME = "recording.jsonl"
 
 TOPIC_MAPPING = {
-    "data1.jsonl": "cpsens/recorded/1/data",
-    "metadata.jsonl": "cpsens/recorded/1/metadata",
-    "data2.jsonl": "cpsens/recorded/2/data",
-    "data3.jsonl": "cpsens/recorded/3/data",
-    "data4.jsonl": "cpsens/recorded/4/data"
+    "acc1": "cpsens/recorded/1/data",
+    "metadata1": "cpsens/recorded/1/metadata",
+    "acc2": "cpsens/recorded/2/data",
+    "acc3": "cpsens/recorded/3/data",
+    "acc4": "cpsens/recorded/4/data"
 }
 
 PUBLISH_BROKER = {
@@ -21,6 +24,8 @@ PUBLISH_BROKER = {
     "password": "",
     "ClientID": "ReplayPublisher"
 }
+
+REPLAY_SPEED = 1  # Multiplier for replay speed
 
 def setup_publish_client(config: dict) -> MQTTClient:
     client = MQTTClient(
@@ -33,68 +38,62 @@ def setup_publish_client(config: dict) -> MQTTClient:
     client.connect(config["host"], config["port"], keepalive=60)
     return client
 
+def send_message(publish_client: MQTTClient, line: str, delay: float):
+    try:
+        record = json.loads(line.strip())
+        payload = record["payload"]
+        if isinstance(payload, list):
+            payload_bytes = bytes(payload)
+        elif isinstance(payload, str):
+            payload_bytes = bytes.fromhex(payload)
+        else:
+            raise ValueError("Invalid payload format")
+
+        qos = record.get("qos", 1)
+        topic_key = record.get("topic")
+        topic = TOPIC_MAPPING.get(topic_key, topic_key)
+        publish_client.publish(topic, payload=payload_bytes, qos=qos)
+        print(f"[REPLAYED] → {topic} (len={len(payload_bytes)}, delay={delay:.4f}s)")
+    except KeyboardInterrupt:
+        raise RuntimeError("Replay interrupted by user.")
+
 def replay_mqtt_messages():
     publish_client = setup_publish_client(PUBLISH_BROKER)
     publish_client.loop_start()
 
-    files = {}
-    for fname in TOPIC_MAPPING:
-        path = os.path.join(RECORDINGS_DIR, fname)
+    try:
+        path = os.path.join(RECORDINGS_DIR, FILE_NAME)
         if not os.path.exists(path):
-            print(f"[SKIP] File not found: {path}")
-            continue
-        files[fname] = open(path, "r", encoding="utf-8")
+            raise ValueError(f"[Error] File not found: {path}")
+    except Exception as e:
+        print(f"[Error] {e}")
 
-    iterators = {fname: iter(files[fname]) for fname in files}
-
-    prev_timestamps = {fname: None for fname in files}
-    done = set()
-
-
-    while len(done) < len(files):
-        for fname, fiter in iterators.items():
-            if fname in done:
-                continue
-
+    accumulated_delay = 0.0
+    with open(path, "r") as f:
+        prev_timestamp = None
+        for line in f:
             try:
-                line = next(fiter)
-                record = json.loads(line.strip())
-                payload = record["payload"]
-                if isinstance(payload, list):
-                    payload_bytes = bytes(payload)
-                elif isinstance(payload, str):
-                    payload_bytes = bytes.fromhex(payload)
+                message = json.loads(line.strip())
+                timestamp = datetime.fromisoformat(message["timestamp"])
+                if prev_timestamp is None:
+                    delay = 0.0  # Send the first message immediately
                 else:
-                    raise ValueError("Invalid payload format")
-
-                qos = record.get("qos", 1)
-                timestamp_str = record.get("timestamp")
-                if timestamp_str:
-                    current_timestamp = datetime.fromisoformat(timestamp_str)
-                    prev = prev_timestamps[fname]
-                    if prev:
-                        delay = (current_timestamp - prev).total_seconds()
-                        if delay > 0:
-                            time.sleep(delay)
-                    prev_timestamps[fname] = current_timestamp
-
-                topic = TOPIC_MAPPING[fname]
-                publish_client.publish(topic, payload=payload_bytes, qos=qos)
-                print(f"[{fname}] → {topic} (len={len(payload_bytes)})")
-
-            except StopIteration:
-                done.add(fname)
-                print(f"[DONE] {fname} finished")
+                    delay = (timestamp - prev_timestamp).total_seconds()
+                    if delay < 0:
+                        delay = 0.0  # Prevent negative delay
+                accumulated_delay += delay
+                replay_delay = delay / REPLAY_SPEED
+                threading.Timer(replay_delay, send_message, args=(publish_client,line,replay_delay,)).start()
+                prev_timestamp = timestamp
             except Exception as e:
-                print(f"[ERROR] in {fname}: {e}")
-
-    for f in files.values():
+                print(f"[Error] Failed to process line: {e}")
         f.close()
-
-    time.sleep(1)
+    time.sleep(2)
+    print(f"Waiting for all messages ({accumulated_delay:.1f}s) to be sent...")
     publish_client.loop_stop()
     publish_client.disconnect()
-    print("[DONEEEE].")
+    sys.stdout.flush()
+    print("[DONE].")
 
 if __name__ == "__main__":
     replay_mqtt_messages()
