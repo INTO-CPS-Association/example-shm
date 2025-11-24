@@ -57,22 +57,22 @@ def subscribe_cluster_output(config: Dict[str,Any]) -> Optional[Tuple[str, Dict[
     mqtt_client = start_mqtt(config["model_update"], _on_connect, _on_message=_on_message)
     print("Waiting for mode clustering data...")
 
-    while True:
-        try:
-            result_ready.wait() # Wait until message arrives
 
-            if cluster_global is None:
-                raise RuntimeError("Failed to receive cluster data.")
-            clusters = cluster_global
-            timestamp = timestamp_global
-            print(f"Cluster data received at {timestamp}. Running model update...")
+    try:
+        result_ready.wait() # Wait until message arrives
 
-            shutdown(mqtt_client)
-            return timestamp, clusters
+        if cluster_global is None:
+            raise RuntimeError("Failed to receive cluster data.")
+        clusters = cluster_global
+        timestamp = timestamp_global
+        print(f"Cluster data received at {timestamp}. Running model update...")
 
-        except KeyboardInterrupt as exc:
-            shutdown(mqtt_client,"model updating")
-            raise RuntimeError("Keyboard interrupt") from exc
+        shutdown(mqtt_client)
+        return timestamp, clusters
+
+    except KeyboardInterrupt as exc:
+        shutdown(mqtt_client,"model updating")
+        raise RuntimeError("Keyboard interrupt") from exc
 
 def publish_model_parameters(config: Dict[str,Any],
                              timestamp: str, model_parameters: Dict[str,Any]):
