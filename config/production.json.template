@@ -1,5 +1,5 @@
 {
-    "sysid": {
+    "MQTT": {
         "host": "",
         "port": 0,
         "userId": "",

@@ -21,48 +21,41 @@ The format of configuration file is,
 {
     "MQTT": {
         "host": "",
-        "port": ,
+        "port": 0,
         "userId": "",
         "password": "",
         "ClientID": "NOT_NEEDED",
         "QoS": 1,
+        "MetadataToSubscribe":["sensors/1/acc/raw/metadata"],
         "TopicsToSubscribe": [
           "sensors/1/acc/raw/data",
-          "sensors/1/acc/raw/metadata",
           "sensors/2/acc/raw/data",
           "sensors/3/acc/raw/data",
           "sensors/4/acc/raw/data"
-        ]
+        ],
+        "TopicsToPublish": ["sensors/1/acc/sysid/data"]
       },
-
-    "sysID": {
-      "host": "",
-      "port": ,
-      "userId": "",
-      "password": "",
-      "ClientID": "NOT_NEEDED",
-      "QoS": 2,
-      "TopicsToSubscribe": ["sensors/1/acc/sysid/data"]
-    },
 
     "mode_cluster": {
       "host": "",
-      "port": ,
+      "port": 0,
       "userId": "",
         "password": "",
       "ClientID": "NOT_NEEDED",
       "QoS": 2,
-      "TopicsToSubscribe": ["sensors/1/acc/mode_cluster/data"]
+      "TopicsToSubscribe": ["sensors/1/acc/sysid/data"],
+      "TopicsToPublish": ["sensors/1/acc/mode_cluster/data"]
     },
 
     "model_update": {
       "host": "",
-      "port": ,
+      "port": 0,
       "userId": "",
         "password": "",
       "ClientID": "NOT_NEEDED",
       "QoS": 2,
-      "TopicsToSubscribe": ["sensors/1/acc/model_update/data"]
+      "TopicsToSubscribe": ["sensors/1/acc/mode_cluster/data"],
+      "TopicsToPublish": ["sensors/1/acc/mode_clmodel_updateuster/data"]
     }
 }
 ```

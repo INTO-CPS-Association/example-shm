@@ -9,7 +9,13 @@ authors = [
 ]
 readme = "README.md"
 license = "INTO-CPS Association"
-packages = [{include = "*", from="src"}]
+packages = [
+    {include = "data", from="src"},
+    {include = "examples", from="src"},
+    {include = "functions", from="src"},
+    {include = "methods", from="src"},
+    {include = "beam", from="models"}
+]
 
 [tool.poetry.dependencies]
 python = ">=3.12, <3.13"

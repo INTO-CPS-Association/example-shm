@@ -1,5 +1,5 @@
 {
-    "sysid": {
+    "MQTT": {
         "host": "",
         "port": 0,
         "userId": "",
@@ -14,29 +14,7 @@
             "cpsens/recorded/4/data"
         ],
         "TopicsToPublish": ["cpsens/recorded/sysid/data"]
-      },
-
-    "mode_cluster": {
-      "host": "",
-      "port": 0,
-      "userId": "",
-        "password": "",
-      "ClientID": "NOT_NEEDED",
-      "QoS": 2,
-      "TopicsToSubscribe": ["cpsens/recorded/sysid/data"],
-      "TopicsToPublish": ["cpsens/recorded/mode_cluster/data"]
-    },
-
-    "model_update": {
-      "host": "",
-      "port": 0,
-      "userId": "",
-        "password": "",
-      "ClientID": "NOT_NEEDED",
-      "QoS": 2,
-      "TopicsToSubscribe": ["cpsens/recorded/mode_cluster/data"],
-      "TopicsToPublish": ["cpsens/recorded/model_update/data"]
-    }
+      }
 }
 
 

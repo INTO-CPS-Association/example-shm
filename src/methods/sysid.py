@@ -95,7 +95,7 @@ def setup_sysid(config_path, data_topic_indexes: List[int] = None) -> Tuple[IAli
         fs (float): Sampling frequency.
     """
     config = load_config(config_path)
-    mqtt_config = config["sysid"]
+    mqtt_config = config["MQTT"]
 
     # Setting up the client and extracting Fs
     data_client, fs = setup_client(mqtt_config)
