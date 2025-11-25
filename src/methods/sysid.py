@@ -66,7 +66,7 @@ def setup_client(mqtt_config: Dict[str, Any]) -> Tuple[MQTTClient, float]:
         mqtt_config: Configuration dictionary for the MQTT client.
 
     Returns:
-        A tuple of the connected MQTTClient instance and the extracted sampling frequency.
+        (Tuple[MQTTClient, float]): A tuple of the connected MQTTClient instance and the extracted sampling frequency.
     """
     try:
         fs = extract_fs_from_metadata(mqtt_config)
@@ -89,7 +89,10 @@ def setup_sysid(config_path, data_topic_indexes: List[int] = None) -> Tuple[IAli
         data_topic_indexes (list): Indexes of topics to subscribe to.
 
     Returns:
-        tuple: (aligner, data_client, mqtt_config, fs)
+        Aligner (IAligner): The aligner object for data alignment.
+        data_client (MQTTClient): The MQTT client used for data subscription.
+        mqtt_config (Dict[str,Any]): Configuration dictionary for the MQTT client.
+        fs (float): Sampling frequency.
     """
     config = load_config(config_path)
     mqtt_config = config["sysid"]
@@ -116,18 +119,19 @@ def get_sysid_output(
         fs: Sampling frequency to use in the sysid algorithm.
 
     Returns:
-        A tuple (sysid_output, timestamp) if successful, or None if data is not ready.
+        sysid_output (Dict[str, Any]): System identification output data.
+        aligner_time (str): Timestamp of the aligned data.
     """
 
     number_of_samples = int(sampling_period * 60 * fs)
-    data, timestamp = aligner.extract(number_of_samples)
+    data, aligner_time = aligner.extract(number_of_samples)
 
     if data.size < number_of_samples:
         return None, None
 
     try:
         sysid_output = sysid(data, PARAMS)
-        return sysid_output, timestamp.isoformat()
+        return sysid_output, aligner_time.isoformat()
     except Exception as e:
         print(f"sysID failed: {e}")
         return None, None
@@ -143,7 +147,8 @@ def wait_for_sysid_output(number_of_minutes: float, aligner: Aligner,
         fs (float): Sampling frequency to use in the sysid algorithm.
 
     Returns:
-        A tuple (sysid_output, timestamp) if successful, or None if data is not ready.
+        sysid_output (Dict[str, Any]): System identification output data.
+        aligner_time (str): Timestamp of the aligned data.
     """
     aligner_time = None
     t1 = time.time()
@@ -164,7 +169,7 @@ def wait_for_sysid_output(number_of_minutes: float, aligner: Aligner,
         raise RuntimeError("Keyboard interrupt") from exc
 
 def publish_sysid_output(publish_client: MQTTClient, publish_topics: List[str],
-                        sysid_output: Dict[str, Any], timestamp: str) -> None:
+                        sysid_output: Dict[str, Any], aligner_time: str) -> None:
     """
     Ppublish sysid results once.
 
@@ -172,12 +177,12 @@ def publish_sysid_output(publish_client: MQTTClient, publish_topics: List[str],
         publish_client (MQTTClient): MQTT client used for publishing results.
         publish_topics (str): The MQTT topic to publish results to.
         sysid_output (Dict[str, Any]): System identification output data.
-        timestamp (str): Sampling frequency.
+        aligner_time (str): Sampling frequency.
     Returns:
     """
     
     payload = {
-        "timestamp": timestamp,
+        "timestamp": aligner_time,
         "sysid_output": convert_numpy_to_list(sysid_output)
     }
     

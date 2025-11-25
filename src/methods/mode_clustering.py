@@ -143,7 +143,7 @@ def cluster_from_local_sysid(config_path: str, number_of_minutes: float,
     return sysid_output, dictionary_of_clusters, median_frequencies
 
 def subscribe_and_cluster(config: Dict[str,Any], params: Dict[str,Any]
-                          ) -> Tuple[Dict[str,Any], Dict[str,Any]]:
+                          ) -> Tuple[Dict[str,Any], Dict[str,Any], List[float], str]:
     """
     Subscribes to MQTT broker, receives one sysid message,
     runs mode clustering, and returns results.

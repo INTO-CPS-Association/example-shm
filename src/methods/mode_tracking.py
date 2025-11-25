@@ -66,7 +66,7 @@ def subscribe_and_track_clusters(config: Dict[str,Any],
         params (Dict[str,Any]): clustering parameters
 
     Returns:
-        oma_output_global (Dict[str,Any]): OMA output
+        sysid_output (Dict[str,Any]): sysid output from clustering
         clusters (Dict[str,Any]): Clusters
         tracked_clusters (Dict[str,Any]): Tracked clusters
     """

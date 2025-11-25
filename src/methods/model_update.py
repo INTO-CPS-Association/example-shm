@@ -39,7 +39,7 @@ def _on_message(_client: MQTTClient, _userdata: Dict, msg: MQTTMessage) -> None:
     except Exception as e:
         print(f"Error processing sysid message: {e}")
 
-def subscribe_cluster_output(config: Dict[str,Any]) -> Optional[Tuple[str, Dict[str,Any]]]:
+def subscribe_cluster_output(config: Dict[str,Any]) -> Tuple[str, Dict[str,Any]]:
     """
     Args:
         config (Dict[str,Any]): Configuration dictionary
@@ -75,7 +75,7 @@ def subscribe_cluster_output(config: Dict[str,Any]) -> Optional[Tuple[str, Dict[
         raise RuntimeError("Keyboard interrupt") from exc
 
 def publish_model_parameters(config: Dict[str,Any],
-                             timestamp: str, model_parameters: Dict[str,Any]):
+                             timestamp: str, model_parameters: Dict[str,Any]) -> None:
     """
     Publish model parameters to MQTT broker
 
@@ -249,7 +249,6 @@ def live_model_update_with_remote_sysid(config: Dict[str,Any],
 def live_model_update_with_remote_clustering(config: Dict[str,Any],
                                             params: Dict[str,Any],
                                             publish: bool = False) -> None:
-    model_parameters = MODEL_PARAMETERS
     fig_axes = [None, None]
 
     try:
