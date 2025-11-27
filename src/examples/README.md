@@ -35,8 +35,6 @@ filename. (e.g `0.1.0`).
 
 ## Running the Examples
 
-There are 5 examples.
-
 * **acceleration_readings** demonstrates the use of `Accelerometer` class to extract
   accelerometer measurements from MQTT data stream.
 * **aligning_readings** demonstrates the use of `Aligner` class to collect and

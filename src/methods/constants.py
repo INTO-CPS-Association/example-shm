@@ -46,6 +46,8 @@ PARAMS['MU_start_values'] = np.array([10, 0.015])
 PARAMS['MU_bounds'] = [(0.01, 1000), (0, 1000)]
 PARAMS['MU_modes'] = [1,2,3]
 
+MODEL_DIR = "models/beam"
+MODEL_PARS_NAME = "beam_pars.jsonl"
 MODEL_FUNC = model.eval_yafem_model
 MODEL_PARAMETERS = {'modes': PARAMS['modes_search_paring'],
             'dofs_sel': np.array([[7,1],[6,1],[5,1],[4,1]]),
@@ -53,4 +55,3 @@ MODEL_PARAMETERS = {'modes': PARAMS['modes_search_paring'],
             'l4': 0.1289,
             'm': None,
             }
-

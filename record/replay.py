@@ -2,42 +2,20 @@ import os
 import json
 import threading
 import time
+from typing import Dict
 from datetime import datetime
-from paho.mqtt.client import Client as MQTTClient, CallbackAPIVersion, MQTTv5  # type: ignore
-from data.comm.mqtt import shutdown
+from paho.mqtt.client import Client as MQTTClient
+from data.comm.mqtt import (shutdown, load_config, setup_publish_client)
+
+# MQTT Configuration
+CONFIG_PATH = "config/replay.json"
+
 RECORDINGS_DIR = "record/mqtt_recordings"
 FILE_NAME = "recording.jsonl"
 
-TOPIC_MAPPING = {
-    "acc1": "cpsens/recorded/1/data",
-    "metadata1": "cpsens/recorded/1/metadata",
-    "acc2": "cpsens/recorded/2/data",
-    "acc3": "cpsens/recorded/3/data",
-    "acc4": "cpsens/recorded/4/data"
-}
+REPLAY_SPEED = 0.1  # Multiplier for replay speed
 
-PUBLISH_BROKER = {
-    "host": " ",
-    "port": 0,
-    "userId": "",
-    "password": "",
-    "ClientID": "ReplayPublisher"
-}
-
-REPLAY_SPEED = 1  # Multiplier for replay speed
-
-def setup_publish_client(config: dict) -> MQTTClient:
-    client = MQTTClient(
-        client_id=config["ClientID"],
-        protocol=MQTTv5,
-        callback_api_version=CallbackAPIVersion.VERSION2
-    )
-    if config["userId"]:
-        client.username_pw_set(config["userId"], config["password"])
-    client.connect(config["host"], config["port"], keepalive=60)
-    return client
-
-def send_message(publish_client: MQTTClient, line: str, delay: float):
+def send_message(publish_client: MQTTClient, PublishTopics: Dict[str,str], line: str, delay: float, total: int, counter: int):
     try:
         record = json.loads(line.strip())
         payload = record["payload"]
@@ -50,15 +28,18 @@ def send_message(publish_client: MQTTClient, line: str, delay: float):
 
         qos = record.get("qos", 1)
         topic_key = record.get("topic")
-        topic = TOPIC_MAPPING.get(topic_key, topic_key)
+        topic = PublishTopics[topic_key]
+        
         publish_client.publish(topic, payload=payload_bytes, qos=qos)
-        print(f"[REPLAYED] → {topic} (len={len(payload_bytes)}, delay={delay:.4f}s)")
+        text = (f"[REPLAYED {counter+1}/{total}] → {topic} (len={len(payload_bytes)}, delay={delay:.5f}s)       ")
+        print(text,end="\r")
     except KeyboardInterrupt:
         raise RuntimeError("Replay interrupted by user.")
 
-def replay_mqtt_messages(loop: bool = False) -> None:
-    publish_client = setup_publish_client(PUBLISH_BROKER)
-    
+def replay_mqtt_messages(loop: int = 1) -> None:
+    config = load_config(CONFIG_PATH)
+    MQTT_config = config["MQTT"]
+    publish_client = setup_publish_client(MQTT_config)
     try:
         path = os.path.join(RECORDINGS_DIR, FILE_NAME)
         if not os.path.exists(path):
@@ -67,14 +48,20 @@ def replay_mqtt_messages(loop: bool = False) -> None:
         print(f"[Error] {e}")
 
     try:
-        while True:
+        for ii in range(loop):
+            print(f"Replay function iteration {ii+1}/{loop}.")
             publish_client.loop_start()
             t_start = time.time()
             accumulated_delay = 0.0
-            threads = []
+            with open(path, "r") as f:
+                total_lines = len(f.readlines())
+                f.close()
+
             with open(path, "r") as f:
                 prev_timestamp = None
-                for line in f:
+                for counter, line in enumerate(f):
+                    # if counter >= 256:
+                    #     break
                     try:
                         message = json.loads(line.strip())
                         timestamp = datetime.fromisoformat(message["timestamp"])
@@ -86,33 +73,31 @@ def replay_mqtt_messages(loop: bool = False) -> None:
                                 delay = 0.0  # Prevent negative delay
                         accumulated_delay += delay
                         replay_delay = delay / REPLAY_SPEED
-                        t = threading.Timer(replay_delay, send_message, args=(publish_client,line,replay_delay,)).start()
-                        threads.append(t)
+                        threading.Timer(replay_delay, send_message, args=(publish_client,MQTT_config["TopicsToPublish"],line,replay_delay,total_lines,counter,)).start()
                         prev_timestamp = timestamp
                     except Exception as e:
-                        print(f"[Error] Failed to process line: {e}")
+                        print(f"\n[Error] Failed to process line: {e}")
                 f.close()
-            time.sleep(2)
-            print(f"Waiting for all messages ({accumulated_delay:.1f}s) to be sent...")
 
+            time.sleep(2)
+            print(f"\nWaiting for all messages ({total_lines}msg. {accumulated_delay:.3f}s) to be sent...")
+            while publish_client._out_messages:
+                text = f"Remaining messages to be sent: {str(len(publish_client._out_messages)).zfill(len(str(total_lines)))}"
+                time.sleep(1)
+                print(text,end="\r")
             publish_client.loop_stop()
             t_end = time.time()
-            print(f"({(t_end-t_start):.1f}s)")
+            print(f"\nTime it took to publish: {(t_end-t_start):.3f}s")
 
-            if loop is not True:
-                break
-            else:
+            if ii+1 >= loop:
                 print("Restart replay function.")
     except KeyboardInterrupt:
+        time.sleep(1)
         print("Keyboard interrupt.")
-        for t in threads:
-            t.cancel()
         shutdown(publish_client)
-
-    shutdown(publish_client)
-    print("[DONE].")
-    t_end = time.time()
-    print(f"({(t_end-t_start):.1f}s)")
+    else:
+        shutdown(publish_client)
+        print("[DONE].")
 
 if __name__ == "__main__":
-    replay_mqtt_messages(loop=True) # True will loop forever
+    replay_mqtt_messages(loop=10) # Times to loop

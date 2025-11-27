@@ -6,7 +6,6 @@ from data.accel.hbk.aligner import Aligner
 def align_acceleration_readings(config_path):
     config = load_config(config_path)
     sysid_config = config["sysid"]
-    sysid_config = config["MQTT"]
 
     all_topics = sysid_config["TopicsToSubscribe"]
 

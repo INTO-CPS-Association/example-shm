@@ -12,7 +12,7 @@ from methods.model_update_functions.plot_model_update import (plot_parameters,
                                                               plot_model_frequencies)
 from methods.mode_clustering import subscribe_and_cluster
 from methods.model_update_functions import model_update_func
-from methods.constants import (MODEL_PARAMETERS, MODEL_FUNC)
+from methods.constants import (MODEL_DIR, MODEL_PARS_NAME, MODEL_PARAMETERS, MODEL_FUNC)
 from methods.mode_clustering import _on_connect
 
 # pylint: disable=C0103, W0603
@@ -54,7 +54,7 @@ def subscribe_cluster_output(config: Dict[str,Any]) -> Tuple[str, Dict[str,Any]]
     timestamp_global = None
     result_ready.clear()
 
-    mqtt_client = start_mqtt(config["model_update"], _on_connect, _on_message=_on_message)
+    mqtt_client, _, _ = start_mqtt(config["model_update"], _on_connect, _on_message=_on_message)
     print("Waiting for mode clustering data...")
 
 
@@ -114,7 +114,9 @@ def estimate_updated_model(clusters: Dict[str,Any], model_parameters: Dict[str,A
     """
     try:
         (X, omega_model,
-         updated_model_parameters) = model_update_func.update_model(clusters, MODEL_FUNC, model_parameters,
+         updated_model_parameters,
+         pairing_MAC, pairing_freq_des) = model_update_func.update_model(clusters, MODEL_FUNC,
+                                                                         model_parameters,
                                                                     params['pars_to_update'],
                                                                     params)
         if omega_model is not None:
@@ -152,7 +154,7 @@ def model_update_plots(plot: List[bool], model_parameters: Dict[str,Any],
     else:
         fig_ax2 = None
     plt.show(block=hold)
-    return [fig_ax1,fig_ax2]
+    return [fig_ax1,fig_ax2,fig_ax3]
 
 def save_model_parameters(config: Dict[str,Any], timestamp: str,
                           model_parameters: Dict[str,Any]) -> None:
@@ -168,7 +170,7 @@ def save_model_parameters(config: Dict[str,Any], timestamp: str,
     """
     if model_parameters is not None:
         # Ensure output directory exists
-        os.makedirs("models/beam", exist_ok=True)
+        os.makedirs(MODEL_DIR, exist_ok=True)
 
         # Thread-safe file locks
         file_locks = {topic: threading.Lock() for topic in config["model_update"]["TopicsToSubscribe"]}
@@ -177,8 +179,8 @@ def save_model_parameters(config: Dict[str,Any], timestamp: str,
             "timestamp": timestamp,
             "parameters": convert_numpy_to_list(model_parameters)
         }
-        file_path = "models/beam/beam_pars.jsonl"
-        with file_locks["cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/mode_cluster/data"]:
+        file_path = os.path.join(MODEL_DIR, MODEL_PARS_NAME)
+        with file_locks[config["model_update"]["TopicsToSubscribe"][0]]:
             with open(file_path, "a", encoding="utf-8") as f:
                 f.write(json.dumps(record) + "\n")
 
@@ -196,9 +198,7 @@ def load_model_parameters() -> Optional[Tuple[str, Dict[str,Any]]]:
 
     """
     try:
-        RECORDINGS_DIR = "models/beam"
-        fname = "beam_pars.jsonl"
-        path = os.path.join(RECORDINGS_DIR, fname)
+        path = os.path.join(MODEL_DIR, MODEL_PARS_NAME)
         if not os.path.exists(path):
             print(f"File not found: {path}. Proceed with standard parameters.")
             model_parameters = MODEL_PARAMETERS

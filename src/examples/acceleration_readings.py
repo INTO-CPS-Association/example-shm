@@ -25,4 +25,4 @@ def read_accelerometers(config_path):
     _, data = accelerometer.read(requested_samples=256)
 
     print("Data requested", data)
-    shutdown(mqtt_client, "Acceleration Reader")
+    shutdown(mqtt_client, "acceleration reader")

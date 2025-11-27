@@ -161,9 +161,9 @@ def wait_for_sysid_output(number_of_minutes: float, aligner: Aligner,
             sysid_output, aligner_time = get_sysid_output(number_of_minutes, aligner, fs)
 
             if (t2-t1) > 20*number_of_minutes*60:
-                raise RuntimeError("Aligned data not recieved in time")
+                raise RuntimeError("Aligned data not received in time")
 
-        print("Aligned data recieved at:",aligner_time)
+        print("Aligned data received at:",aligner_time)
         return sysid_output, aligner_time
     except KeyboardInterrupt as exc:
         raise RuntimeError("Keyboard interrupt") from exc
@@ -171,7 +171,7 @@ def wait_for_sysid_output(number_of_minutes: float, aligner: Aligner,
 def publish_sysid_output(publish_client: MQTTClient, publish_topics: List[str],
                         sysid_output: Dict[str, Any], aligner_time: str) -> None:
     """
-    Ppublish sysid results once.
+    Publish sysid results once.
 
     Args:
         publish_client (MQTTClient): MQTT client used for publishing results.
@@ -203,7 +203,7 @@ def local_sysid(config_path: str, number_of_minutes: float, topic_indexes: List[
     aligner, mqtt_client, _, fs = setup_sysid(config_path, topic_indexes)
 
     sysid_output, aligner_time = wait_for_sysid_output(number_of_minutes, aligner, fs)
-    print("Aligned data recieved at:",aligner_time)
+    print("Aligned data received at:",aligner_time)
 
     return mqtt_client, sysid_output, aligner_time
 

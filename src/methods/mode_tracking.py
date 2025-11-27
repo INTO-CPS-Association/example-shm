@@ -1,7 +1,7 @@
 from typing import Any, List, Dict, Tuple, Optional
 import matplotlib.pyplot as plt
 import methods.mode_clustering as MC
-from methods.mode_tracking_functions.mode_tracking import cluster_tracking
+from methods.mode_tracking_functions.mode_tracking_func import cluster_tracking
 from methods.mode_tracking_functions.plot_mode_tracking import plot_tracked_modes
 from functions.plot_clusters import plot_clusters
 # pylint: disable=C0103, W0603
@@ -106,4 +106,4 @@ def live_mode_tracking(config: Dict[str,Any],
     except KeyboardInterrupt:
         print("Keyboard interrupt of live mode tracking\n")
     except Exception as e:
-        print(f"Unexpected errorat: {e}")
+        print(f"Unexpected error at: {e}")

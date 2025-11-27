@@ -3,31 +3,21 @@ import time
 import json
 import threading
 import datetime
-from paho.mqtt.client import Client as MQTTClient, CallbackAPIVersion, MQTTv311
+from paho.mqtt.client import Client as MQTTClient, CallbackAPIVersion, MQTTv5
+from data.comm.mqtt import load_config
 
 # MQTT Configuration
-MQTT_CONFIG = {
-    "host": "",
-    "port":  0,
-    "userId": "",
-    "password": "",
-    "ClientID": "",
-    "QoS": 1,
-    "file_path": "record/mqtt_recordings",
-    "file_name": "recording.jsonl",
-    "TopicsToSubscribe": {
-        "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/raw/data": "acc1",
-        "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/raw/metadata": "metadata1",
-        "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/2/acc/raw/data": "acc2",
-        "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/3/acc/raw/data": "acc3",
-        "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/4/acc/raw/data": "acc4"
-    }
-}
+config_path = "config/replay.json"
+config = load_config(config_path)
+MQTT_CONFIG = config["MQTT"]
 
-DURATION_SECONDS = 300  # Recording duration in seconds 
+RECORDINGS_DIR = "record/mqtt_recordings"
+FILE_NAME = "recording2.jsonl"
+
+DURATION_SECONDS = 20  # Recording duration in seconds 
 
 # Ensure output directory exists
-os.makedirs(MQTT_CONFIG["file_path"], exist_ok=True)
+os.makedirs(RECORDINGS_DIR, exist_ok=True)
 
 # Thread-safe file locks
 file_locks = {topic: threading.Lock() for topic in MQTT_CONFIG["TopicsToSubscribe"]}
@@ -44,20 +34,19 @@ def on_message(client, userdata, msg):
     topic = msg.topic
     if topic in MQTT_CONFIG["TopicsToSubscribe"]:
         timestamp = datetime.datetime.now(datetime.UTC).replace(tzinfo=None).isoformat()
-        data_name = MQTT_CONFIG["TopicsToSubscribe"][topic]
         record = {
             "timestamp": timestamp,
-            "topic": data_name,
+            "topic": topic,
             "payload": list(msg.payload)  # Byte data as list of ints
         }
-        file_path = os.path.join(MQTT_CONFIG["file_path"],MQTT_CONFIG["file_name"])
+        file_path = os.path.join(RECORDINGS_DIR,FILE_NAME)
         with file_locks[topic]:
             with open(file_path, "a", encoding="utf-8") as f:
                 f.write(json.dumps(record) + "\n")
 
 
 def record_mqtt():
-    client = MQTTClient(client_id=MQTT_CONFIG["ClientID"], protocol=MQTTv311, callback_api_version=CallbackAPIVersion.VERSION2)
+    client = MQTTClient(client_id=MQTT_CONFIG["ClientID"], protocol=MQTTv5, callback_api_version=CallbackAPIVersion.VERSION2)
     client.username_pw_set(MQTT_CONFIG["userId"], MQTT_CONFIG["password"])
     client.on_connect = on_connect
     client.on_message = on_message

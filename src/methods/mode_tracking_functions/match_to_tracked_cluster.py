@@ -60,6 +60,8 @@ def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_cluste
 
                     #median freq of last cluster in tracked cluster group
                     omega_t = tracked_cluster['median_f']
+                    if omega_t < 0.0001:
+                        omega_t = 0.0001
                     #phi of last cluster in tracked cluster group
                     phi_t_all = tracked_cluster['mode_shapes']
 

@@ -4,10 +4,11 @@ MQTT Client Setup and Utility Functions.
 This module provides functions to set up an MQTT client, handle connections,
 subscriptions, and message publishing using the Paho MQTT library.
 """
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 import json
 import uuid
 from paho.mqtt.client import Client as MQTTClient, CallbackAPIVersion, MQTTv5  # type: ignore
+from collections.abc import Callable
 import sys
 
 def load_config(config_path: str) -> dict:
@@ -114,10 +115,35 @@ def setup_mqtt_client(config: Dict[str,Any], topic_to_subscribe: str):
 
     return mqttc
 
-def start_mqtt(config: Dict[str,Any], _on_connect, _on_message = None) -> MQTTClient:
+def setup_publish_client(config: Dict[str,Any]) -> MQTTClient:
     """
+    Generate publish client
     Args:
+        config (Dict[str,Any]): Configuration file for generating MQTT client
     Returns:
+        mqtt_client (MQTTClient): MQTT client
+    """
+    publish_client = MQTTClient(
+        client_id=config["ClientID"],
+        protocol=MQTTv5,
+        callback_api_version=CallbackAPIVersion.VERSION2
+    )
+    if config["userId"]:
+        publish_client.username_pw_set(config["userId"], config["password"])
+    publish_client.connect(config["host"], config["port"], keepalive=60)
+    return publish_client
+
+def start_mqtt(config: Dict[str,Any], _on_connect: Callable, _on_message: Callable = None) -> Tuple[MQTTClient,List[str],List[str]]:
+    """
+    Generate client from config file and intiate it.
+    Args:
+        config (Dict[str,Any]): Configuration file for generating MQTT client
+        _on_connect (Callable): on_connect function
+        _on_message (Callable): on_message function
+    Returns:
+        mqtt_client (MQTTClient): MQTT client
+        subcribe_topics (List[str]): Topics to subscribe to
+        publish_topics (List[str]): Topics to publish
     """
     mqtt_client = setup_mqtt_client(config,config["TopicsToSubscribe"][0])
     mqtt_client.connect(config["host"], config["port"], 60)
@@ -137,9 +163,9 @@ def start_mqtt(config: Dict[str,Any], _on_connect, _on_message = None) -> MQTTCl
 def reconnect_client(mqtt_client: MQTTClient) -> bool:
     """
     Args:
-        mqtt_client (MQTTClient):
+        mqtt_client (MQTTClient): MQTT client
     Returns:
-        True:
+        bool
     """
     if not mqtt_client.is_connected():
         print("Client disconnected. Reconnecting...")
@@ -178,9 +204,9 @@ def publish_to_mqtt(publish_client: MQTTClient, publish_topics: List[str],
 
 def shutdown(mqtt_client: MQTTClient,name: str = None):
     """
-    Shutdown mqtt client
+    Shutdown MQTT client
     Args:
-        mqtt_client (MQTTClient):
+        mqtt_client (MQTTClient): MQTT client
         name (str): What is shutting down
     Returns:
     """
