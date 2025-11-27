@@ -12,7 +12,7 @@ from methods.model_update_functions.plot_model_update import (plot_parameters,
                                                               plot_model_frequencies)
 from methods.mode_clustering import subscribe_and_cluster
 from methods.model_update_functions import model_update_func
-from methods.constants import MODEL_PARAMETERS
+from methods.constants import (MODEL_PARAMETERS, MODEL_FUNC)
 from methods.mode_clustering import _on_connect
 
 # pylint: disable=C0103, W0603
@@ -114,7 +114,7 @@ def estimate_updated_model(clusters: Dict[str,Any], model_parameters: Dict[str,A
     """
     try:
         (X, omega_model,
-         updated_model_parameters) = model_update_func.update_model(clusters, model_parameters,
+         updated_model_parameters) = model_update_func.update_model(clusters, MODEL_FUNC, model_parameters,
                                                                     params['pars_to_update'],
                                                                     params)
         if omega_model is not None:

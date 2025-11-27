@@ -1,4 +1,9 @@
 import numpy as np
+import sys
+from pathlib import Path
+sys.path.append(Path.cwd().__str__())
+from models.beam import beam_yafem_model as model
+
 # Constants for sysID
 WAIT_METADATA = 11 # Wait max 11 seconds for getting metadata message
 
@@ -41,9 +46,11 @@ PARAMS['MU_start_values'] = np.array([10, 0.015])
 PARAMS['MU_bounds'] = [(0.01, 1000), (0, 1000)]
 PARAMS['MU_modes'] = [1,2,3]
 
+MODEL_FUNC = model.eval_yafem_model
 MODEL_PARAMETERS = {'modes': PARAMS['modes_search_paring'],
             'dofs_sel': np.array([[7,1],[6,1],[5,1],[4,1]]),
             'k_rot': None, 
             'l4': 0.1289,
             'm': None,
             }
+

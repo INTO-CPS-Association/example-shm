@@ -1,15 +1,11 @@
-import sys
-import os
 from typing import Dict, Any, Optional, List
-from pathlib import Path
+from collections.abc import Callable
 import numpy as np
 from scipy.optimize import minimize
-sys.path.append(Path.cwd().__str__())
-from models.beam import beam_yafem_model as beam_new
 from methods.model_update_functions.mode_pairing import pair_modes
 # pylint: disable=C0103
 
-def update_model(cluster_dict: Dict[str,Any], model_pars: Dict[str,Any],
+def update_model(cluster_dict: Dict[str,Any], model_func: Callable[[Dict[str,Any]],Any], model_pars: Dict[str,Any],
                  pars_to_update: List[str], params: Dict[str,Any]) -> Optional[Any]:
     """
     Estimate updated model parameters
@@ -29,7 +25,7 @@ def update_model(cluster_dict: Dict[str,Any], model_pars: Dict[str,Any],
     X = None
     pars_to_update = params['pars_to_update']
     try:
-        res = minimize(lambda x: estimate_parameters(x, cluster_dict, model_pars,
+        res = minimize(lambda x: estimate_parameters(x, cluster_dict, model_func, model_pars,
                                                      pars_to_update, params),
                        params['MU_start_values'], bounds=params['MU_bounds'],
                        options={'maxiter': 1000})
@@ -43,7 +39,7 @@ def update_model(cluster_dict: Dict[str,Any], model_pars: Dict[str,Any],
                 model_pars[key] = X[idx]
                 idx += 1
         updated_model_parameters = model_pars
-        omegaMU, _, __, ___ = beam_new.eval_yafem_model(updated_model_parameters)
+        omegaMU, _, __, ___ = model_func(updated_model_parameters)
 
     except ValueError as e:
         print(f"Skipping model updating due to error: {e}")
@@ -56,7 +52,7 @@ def update_model(cluster_dict: Dict[str,Any], model_pars: Dict[str,Any],
     return None, None, None
 
 def estimate_parameters(theta_star: List[float], cluster_dict: Dict[str,Any],
-                        model_parameters: Dict[str,Any],
+                        model_func: Callable[[Dict[str,Any]],Any], model_parameters: Dict[str,Any],
                         parameters_to_update: List[str],params: Dict[str,Any]) -> float:
     """
     Estimate updated parameters and return the objective function result
@@ -83,7 +79,7 @@ def estimate_parameters(theta_star: List[float], cluster_dict: Dict[str,Any],
             model_parameters[key] = theta_star[idx]
             idx += 1
     # Call FE solver to get model frequencies and mode shapes
-    omegaM, _, PhiM, __ = beam_new.eval_yafem_model(model_parameters)
+    omegaM, _, PhiM, __ = model_func(model_parameters)
 
     # Mode Pairing Start
     (paired_frequencies, paired_mode_shapes, omegaM, PhiM
