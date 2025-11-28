@@ -114,8 +114,7 @@ def estimate_updated_model(clusters: Dict[str,Any], model_parameters: Dict[str,A
     """
     try:
         (X, omega_model,
-         updated_model_parameters,
-         pairing_MAC, pairing_freq_des) = model_update_func.update_model(clusters, MODEL_FUNC,
+         updated_model_parameters) = model_update_func.update_model(clusters, MODEL_FUNC,
                                                                          model_parameters,
                                                                     params['pars_to_update'],
                                                                     params)
@@ -154,7 +153,7 @@ def model_update_plots(plot: List[bool], model_parameters: Dict[str,Any],
     else:
         fig_ax2 = None
     plt.show(block=hold)
-    return [fig_ax1,fig_ax2,fig_ax3]
+    return [fig_ax1,fig_ax2]
 
 def save_model_parameters(config: Dict[str,Any], timestamp: str,
                           model_parameters: Dict[str,Any]) -> None:
@@ -229,9 +228,9 @@ def live_model_update_with_remote_sysid(config: Dict[str,Any],
             _, clusters, __, timestamp = subscribe_and_cluster(config, params)
 
             if clusters is not None:
-                _, omega_model, model_parameters = estimate_updated_model(clusters,
-                                                                          model_parameters,
-                                                                          params)
+                (_, omega_model, model_parameters) = estimate_updated_model(clusters,
+                                                                        model_parameters,
+                                                                        params)
 
                 if model_parameters is not None:
                     save_model_parameters(config,timestamp,model_parameters)
@@ -239,8 +238,8 @@ def live_model_update_with_remote_sysid(config: Dict[str,Any],
                         publish_model_parameters(config,
                                             timestamp,model_parameters)
 
-                    fig_axes = model_update_plots([1,1], model_parameters, params['pars_to_update'],
-                                                omega_model, fig_axes)
+                    fig_axes = model_update_plots([1,1], model_parameters,
+                                                params['pars_to_update'], omega_model, fig_axes)
     except KeyboardInterrupt:
         print("Keyboard interrupt in live model updating\n")
     except Exception as e:
@@ -257,9 +256,8 @@ def live_model_update_with_remote_clustering(config: Dict[str,Any],
 
             if clusters is not None:
                 _, model_parameters = load_model_parameters()
-                _, omega_model, model_parameters = estimate_updated_model(clusters,
-                                                                          model_parameters,
-                                                                          params)
+                (_, omega_model, model_parameters) = estimate_updated_model(clusters,
+                                                                model_parameters, params)
 
                 if model_parameters is not None:
                     save_model_parameters(config,timestamp,model_parameters)
@@ -268,7 +266,8 @@ def live_model_update_with_remote_clustering(config: Dict[str,Any],
                                              timestamp,model_parameters)
 
                     fig_axes = model_update_plots([1,1], model_parameters,
-                                                  params['pars_to_update'], omega_model, fig_axes)
+                                                  params['pars_to_update'], omega_model,
+                                                 fig_axes)
 
     except KeyboardInterrupt:
         print("Keyboard interrupt of live model updating\n")

@@ -37,7 +37,7 @@ def on_message(client, userdata, msg):
         record = {
             "timestamp": timestamp,
             "topic": MQTT_CONFIG["TopicsToSubscribe"][topic],
-            "orogin": topic,
+            "origin": topic,
             "payload": list(msg.payload)  # Byte data as list of ints
         }
         file_path = os.path.join(RECORDINGS_DIR,FILE_NAME)

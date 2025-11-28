@@ -12,6 +12,7 @@ def update_model(cluster_dict: Dict[str,Any], model_func: Callable[[Dict[str,Any
 
     Args:
         cluster_dict (Dict[str,Any]): Dictionary of clustered modes
+        model_func (Callable[[Dict[str,Any]],Any]): YAFEM model function
         model_parameters (Dict[str,Any]): Model parameters (YaFEM)
         parameters_to_update (List[str]): String of keys to update in model_parameters
         params (Dict[str,Any]): Update parameters
@@ -60,6 +61,7 @@ def estimate_parameters(theta_star: List[float], cluster_dict: Dict[str,Any],
     Args:
         theta_star (np.ndarray[float]): The parameters to update
         cluster_dict (Dict[str,Any]): Dictionary of clustered modes
+        model_func (Callable[[Dict[str,Any]],Any]): YAFEM model function
         model_parameters (Dict[str,Any]): Model parameters (YaFEM)
         parameters_to_update (List[str]): String of keys to update in model_parameters
         params (Dict[str,Any]): Update parameters
@@ -93,13 +95,13 @@ def estimate_parameters(theta_star: List[float], cluster_dict: Dict[str,Any],
         " The number of updated parameters should not be more than the number of features")
 
     # Compute MAC
-    MACn = np.abs(np.diag(np.conj(paired_mode_shapes).T @ PhiM))**2
+    MACn = np.abs(np.diag(np.conj(paired_mode_shapes).T @ PhiM))**2 #Nominator
     MACd = np.diag(np.conj(paired_mode_shapes).T @
-                   paired_mode_shapes) * np.diag(np.conj(PhiM).T @ PhiM)
+                   paired_mode_shapes) * np.diag(np.conj(PhiM).T @ PhiM) #Denominator
     MAC = MACn / MACd
 
     # Objective function
-    resOM = (omegaM - paired_frequencies)/omegaM
+    resOM = (omegaM - paired_frequencies)/omegaM #Frequency desqrepancy
     resPhi = MAC
     X = np.dot(resOM.T, resOM) + 1 / np.dot(resPhi.T, resPhi)
 
