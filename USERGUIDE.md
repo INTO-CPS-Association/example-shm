@@ -285,6 +285,42 @@ poetry run python src/scripts/find_offset.py
 poetry run python src/scripts/publish_samples.py
 ```
 
+**Record and replay**
+Record and replay data is also possible. Here a `config/replay.json` config file must be defined before hand.
+
+Inside `record/record.py` some parameters must be specified:
+
+```py
+config_path = "config/replay.json"
+config = load_config(config_path)
+MQTT_CONFIG = config["MQTT"]
+
+RECORDINGS_DIR = "record/mqtt_recordings"
+FILE_NAME = "recording2.jsonl"
+
+DURATION_SECONDS = 20 # This is how many seconds of data that are recorded
+```
+
+The same goes for `record/replay.py`:
+
+```py
+# MQTT Configuration
+CONFIG_PATH = "config/replay.json"
+
+RECORDINGS_DIR = "record/mqtt_recordings"
+FILE_NAME = "recording.jsonl"
+
+REPLAY_SPEED = 0.1  # Multiplier for replay speed
+```
+At the bottom the number of times to loop the replay function can be stated: `replay_mqtt_messages(loop=10) # Times to loop`
+
+The files can then be run with:
+
+```bash
+poetry run python record/record.py
+poetry run python record/replay.py
+```
+
 ## Machine 2: Fog Layer – Data Alignment and System Identification
 
 This machine subscribes to MQTT topics from Machine 1. It aligns multi-channel data, runs system identification,
