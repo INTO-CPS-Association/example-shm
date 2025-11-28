@@ -9,13 +9,15 @@ def plot_tracked_modes(
         tracked_clusters: Dict[str, Any],
         sysid_params: Dict[str, Any],
         fig_ax: Any = None,
-        x_length: Any = None)-> Tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]:
+        x_length: int = None)-> Tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]:
     """
     Plot tracked modes
 
     Args:
         tracked_clusters (Dict[str, Any]): Tracked clusters
-        sysid_params (Dict[str, Any]): sysid parameters
+        sysid_params (Dict[str, Any]): System identification parameters
+        fig_ax (Tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]): fig and ax of plot
+        x_length (int): Limit on x axis for tracked modes, default=None.
     Returns:
         fig_ax (Tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]): fig and ax of plot
 
@@ -40,13 +42,13 @@ def plot_tracked_modes(
             for cluster in tracked_cluster_list:
                 m_f.append(cluster['median_f'])
                 x.append(cluster['id'])
-
             sc = ax1.scatter(x, m_f, marker="o", s=50)
             col2 = sc.get_facecolors().tolist()
             ax1.plot(x, m_f, color=col2[0])
             max_x.append(max(x))
             ii += 1
 
+    ax1.set_title("Tracked modes over datasets")
     ax1.set_ylabel("Eigenfrequency [Hz]", fontsize=20, color = 'black')
     ax1.set_xlabel("Dataset", fontsize=20, color = 'black')
     ax1.tick_params(axis='both', which='major', labelsize=17)

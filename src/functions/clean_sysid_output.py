@@ -1,6 +1,11 @@
+from typing import Any, Dict, Tuple
 import numpy as np
 
-def remove_complex_conjugates(sysid_output):
+def remove_complex_conjugates(sysid_output: Dict[str, Any]) -> Tuple[np.ndarray[float],
+                                                                     np.ndarray[float],
+                                                                     np.ndarray[float],
+                                                                     np.ndarray[float],
+                                                                     np.ndarray[float]]:
     """
     Remove complex conjucates
     
@@ -8,11 +13,11 @@ def remove_complex_conjugates(sysid_output):
         sysid_output (Dict[str, Any]): Results from Pysysid-2
     
     Returns:
-        frequencies (np.ndarray): Frequencies (mean)
-        cov_freq (np.ndarray): Covariance of frequency
-        damping_ratios (np.ndarray): Damping ratios (mean)
-        cov_damping (np.ndarray): Covariance of damping ratio
-        mode_shapes (np.ndarray): Mode shapes
+        frequencies (np.ndarray[float]): Frequencies (mean)
+        cov_freq (np.ndarray[float]): Covariance of frequency
+        damping_ratios (np.ndarray[float]): Damping ratios (mean)
+        cov_damping (np.ndarray[float]): Covariance of damping ratio
+        mode_shapes (np.ndarray[float]): Mode shapes
     """
     sysid = sysid_output.copy()
     # sysid results as numpy array
@@ -26,12 +31,18 @@ def remove_complex_conjugates(sysid_output):
     frequencies = frequencies[::2]              # This is 'S' as per algorithm
     damping_ratios = damping_ratios[::2]        # This is 'S' as per algorithm
     mode_shapes = mode_shapes[::2, :, :]
-    cov_freq = cov_freq[::2]           
+    cov_freq = cov_freq[::2]
     cov_damping = cov_damping[::2]
 
     return frequencies, cov_freq, damping_ratios, cov_damping, mode_shapes
 
-def transform_sysid_features(frequencies_,cov_freq_,damping_ratios_,cov_damping_,mode_shapes_):
+def transform_sysid_features(frequencies_: np.ndarray[float],cov_freq_: np.ndarray[float],
+                             damping_ratios_: np.ndarray[float],cov_damping_: np.ndarray[float],
+                             mode_shapes_:np.ndarray[float]) -> Tuple[np.ndarray[float],
+                                                                      np.ndarray[float],
+                                                                      np.ndarray[float],
+                                                                      np.ndarray[float],
+                                                                      np.ndarray[float]]:
     """
     Transform sysid results
 
@@ -45,7 +56,8 @@ def transform_sysid_features(frequencies_,cov_freq_,damping_ratios_,cov_damping_
     1.|
     0.|
        -1----4------- Frequency
-    The frequency array will then have the shape (6,3). Initially (6,6) but the complex conjugates have been removed. So 6 is halved to 3.
+    The frequency array will then have the shape (6,3). Initially (6,6)
+    but the complex conjugates have been removed. So 6 is halved to 3.
     6 for each model order, including 0 and 3 for maximum poles in a modelorder
     The frequency array will then become:
       _0_1_
@@ -86,7 +98,7 @@ def transform_sysid_features(frequencies_,cov_freq_,damping_ratios_,cov_damping_
     cov_damping = np.flip(cov_damping, 0)
     cov_damping = np.take_along_axis(cov_damping, sort_indices, axis=1)
     mode_shapes = np.moveaxis(mode_shapes_, [0, 1, 2], [1, 0, 2])
-    
+
     mode_shapes2 = np.zeros(mode_shapes.shape,dtype=np.complex128)
     for ii, indices in enumerate(sort_indices):
         mode_shapes2[ii,:,:] = mode_shapes[(sort_indices.shape[0]-ii-1),indices,:]
@@ -113,7 +125,8 @@ def remove_highly_uncertain_points(sysid_output,sysid_params):
         cov_damping (np.ndarray): Covariance of damping ratio
         mode_shapes (np.ndarray): Mode shapes
     """
-    frequencies, cov_freq, damping_ratios, cov_damping, mode_shapes = remove_complex_conjugates(sysid_output)
+    (frequencies, cov_freq, damping_ratios,
+     cov_damping, mode_shapes) = remove_complex_conjugates(sysid_output)
 
     # # #=================== Removing high uncertain poles =======================
     freq_variance_treshold = sysid_params.get('freq_variance_treshold', 0.1)

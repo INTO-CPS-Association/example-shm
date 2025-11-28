@@ -3,7 +3,7 @@ import struct
 from collections import deque
 from typing import Tuple, Any, Optional, List
 import numpy as np
-import paho.mqtt.client as mqtt
+from paho.mqtt.client import Client as MQTTClient, MQTTMessage
 # Project Imports
 from data.accel.accelerometer import IAccelerometer
 from data.accel.constants import MAX_MAP_SIZE
@@ -12,7 +12,7 @@ from data.accel.metadata_constants import DESCRIPTOR_LENGTH_BYTES
 class Accelerometer(IAccelerometer):
     def __init__(
         self,
-        mqtt_client: mqtt.Client,
+        mqtt_client: MQTTClient,
         topic: str,
         map_size: int = MAX_MAP_SIZE ):
         """
@@ -36,7 +36,7 @@ class Accelerometer(IAccelerometer):
         self.mqtt_client.on_message = self._on_message
 
     # pylint: disable=unused-argument
-    def _on_message(self, client: Any, userdata: Any, msg: mqtt.MQTTMessage) -> None:
+    def _on_message(self, client: Any, userdata: Any, msg: MQTTMessage) -> None:
         """Handles incoming MQTT messages."""
         print(f"Received message on topic {msg.topic}")
 
@@ -49,7 +49,7 @@ class Accelerometer(IAccelerometer):
         threading.Thread(target=safe_process, daemon=True).start()
 
 
-    def process_message(self, msg: mqtt.MQTTMessage) -> None:
+    def process_message(self, msg: MQTTMessage) -> None:
         """
             Processes incoming MQTT messages, extracts accelerometer data,
             and stores it in a dictionary of FIFO queues.

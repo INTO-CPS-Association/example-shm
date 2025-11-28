@@ -1,0 +1,42 @@
+{
+    "sysid": {
+        "host": "",
+        "port": 0,
+        "userId": "",
+        "password": "",
+        "ClientID": "NOT_NEEDED",
+        "QoS": 1,
+        "MetadataToSubscribe": ["cpsens/recorded/1/metadata"],
+        "TopicsToSubscribe": [
+            "cpsens/recorded/1/data",
+            "cpsens/recorded/2/data",
+            "cpsens/recorded/3/data",
+            "cpsens/recorded/4/data"
+        ],
+        "TopicsToPublish": ["cpsens/recorded/sysid/data"]
+      },
+
+    "mode_cluster": {
+      "host": "",
+      "port": 0,
+      "userId": "",
+      "password": "",
+      "ClientID": "NOT_NEEDED",
+      "QoS": 2,
+      "TopicsToSubscribe": ["cpsens/recorded/sysid/data"],
+      "TopicsToPublish": ["cpsens/recorded/mode_cluster/data"]
+    },
+
+    "model_update": {
+      "host": "",
+      "port": 0,
+      "userId": "",
+      "password": "",
+      "ClientID": "NOT_NEEDED",
+      "QoS": 2,
+      "TopicsToSubscribe": ["cpsens/recorded/mode_cluster/data"],
+      "TopicsToPublish": ["cpsens/recorded/model_update/data"]
+    }
+}
+
+

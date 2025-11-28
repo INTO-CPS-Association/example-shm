@@ -1,115 +1,275 @@
-import json
+import datetime
+import os
 import threading
-from typing import Any, List, Dict, Optional
+import json
+from typing import Any, List, Dict, Optional, Tuple
 import numpy as np
-import paho.mqtt.client as mqtt
-from scipy.optimize import minimize
-from scipy.linalg import eigh
-from methods.packages.eval_yafem_model import eval_yafem_model
-from methods.mode_update_functions import model_update
-from methods.constants import X0, BOUNDS
+import matplotlib.pyplot as plt
+from paho.mqtt.client import Client as MQTTClient, MQTTMessage
+from data.comm.mqtt import (shutdown,start_mqtt, publish_to_mqtt)
+from functions.util import (convert_numpy_to_list, _convert_list_to_dict_or_array)
+from methods.model_update_functions.plot_model_update import (plot_parameters,
+                                                              plot_model_frequencies)
+from methods.mode_clustering import subscribe_and_cluster
+from methods.model_update_functions import model_update_func
+from methods.constants import (MODEL_DIR, MODEL_PARS_NAME, MODEL_PARAMETERS, MODEL_FUNC)
+from methods.mode_clustering import _on_connect
+
 # pylint: disable=C0103, W0603
 
-# Global threading event to wait for OMA data
+# Global threading event to wait for cluster data
 result_ready = threading.Event()
-oma_output_global = None  # will store received OMA data inside callback
+cluster_global = None  # will store received cluster data inside callback
+timestamp_global = None
 
-def _convert_oma_output(obj: Any) -> Any:
-    """Recursively convert JSON structure into complex numbers and numpy arrays."""
-    if isinstance(obj, dict):
-        if "real" in obj and "imag" in obj:
-            return complex(obj["real"], obj["imag"])
-        return {k: _convert_oma_output(v) for k, v in obj.items()}
-
-    if isinstance(obj, list):
-        try:
-            return np.array([_convert_oma_output(item) for item in obj])
-        except Exception:
-            return [_convert_oma_output(item) for item in obj]
-
-    return obj
-
-
-def _on_connect(client: mqtt.Client, userdata: dict, flags: dict, reason_code: int, properties: mqtt.Properties) -> None:
-    """Callback when MQTT client connects."""
-    if reason_code  == 0:
-        print("Connected to MQTT broker.")
-        client.subscribe(userdata["topic"], qos=userdata["qos"])
-        print(f"Subscribed to topic: {userdata['topic']}")
-    else:
-        print(f"Failed to connect to MQTT broker. Code: {reason_code}")
-
-
-def _on_message(_client: mqtt.Client, _userdata: dict, msg: mqtt.MQTTMessage) -> None:
+def _on_message(_client: MQTTClient, _userdata: Dict, msg: MQTTMessage) -> None:
     """Callback when a message is received."""
-    global oma_output_global
+    global cluster_global
+    global timestamp_global
     print(f"Message received on topic: {msg.topic}")
     try:
         raw = json.loads(msg.payload.decode("utf-8"))
-        oma_output = _convert_oma_output(raw["OMA_output"])
+        clusters = _convert_list_to_dict_or_array(raw["cluster_dictionary"])
         timestamp = raw["timestamp"]
-        print(f"Received OMA data at timestamp: {timestamp}")
-        oma_output_global = oma_output
+        print(f"Received cluster data at timestamp: {timestamp}")
+        cluster_global = clusters
+        timestamp_global = timestamp
         result_ready.set()
+
     except Exception as e:
-        print(f"Error processing OMA message: {e}")
+        print(f"Error processing sysid message: {e}")
 
-
-# pylint: disable=R0914
-def run_model_update(cleaned_values: List[Dict]) -> Optional[Dict[str, Any]]:
+def subscribe_cluster_output(config: Dict[str,Any]) -> Tuple[str, Dict[str,Any]]:
     """
-    Runs model updating based on cleaned OMA clusters.
+    Args:
+        config (Dict[str,Any]): Configuration dictionary
+    Returns:
+        timestamp (str): timestamp string
+        clusters (Dict[str,Any]) Dictionary of clusters
+    """
+    global cluster_global
+    global timestamp_global
+
+    cluster_global = None  # Reset in case old data is present
+    timestamp_global = None
+    result_ready.clear()
+
+    mqtt_client, _, _ = start_mqtt(config["model_update"], _on_connect, _on_message=_on_message)
+    print("Waiting for mode clustering data...")
+
+
+    try:
+        result_ready.wait() # Wait until message arrives
+
+        if cluster_global is None:
+            raise RuntimeError("Failed to receive cluster data.")
+        clusters = cluster_global
+        timestamp = timestamp_global
+        print(f"Cluster data received at {timestamp}. Running model update...")
+
+        shutdown(mqtt_client)
+        return timestamp, clusters
+
+    except KeyboardInterrupt as exc:
+        shutdown(mqtt_client,"model updating")
+        raise RuntimeError("Keyboard interrupt") from exc
+
+def publish_model_parameters(config: Dict[str,Any],
+                             timestamp: str, model_parameters: Dict[str,Any]) -> None:
+    """
+    Publish model parameters to MQTT broker
 
     Args:
-        cleaned_values (List[Dict]): Cleaned cluster results.
+        config (Dict[str,Any]): Configuration dictionary
+        timestamp (str): Timestamp of data
+        model_parameters (Dict[str,Any]): Model parameters
+    Returns:
+        
+    """
+    publish_client, _, publish_topics = start_mqtt(config["model_update"], _on_connect)
+
+    payload = {
+            "timestamp": timestamp,
+            "model_parameters": convert_numpy_to_list(model_parameters)
+        }
+
+    publish_to_mqtt(publish_client, publish_topics, payload, "model parameters")
+    shutdown(publish_client,"model parameter publish client")
+
+def estimate_updated_model(clusters: Dict[str,Any], model_parameters: Dict[str,Any],
+                           params: Dict[str,Any]) -> Optional[Tuple[List[float],
+                                                                    List[float], Dict[str,Any]]]:
+    """
+    Estimate model parameters based on clusters
+
+    Args:
+        clusters (Dict[str,Any]): Dictionary of clsuters
+        model_parameters (Dict[str,Any]): Model parameters
+        params (Dict[str,Any]): Model update parameters
+    Returns:
+        X (List[float]): Updated values
+        omega_model (List[float]): Eigenfrequency of model
+        updated_model_parameters (Dict[str,Any]): Model parameters
+
+    """
+    try:
+        (X, omega_model,
+         updated_model_parameters) = model_update_func.update_model(clusters, MODEL_FUNC,
+                                                                         model_parameters,
+                                                                    params['pars_to_update'],
+                                                                    params)
+        if omega_model is not None:
+            print("Model frequencies:",omega_model,"[Hz]")
+
+        return (X, omega_model, updated_model_parameters)
+    except Exception as e:
+        print('Model update is not succesful.', e)
+        return None
+
+def model_update_plots(plot: List[bool], model_parameters: Dict[str,Any],
+                       pars_to_update: List[str], omega_updated_model: np.ndarray[float],
+                       fig_axes: List[Tuple[plt.Figure,plt.Axes]],
+                       hold: bool = False) -> List[Tuple[plt.Figure,plt.Axes]]:
+    """
+    Plot clusters and stabilization diagram
+
+    Args:
+        plot (List[bool]): List of bools to state what plots should be made/updated
+        model_parameters (Dict[str,Any]): Dictionary of model parameters
+        pars_to_update (List[str]): Updated parameters, keys of model_parameters dict.
+        omega_updated_model (np.ndarray[float]): Eigenfrequencies of model
+        fig_axes (List[plt.Fig,plt.Axes]): List of figure and axes of plots
+        hold (bool): To show graph until it is closed, plt.show(block=False)
 
     Returns:
-        Updated model details or None if error.
+        fig_axes (List[plt.Fig,plt.Axes]): List of figure and axes of plots
     """
-    comb = {'cluster': cleaned_values}
+    if plot[0] == 1:
+        fig_ax1 = plot_parameters(model_parameters, pars_to_update, fig_ax=fig_axes[0])
+    else:
+        fig_ax1 = None
+    if plot[1] == 1:
+        fig_ax2 = plot_model_frequencies(omega_updated_model, fig_ax=fig_axes[1])
+    else:
+        fig_ax2 = None
+    plt.show(block=hold)
+    return [fig_ax1,fig_ax2]
+
+def save_model_parameters(config: Dict[str,Any], timestamp: str,
+                          model_parameters: Dict[str,Any]) -> None:
+    """
+    Save model parameters based on config.
+
+    Args:
+        config (Dict[str,Any]):
+        timestamp (Str): Timestamp of the latest data
+        model_parameters (Dict[str,Any]): Updated model parameters
+    Returns:
+
+    """
+    if model_parameters is not None:
+        # Ensure output directory exists
+        os.makedirs(MODEL_DIR, exist_ok=True)
+
+        # Thread-safe file locks
+        file_locks = {topic: threading.Lock() for topic in config["model_update"]["TopicsToSubscribe"]}
+
+        record = {
+            "timestamp": timestamp,
+            "parameters": convert_numpy_to_list(model_parameters)
+        }
+        file_path = os.path.join(MODEL_DIR, MODEL_PARS_NAME)
+        with file_locks[config["model_update"]["TopicsToSubscribe"][0]]:
+            with open(file_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(record) + "\n")
+
+        print("Model parameters saved to:",file_path)
+
+def load_model_parameters() -> Optional[Tuple[str, Dict[str,Any]]]:
+    """
+    Load model parameters based on config.
+
+    Args:
+
+    Returns:
+        timestamp (str): Timestamp of the last updated parameters
+        model_parameters (Dict[str,Any]): Updated model parameters
+
+    """
     try:
-        res = minimize(lambda x: model_update.par_est(x, comb),
-                       X0, bounds=BOUNDS, options={'maxiter': 1000})
-        X = res.x
-        print(f'Updated parameters: {X}')
+        path = os.path.join(MODEL_DIR, MODEL_PARS_NAME)
+        if not os.path.exists(path):
+            print(f"File not found: {path}. Proceed with standard parameters.")
+            model_parameters = MODEL_PARAMETERS
+            timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+            return timestamp, model_parameters
+        else:
+            with open(path, 'r') as json_file:
+                data = json.loads(json_file.readlines()[-1])
+            timestamp = data['timestamp']
+            model_parameters = data['parameters']
+            if model_parameters is None:
+                print("Stored model_parameters are None. Proceed with standard parameters.")
+                model_parameters = MODEL_PARAMETERS
+            print("Model parameters loaded successfully from:", path,"at:", timestamp)
 
-        pars_updated = {'k': X[0], 'Lab': X[1]}
-        omegaMU, phi, PhiMU, myModel = eval_yafem_model(pars_updated)
-        print("\nomegaMU:",omegaMU)
-        print("\nphi:",phi)
-        print("\nPhiMU:",PhiMU)
+            return timestamp, model_parameters
+    except Exception as e:
+        print('Could not find previous model data.',e)
+        return None, None
 
-        M = myModel.M.todense()
-        K = myModel.K.todense()
+def live_model_update_with_remote_sysid(config: Dict[str,Any],
+                                        params: Dict[str,Any],
+                                        publish: bool = False) -> None:
+    fig_axes = [None, None]
+    try:
+        while True:
+            _, model_parameters = load_model_parameters()
+            _, clusters, __, timestamp = subscribe_and_cluster(config, params)
 
-        eigenvalues, eigenvectors = eigh(K, M)
-        omegaN = np.sqrt(eigenvalues)
-        omegaN_pi = omegaN / (2 * np.pi)
+            if clusters is not None:
+                (_, omega_model, model_parameters) = estimate_updated_model(clusters,
+                                                                        model_parameters,
+                                                                        params)
 
-        dd = np.sqrt(np.diag(eigenvectors.T @ M @ eigenvectors))
-        aa = eigenvectors @ np.diag(1.0 / dd)
+                if model_parameters is not None:
+                    save_model_parameters(config,timestamp,model_parameters)
+                    if publish:
+                        publish_model_parameters(config,
+                                            timestamp,model_parameters)
 
-        zeta = np.zeros(len(omegaN))
-        zeta_medians = np.array([np.median(cluster['z_values']) for cluster in cleaned_values])
-        zeta[:len(zeta_medians)] = zeta_medians
+                    fig_axes = model_update_plots([1,1], model_parameters,
+                                                params['pars_to_update'], omega_model, fig_axes)
+    except KeyboardInterrupt:
+        print("Keyboard interrupt in live model updating\n")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
 
-        Cmodal = np.diag(2 * zeta * omegaN)
-        C = np.linalg.inv(aa).T @ Cmodal @ np.linalg.inv(aa)
-        system_updated = {
-            "M": M,
-            "K": K,
-            "C": C
-        }
-        return {
-            'optimized_parameters': X,
-            'omegaN_rad': omegaN,
-            'omegaN_Hz': omegaN_pi,
-            'mode_shapes': aa,
-            'damping_matrix': C,
-            'pars_updated': pars_updated,
-            'System_updated': system_updated
-        }
+def live_model_update_with_remote_clustering(config: Dict[str,Any],
+                                            params: Dict[str,Any],
+                                            publish: bool = False) -> None:
+    fig_axes = [None, None]
 
-    except ValueError as e:
-        print(f"Skipping model updating due to error: {e}")
-        return None
+    try:
+        while True:
+            timestamp, clusters = subscribe_cluster_output(config)
+
+            if clusters is not None:
+                _, model_parameters = load_model_parameters()
+                (_, omega_model, model_parameters) = estimate_updated_model(clusters,
+                                                                model_parameters, params)
+
+                if model_parameters is not None:
+                    save_model_parameters(config,timestamp,model_parameters)
+                    if publish:
+                        publish_model_parameters(config,
+                                             timestamp,model_parameters)
+
+                    fig_axes = model_update_plots([1,1], model_parameters,
+                                                  params['pars_to_update'], omega_model,
+                                                 fig_axes)
+
+    except KeyboardInterrupt:
+        print("Keyboard interrupt of live model updating\n")
+    except Exception as e:
+        print(f"Unexpected error: {e}")

@@ -1,19 +1,17 @@
 import time
-import sys
 from data.accel.hbk.accelerometer import Accelerometer
-from data.comm.mqtt import setup_mqtt_client, load_config  # type: ignore
+from data.comm.mqtt import setup_mqtt_client, load_config, shutdown  # type: ignore
 
 def read_accelerometers(config_path):
     config = load_config(config_path)
-    mqtt_config = config["MQTT"]
-    topic_index = 0
-    mqtt_client, selected_topic = setup_mqtt_client(mqtt_config, topic_index)
-    mqtt_client.connect(mqtt_config["host"], mqtt_config["port"], 60)
+    sysid_config = config["sysid"]
+    mqtt_client = setup_mqtt_client(sysid_config, sysid_config['TopicsToSubscribe'][0])
+    mqtt_client.connect(sysid_config["host"], sysid_config["port"], 60)
     mqtt_client.loop_start()
 
     accelerometer = Accelerometer(
         mqtt_client,
-        topic=selected_topic,
+        topic=sysid_config['TopicsToSubscribe'][0],
         map_size=1920
     )
 
@@ -26,8 +24,5 @@ def read_accelerometers(config_path):
             print(f"Key: {key} -> Data: {list(fifo)}\n")
     _, data = accelerometer.read(requested_samples=256)
 
-    mqtt_client.loop_stop()
-    mqtt_client.disconnect()
-
     print("Data requested", data)
-    sys.stdout.flush()
+    shutdown(mqtt_client, "acceleration reader")

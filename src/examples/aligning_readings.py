@@ -1,22 +1,19 @@
 import time
-
-from data.comm.mqtt import setup_mqtt_client, load_config  # type: ignore
+from data.comm.mqtt import setup_mqtt_client, load_config, shutdown  # type: ignore
 from data.accel.hbk.aligner import Aligner
 
 
 def align_acceleration_readings(config_path):
     config = load_config(config_path)
-    mqtt_config = config["MQTT"]
-    topic_indexes = [0,2]
+    sysid_config = config["sysid"]
 
-    all_topics = mqtt_config["TopicsToSubscribe"]
-    selected_topics = [all_topics[i] for i in topic_indexes]
+    all_topics = sysid_config["TopicsToSubscribe"]
 
-    mqtt_client, _ = setup_mqtt_client(mqtt_config, topic_index=topic_indexes[0])
-    mqtt_client.connect(mqtt_config["host"], mqtt_config["port"], 60)
+    mqtt_client = setup_mqtt_client(sysid_config, sysid_config["TopicsToSubscribe"][0])
+    mqtt_client.connect(sysid_config["host"], sysid_config["port"], 60)
     mqtt_client.loop_start()
 
-    aligner = Aligner(mqtt_client, topics=selected_topics, map_size=2560)
+    aligner = Aligner(mqtt_client, topics=all_topics, map_size=2560)
 
     while True:
         time.sleep(1)
@@ -28,3 +25,4 @@ def align_acceleration_readings(config_path):
             print(f"Extracted aligned data shape: {data.shape}\n{data}")
             break
         time.sleep(1)
+    shutdown(mqtt_client, "aligner example")

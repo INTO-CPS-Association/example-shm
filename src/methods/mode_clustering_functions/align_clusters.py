@@ -1,16 +1,17 @@
+from typing import Any, Dict
 import numpy as np
-from typing import Any
 from functions.calculate_mac import calculate_mac
+# pylint: disable=C0103
 
-def alignment(cluster_dict: dict[str,dict], Params: dict[str,Any]) -> dict[str,dict]:
+def alignment(cluster_dict: Dict[str,dict], params: Dict[str,Any]) -> Dict[str,dict]:
     """
         Alignment/merging of clusters
 
         Args:
-            cluster_dict (dict): Dictionary of multiple clusters
-            Params (dict): Dictionary of algorithm parameters
+            cluster_dict (Dict[str,dict]): Dictionary of multiple clusters
+            params (Dict[str,dict]): Dictionary of algorithm parameters
         Returns:
-            cluster_dict (dict): Dictionary of aligned clusters
+            cluster_dict (Dict[str,dict]): Dictionary of aligned clusters
 
     """
     median_f = []
@@ -26,62 +27,72 @@ def alignment(cluster_dict: dict[str,dict], Params: dict[str,Any]) -> dict[str,d
         # Calculate absolute difference of selected median and all medians
         diff = abs(median_f-m_f)
         # If this difference is above 0 (not itself) and inside the bounds:
-        # Bounds are the minimum of either median_f * allignment_factor_0 or Sampling frequency / 2 * allignment_factor_1
+        # Bounds are the minimum of either median_f * allignment_factor_0
+        # or Sampling frequency / 2 * allignment_factor_1
         # For lower median frequencies the bound is determined by the size of median frequency.
         # For higher median frequencies the bound is determined by the sampling frequency
 
-        mask = (diff > 0) & (diff < min(m_f*Params['allignment_factor'][0],Params['Fs']/2*Params['allignment_factor'][1]))
-        indices = np.argwhere(mask == True) #Indicies of clusters that are closely located in frequency
+        mask = (diff > 0) & (diff < min(m_f*params['allignment_factor'][0],
+                                        params['Fs']/2*params['allignment_factor'][1]))
+        #Indicies of clusters that are closely located in frequency
+        indices = np.argwhere(mask == True)
 
         if indices.shape[0] > 0:# If one or more clusters are found
             ids = indices[:,0]
-            for id in ids: #Go through all clusters that is closely located
-                if id in deleted_cluster_id:
+            for idx in ids: #Go through all clusters that is closely located
+                if idx in deleted_cluster_id:
                     continue
 
-                cluster1 = cluster_dict[str(ii)] #Parent cluster
-                cluster2 = cluster_dict[str(id)] #Co-located cluster
+                main_cluster = cluster_dict[str(ii)] #Parent cluster
+                co_located_cluster = cluster_dict[str(idx)] #Co-located cluster
 
-                MAC = calculate_mac(cluster1['mode_shapes'][0],cluster2['mode_shapes'][0]) # Check mode shape for the first pole in each cluster
-                if MAC >= Params['tMAC']: #If MAC complies with the criteria, then add the two clusters
-                    cluster, cluster_remaining = join_clusters(cluster_dict[str(ii)],cluster_dict[str(id)],Params)
+                # Check mode shape for the first pole in each cluster
+                MAC = calculate_mac(main_cluster['mode_shapes'][0],
+                                    co_located_cluster['mode_shapes'][0])
+                if MAC >= params['tMAC']: # If MAC complies with the criteria,
+                                                    # then add the two clusters
+                    cluster, cluster_remaining = join_clusters(cluster_dict[str(ii)],
+                                                               cluster_dict[str(idx)],
+                                                               params)
                     cluster_dict[str(ii)] = cluster #Save the new larger cluster
                     if len(cluster_remaining) == 0: #If the remaining cluster is emmpty
-                        cluster_dict.pop(str(id), None) #Remove the co-located cluster
-                        deleted_cluster_id.append(int(id)) #The delete cluster id
+                        cluster_dict.pop(str(idx), None) #Remove the co-located cluster
+                        deleted_cluster_id.append(int(idx)) #The delete cluster idx
                     else:
-                        cluster_dict[str(id)] = cluster_remaining #Save the remaining cluster
+                        cluster_dict[str(idx)] = cluster_remaining #Save the remaining cluster
 
-                else: #Check if the mode shapes across any of the poles complies with the MAC criteria
-                    
-                    MAC = np.zeros((cluster1['mode_shapes'].shape[0],cluster2['mode_shapes'].shape[0]))
-                    for jj,  ms1 in enumerate(cluster1['mode_shapes']):
-                        for kk, ms2 in enumerate(cluster2['mode_shapes']):
+                else: # Check if the mode shapes across any of the poles
+                                            # complies with the MAC criteria
+                    MAC = np.zeros((main_cluster['mode_shapes'].shape[0],
+                                    co_located_cluster['mode_shapes'].shape[0]))
+                    for jj,  ms1 in enumerate(main_cluster['mode_shapes']):
+                        for kk, ms2 in enumerate(co_located_cluster['mode_shapes']):
                             MAC[jj,kk] = calculate_mac(ms1,ms2)
-                    if MAC.max() >= Params['tMAC']: #If MAC criteria is meet add the clusters together
-                        cluster, cluster_remaining = join_clusters(cluster_dict[str(ii)],cluster_dict[str(id)],Params)
+                    if MAC.max() >= params['tMAC']: #If MAC criteria is meet add clusters together
+                        cluster, cluster_remaining = join_clusters(cluster_dict[str(ii)],
+                                                                   cluster_dict[str(idx)],params)
                         cluster_dict[str(ii)] = cluster #Save the new larger cluster
                         if len(cluster_remaining) == 0: #If the remaining cluster is emmpty
-                            cluster_dict.pop(str(id), None) #Remove the co-located cluster
-                            deleted_cluster_id.append(int(id)) #The delete cluster id
+                            cluster_dict.pop(str(idx), None) #Remove the co-located cluster
+                            deleted_cluster_id.append(int(idx)) #The delete cluster idx
                         else:
-                            cluster_dict[str(id)] = cluster_remaining #Save the remaining cluster
-                    
-    
+                            cluster_dict[str(idx)] = cluster_remaining #Save the remaining cluster
+
     cluster_dict_alligned = cluster_dict
     return cluster_dict_alligned
 
-def join_clusters(cluster_1: dict[str,Any], cluster_2: dict[str,Any], Params: dict[str,Any]) -> dict[str,Any]:
+def join_clusters(cluster_1: Dict[str,Any], cluster_2: Dict[str,Any],
+                  params: Dict[str,Any]) -> Dict[str,Any]:
     """
         Add two clusters together
 
         Args:
-            cluster_1 (dict): Cluster
-            cluster_2 (dict): Cluster
-            Params (dict): Dictionary of algorithm parameters
+            cluster_1 (Dict[str,dict]): Cluster
+            cluster_2 (Dict[str,dict]): Cluster
+            params (Dict[str,dict]): Dictionary of algorithm parameters
         Returns:
-            cluster (dict): Joined cluster
-            cluster_remaining (dict): The cluster that remains
+            cluster (Dict[str,dict]): Joined cluster
+            cluster_remaining (Dict[str,dict]): The cluster that remains
 
     """
     #Adding two clusters together
@@ -92,70 +103,74 @@ def join_clusters(cluster_1: dict[str,Any], cluster_2: dict[str,Any], Params: di
 
     #Should the dominant cluster be the one that have the higest model orders?
     if row1.shape[0] >= row2.shape[0]: #Let be the largest cluster be the dominant one
-        cluster1 = cluster_1
-        cluster2 = cluster_2
+        main_cluster = cluster_1
+        co_located_cluster = cluster_2
         row1 = cluster_1['row']
         row2 = cluster_2['row']
     else:
-        cluster1 = cluster_2
-        cluster2 = cluster_1
+        main_cluster = cluster_2
+        co_located_cluster = cluster_1
         row1 = cluster_2['row']
         row2 = cluster_1['row']
 
-    median_f1 = np.median(cluster1['f'])
+    median_f1 = np.median(main_cluster['f'])
 
-    for MO in range(Params['model_order']): #Go through all poles in a cluster
+    for MO in range(params['model_order']): #Go through all poles in a cluster
         jj = np.argwhere(row1 == MO)
-        id = np.argwhere(row2 == MO)
+        idx = np.argwhere(row2 == MO)
         if MO in row1: #If a pole in the largest cluster exist for the this model order
-            r1 = MO
             if MO in row2: #If a pole exist in the same model order
                 #Get frequencies of the poles
-                f1 = cluster1['f'][jj[:,0]]
-                f2 = cluster2['f'][id[:,0]]
-                if abs(median_f1-f2) >= abs(median_f1-f1): #If pole in cluster 1 is closer to median of cluster 1
-                    cluster = append_cluster_data(cluster,cluster1,jj[:,0])
-                    cluster_remaining = append_cluster_data(cluster_remaining,cluster2,id[:,0])
+                f1 = main_cluster['f'][jj[:,0]]
+                f2 = co_located_cluster['f'][idx[:,0]]
+                if abs(median_f1-f2) >= abs(median_f1-f1):
+                    #If pole in cluster 1 is closer to median of cluster 1
+                    cluster = append_cluster_data(cluster,main_cluster,jj[:,0])
+                    cluster_remaining = append_cluster_data(cluster_remaining,
+                                                            co_located_cluster,idx[:,0])
                 else: #If pole in cluster 2 is closer to median of cluster 1
-                    cluster = append_cluster_data(cluster,cluster2,id[:,0])
-                    cluster_remaining = append_cluster_data(cluster_remaining,cluster1,jj[:,0])
+                    cluster = append_cluster_data(cluster,co_located_cluster,idx[:,0])
+                    cluster_remaining = append_cluster_data(cluster_remaining,main_cluster,jj[:,0])
             else: #If only one pole exist in the largest cluster
-                cluster = append_cluster_data(cluster,cluster1,jj[:,0])
+                cluster = append_cluster_data(cluster,main_cluster,jj[:,0])
         elif MO in row2: #If a pole in the smallest cluster exist for the model order
-            cluster = append_cluster_data(cluster,cluster2,id[:,0])
+            cluster = append_cluster_data(cluster,co_located_cluster,idx[:,0])
 
     return cluster, cluster_remaining
 
-def append_cluster_data(cluster: dict[str,Any], cluster2: dict[str,Any], id: int) -> dict[str,Any]:
+def append_cluster_data(cluster: Dict[str,Any], co_located_cluster: Dict[str,Any],
+                        idx: int) -> Dict[str,Any]:
     """
         Add cluster data to an existing cluster
 
         Args:
-            cluster (dict): Existing cluster
-            cluster2 (dict): Cluster
-            id (int): id of data to append
+            cluster (Dict[str,dict]): Existing cluster
+            co_located_cluster (Dict[str,dict]): Cluster
+            idx (int): id of data to append
         Returns:
-            cluster (dict): Cluster
+            cluster (Dict[str,dict]): Cluster
 
     """
     if len(cluster) == 0: #If it is the first pole
-        cluster['f'] = cluster2['f'][id]
-        cluster['cov_f'] = cluster2['cov_f'][id]
-        cluster['d'] = cluster2['d'][id]
-        cluster['cov_d'] = cluster2['cov_d'][id]
-        cluster['mode_shapes'] = cluster2['mode_shapes'][id,:]
-        cluster['MAC'] = cluster2['MAC'][id]
-        cluster['model_order'] = cluster2['model_order'][id]
-        cluster['row'] = cluster2['row'][id]
-        cluster['col'] = cluster2['col'][id]
+        cluster['f'] = co_located_cluster['f'][idx]
+        cluster['cov_f'] = co_located_cluster['cov_f'][idx]
+        cluster['d'] = co_located_cluster['d'][idx]
+        cluster['cov_d'] = co_located_cluster['cov_d'][idx]
+        cluster['mode_shapes'] = co_located_cluster['mode_shapes'][idx,:]
+        cluster['MAC'] = co_located_cluster['MAC'][idx]
+        cluster['model_order'] = co_located_cluster['model_order'][idx]
+        cluster['row'] = co_located_cluster['row'][idx]
+        cluster['col'] = co_located_cluster['col'][idx]
     else:
-        cluster['f'] = np.append(cluster['f'],cluster2['f'][id])
-        cluster['cov_f'] = np.append(cluster['cov_f'],cluster2['cov_f'][id])
-        cluster['d'] = np.append(cluster['d'],cluster2['d'][id])
-        cluster['cov_d'] = np.append(cluster['cov_d'],cluster2['cov_d'][id])
-        cluster['mode_shapes'] = np.vstack((cluster['mode_shapes'],cluster2['mode_shapes'][id,:]))
-        cluster['MAC'] = np.append(cluster['MAC'],cluster2['MAC'][id])
-        cluster['model_order'] = np.append(cluster['model_order'],cluster2['model_order'][id])
-        cluster['row'] = np.append(cluster['row'],cluster2['row'][id])
-        cluster['col'] = np.append(cluster['col'],cluster2['col'][id])
+        cluster['f'] = np.append(cluster['f'],co_located_cluster['f'][idx])
+        cluster['cov_f'] = np.append(cluster['cov_f'],co_located_cluster['cov_f'][idx])
+        cluster['d'] = np.append(cluster['d'],co_located_cluster['d'][idx])
+        cluster['cov_d'] = np.append(cluster['cov_d'],co_located_cluster['cov_d'][idx])
+        cluster['mode_shapes'] = np.vstack((cluster['mode_shapes'],
+                                            co_located_cluster['mode_shapes'][idx,:]))
+        cluster['MAC'] = np.append(cluster['MAC'],co_located_cluster['MAC'][idx])
+        cluster['model_order'] = np.append(cluster['model_order'],
+                                           co_located_cluster['model_order'][idx])
+        cluster['row'] = np.append(cluster['row'],co_located_cluster['row'][idx])
+        cluster['col'] = np.append(cluster['col'],co_located_cluster['col'][idx])
     return cluster

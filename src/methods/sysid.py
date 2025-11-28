@@ -1,19 +1,19 @@
 import time
 import json
+from typing import Any, Dict, Optional, Tuple, List
 from datetime import datetime
-from typing import Any, Dict, Optional, Tuple
+import numpy as np
 from paho.mqtt.client import Client as MQTTClient
 from pyoma2.setup.single import SingleSetup
-from functions.util import convert_numpy_to_list
+from data.accel.aligner import IAligner
+from data.comm.mqtt import (load_config,setup_mqtt_client,shutdown,publish_to_mqtt)
 from data.accel.metadata import extract_fs_from_metadata
-from data.comm.mqtt import setup_mqtt_client
 from data.accel.hbk.aligner import Aligner
+from functions.util import convert_numpy_to_list
 from methods.packages.pyoma.ssiWrapper import SSIcov
 from methods.constants import DEFAULT_FS, PARAMS
 
-
-
-def sysid(data, params):
+def sysid(data: np.ndarray[float], params: Dict[str,Any]) -> Dict[str, Any]:
     """
     Perform system identification using the Covariance-based
             Stochastic Subspace Identification (SSI-COV) method.
@@ -57,7 +57,6 @@ def sysid(data, params):
         'Phi_poles': output['Phi_poles'],
     }
 
-
 def setup_client(mqtt_config: Dict[str, Any]) -> Tuple[MQTTClient, float]:
     """
     Sets up and starts the MQTT client for subscribing to sensor data.
@@ -67,24 +66,50 @@ def setup_client(mqtt_config: Dict[str, Any]) -> Tuple[MQTTClient, float]:
         mqtt_config: Configuration dictionary for the MQTT client.
 
     Returns:
-        A tuple of the connected MQTTClient instance and the extracted sampling frequency.
+        (Tuple[MQTTClient, float]): A tuple of the connected MQTTClient instance and the extracted sampling frequency.
     """
     try:
         fs = extract_fs_from_metadata(mqtt_config)
-        print("Extracted FS from metadata:", fs)
     except Exception:
         print("Failed to extract FS from metadata. Using DEFAULT_FS.")
         fs = DEFAULT_FS
 
-    data_client, _ = setup_mqtt_client(mqtt_config, topic_index=0)
+    data_client = setup_mqtt_client(mqtt_config, mqtt_config["TopicsToSubscribe"][0])
     data_client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     data_client.loop_start()
     return data_client, fs
 
+def setup_sysid(config_path, data_topic_indexes: List[int] = None) -> Tuple[IAligner, MQTTClient,
+                                                          Dict[str,Any], float]:
+    """
+    Helper function to set up sysid (Operational Modal Analysis).
 
-def get_sysid_results(
+    Parameters:
+        config_path (str): Path to the configuration file.
+        data_topic_indexes (list): Indexes of topics to subscribe to.
+
+    Returns:
+        Aligner (IAligner): The aligner object for data alignment.
+        data_client (MQTTClient): The MQTT client used for data subscription.
+        mqtt_config (Dict[str,Any]): Configuration dictionary for the MQTT client.
+        fs (float): Sampling frequency.
+    """
+    config = load_config(config_path)
+    mqtt_config = config["sysid"]
+
+    # Setting up the client and extracting Fs
+    data_client, fs = setup_client(mqtt_config)
+
+    # Setting up the aligner
+    if data_topic_indexes is None:
+        data_topic_indexes = list(range(len(mqtt_config["TopicsToSubscribe"])))
+    selected_topics = [mqtt_config["TopicsToSubscribe"][i] for i in data_topic_indexes]
+    aligner = Aligner(data_client, topics=selected_topics)
+    return aligner, data_client, mqtt_config, fs
+
+def get_sysid_output(
         sampling_period: int, aligner: Aligner, fs: float
-        ) -> Optional[Tuple[Dict[str, Any], datetime]]:
+        ) -> Optional[Tuple[Dict[str, Any], str]]:
     """
     Extracts aligned sensor data and runs system identification (sysID).
 
@@ -94,75 +119,121 @@ def get_sysid_results(
         fs: Sampling frequency to use in the sysid algorithm.
 
     Returns:
-        A tuple (sysid_output, timestamp) if successful, or None if data is not ready.
+        sysid_output (Dict[str, Any]): System identification output data.
+        aligner_time (str): Timestamp of the aligned data.
     """
 
     number_of_samples = int(sampling_period * 60 * fs)
-    data, timestamp = aligner.extract(number_of_samples)
+    data, aligner_time = aligner.extract(number_of_samples)
 
     if data.size < number_of_samples:
         return None, None
 
     try:
         sysid_output = sysid(data, PARAMS)
-        return sysid_output, timestamp
+        return sysid_output, aligner_time.isoformat()
     except Exception as e:
         print(f"sysID failed: {e}")
         return None, None
 
-
-def publish_sysid_results(sampling_period: int, aligner: Aligner,
-                        publish_client: MQTTClient, publish_topic: str,
-                        fs: float) -> None:
+def wait_for_sysid_output(number_of_minutes: float, aligner: Aligner,
+                          fs: float) -> Optional[Tuple[Dict[str, Any],str]]:
     """
-    Repeatedly tries to get aligned data and publish sysid results once.
+    Extract system identidication results while printing elapsed time
 
     Args:
-        sampling_period: Duration (in minutes) of data to extract.
-        aligner: Aligner object that provides synchronized sensor data.
-        publish_client: MQTT client used for publishing results.
-        publish_topic: The MQTT topic to publish results to.
-        fs: Sampling frequency.
+        sampling_period (float): How many minutes of data to pass to sysid.
+        aligner (IAligner): An initialized Aligner object.
+        fs (float): Sampling frequency to use in the sysid algorithm.
+
+    Returns:
+        sysid_output (Dict[str, Any]): System identification output data.
+        aligner_time (str): Timestamp of the aligned data.
     """
+    aligner_time = None
     t1 = time.time()
-    loop = True
-    while True:
-        try:
+    try:
+        while aligner_time is None:
             time.sleep(0.1)
             t2 = time.time()
             t_text = f"Waiting for data for {round(t2-t1,1)} seconds"
             print(t_text,end="\r")
-            sysid_output, timestamp = get_sysid_results(sampling_period, aligner, fs)
+            sysid_output, aligner_time = get_sysid_output(number_of_minutes, aligner, fs)
 
+            if (t2-t1) > 20*number_of_minutes*60:
+                raise RuntimeError("Aligned data not received in time")
 
-            if sysid_output:
-                print(f"Timestamp: {timestamp}")
-                payload = {
-                    "timestamp": timestamp.isoformat(),
-                    "sysid_output": convert_numpy_to_list(sysid_output)
-                }
-                try:
-                    message = json.dumps(payload)
+        print("Aligned data received at:",aligner_time)
+        return sysid_output, aligner_time
+    except KeyboardInterrupt as exc:
+        raise RuntimeError("Keyboard interrupt") from exc
 
-                    if not publish_client.is_connected():
-                        print("Publisher disconnected. Reconnecting...")
-                        publish_client.reconnect()
+def publish_sysid_output(publish_client: MQTTClient, publish_topics: List[str],
+                        sysid_output: Dict[str, Any], aligner_time: str) -> None:
+    """
+    Publish sysid results once.
 
-                    publish_client.publish(publish_topic, message, qos=1)
-                    print(f"[{timestamp.isoformat()}] Published sysid result to {publish_topic}")
-                    loop = True
-                    break
-                except Exception as e:
-                    print(f"\nFailed to publish sysid result: {e}")
+    Args:
+        publish_client (MQTTClient): MQTT client used for publishing results.
+        publish_topics (str): The MQTT topic to publish results to.
+        sysid_output (Dict[str, Any]): System identification output data.
+        aligner_time (str): Sampling frequency.
+    Returns:
+    """
+    
+    payload = {
+        "timestamp": aligner_time,
+        "sysid_output": convert_numpy_to_list(sysid_output)
+    }
+    
+    publish_to_mqtt(publish_client, publish_topics, payload, "sysid output")
 
-        except KeyboardInterrupt:
-            print("\nShutting down gracefully")
-            aligner.mqtt_client.loop_stop()
-            aligner.mqtt_client.disconnect()
-            publish_client.disconnect()
-            loop = False
-            break
-        except Exception as e:
-            print(f"\nUnexpected error: {e}")
+def local_sysid(config_path: str, number_of_minutes: float, topic_indexes: List[int] = None):
+    """
+    Perform local sysid using specified configuration and topic indexes.
+    Args:
+        config_path (str): Configuration path.
+        number_of_minutes (float): How many minutes of data to sample.
+        topic_indexes (List[int]): Indexes of topics to subscribe to.
+    Returns:
+        mqtt_client (MQTTClient): MQTT client used for publishing results.
+        sysid_output (Dict[str, Any]): System identification output data.
+        aligner_time (str): Sampling frequency.
+    """
+    aligner, mqtt_client, _, fs = setup_sysid(config_path, topic_indexes)
 
-    return loop
+    sysid_output, aligner_time = wait_for_sysid_output(number_of_minutes, aligner, fs)
+    print("Aligned data received at:",aligner_time)
+
+    return mqtt_client, sysid_output, aligner_time
+
+def live_sysid(config_path: str, number_of_minutes: float, topic_indexes: List[int] = None, loop: bool = True):
+    """
+    Perform live sysid using specified configuration and topic indexes.
+    Args:
+        config_path (str): Configuration path.
+        number_of_minutes (float): How many minutes of data to sample.
+        topic_indexes (List[int]): Indexes of topics to subscribe to.
+        loop (bool): Whether to loop the sysid process continuously.
+    Returns:
+    """
+    aligner, mqtt_client, mqtt_config, fs = setup_sysid(config_path, topic_indexes)
+    try:
+        aligner_time_last = datetime.fromisoformat("2025-01-01 01:01:00.00000")
+        while True:
+            sysid_output, aligner_time = wait_for_sysid_output(number_of_minutes,
+                                                                      aligner, fs)
+            publish_sysid_output(mqtt_client, mqtt_config["TopicsToPublish"],
+                                        sysid_output, aligner_time)
+            
+            dt = datetime.fromisoformat(aligner_time)-aligner_time_last
+            print(dt)
+            aligner_time_last = datetime.fromisoformat(aligner_time)
+            
+            if loop is False:
+                break
+    except KeyboardInterrupt:
+        print("\nKeyboard interrupt. Shutting down gracefully")
+    except Exception as e:
+        print(f"\nUnexpected error: {e}")
+    shutdown(mqtt_client,"sysid")

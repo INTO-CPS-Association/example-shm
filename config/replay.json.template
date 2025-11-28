@@ -1,28 +1,26 @@
 {
     "MQTT": {
-        "host": "test.mosquitto.org",
-        "port": 1883,
+        "host": "",
+        "port": 0,
         "userId": "",
         "password": "",
         "ClientID": "ReplaySubscriber",
         "QoS": 1,
-        "TopicsToSubscribe": [
-            "cpsens/recorded/1/data",
-            "cpsens/recorded/1/metadata",
-            "cpsens/recorded/2/data"
-        ]
-      },
-
-    "sysID": {
-      "host": "test.mosquitto.org",
-      "port": 1883,
-      "userId": "",
-      "password": "",
-      "ClientID": "sub.232.sds.213s",
-      "QoS": 1,
-      "TopicsToSubscribe": ["cpsens/d8-3a-dd-f5-92-48/cpsns_Simulator/1_2/oma_results"]
-    }
+        "TopicsToSubscribe": {
+            "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/raw/data": "acc1",
+            "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/raw/metadata": "metadata1",
+            "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/2/acc/raw/data": "acc2",
+            "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/3/acc/raw/data": "acc3",
+            "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/4/acc/raw/data": "acc4"
+        },
+        "TopicsToPublish": {
+            "acc1": "cpsens/recorded/1/data",
+            "metadata1": "cpsens/recorded/1/metadata",
+            "acc2": "cpsens/recorded/2/data",
+            "acc3": "cpsens/recorded/3/data",
+            "acc4": "cpsens/recorded/4/data"
+        }
+      }
 }
-
 
 
