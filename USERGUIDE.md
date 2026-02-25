@@ -47,12 +47,12 @@ Inside `examples/run_sysid.py`, `examples/run_mode_clustering.py`, `examples/run
 the sample time can be changed: `number_of_minutes`.
 
 * **Parameters**
-Inside  `method/constans.py` the parameters for system identification, mode clustering, mode tracking and model updating
+Inside  `method/constants.py` the parameters for system identification, mode clustering, mode tracking and model updating
 can be changed.
 
 * **Model**
 A digital YAFEM model can be added to `models/<your_model>`.
-Inside  `method/constans.py` the model paramters can be set together with the paths to the model folder and the model function file.
+Inside  `method/constants.py` the model paramters can be set together with the paths to the model folder and the model function file.
 
 
 ## Step 1.4 Run examples
@@ -310,7 +310,7 @@ CONFIG_PATH = "config/replay.json"
 RECORDINGS_DIR = "record/mqtt_recordings"
 FILE_NAME = "recording.jsonl"
 
-REPLAY_SPEED = 0.1  # Multiplier for replay speed
+REPLAY_SPEED = 1  # Multiplier for replay speed
 ```
 At the bottom the number of times to loop the replay function can be stated: `replay_mqtt_messages(loop=10) # Times to loop`
 

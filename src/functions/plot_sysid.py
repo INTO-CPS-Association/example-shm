@@ -110,7 +110,7 @@ def plot_stabilization_diagram(
     ax2 = add_plot_annotation(ax2,x,y,y_model_order)
     ax2 = add_plot_standard_flair(ax2,sysid_params)
 
-    ax1.set_title("Damping ratios")
+    ax2.set_title("Damping ratios")
     ax2.set_ylabel("Damping ratio", fontsize=20, color = 'black')
     ax2.set_ylim(0, max(y[~np.isnan(y)])+0.005)
 

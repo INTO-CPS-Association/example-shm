@@ -6,7 +6,7 @@ from functions.calculate_mac import calculate_mac
 def resolve_nonunique_matches(possible_match_id: int, itemindex: np.ndarray[int],
                               result: Dict[str,Any],cluster_dict: Dict[str,Any],
                               tracked_clusters: Dict[str,Any]
-                              ) -> Tuple[int, Dict[str, Any], np.ndarray[int]]:
+                              ) -> Tuple[int, Dict[str, Any]]:
     """
     Resolve if two clusters match with the same tracked cluster.
     Determine what match is the most optimal.
@@ -26,7 +26,6 @@ def resolve_nonunique_matches(possible_match_id: int, itemindex: np.ndarray[int]
     Returns:
         pos (int): Value of cluster that have the most optimal match.
         result (Dict[str,Any]): Dictionary of re-done matches
-        cluster_index (np.ndarray): The indecies of clusters that have the same match
 
     """
     mean_MAC = []
@@ -51,11 +50,9 @@ def resolve_nonunique_matches(possible_match_id: int, itemindex: np.ndarray[int]
     #Find the index with higest mean MAC, i.e. the cluster that match best with the tracked cluster.
     pos = mean_MAC.index(max(mean_MAC))
 
-    cluster_index = itemindex[:,0]
-
     for key in keys:
         if keys[pos] == key: #Let the best cluster match stay
             pass
         else: #Add the clusters with the worst match as a new cluster
             result[key] = "new"
-    return pos, result, cluster_index
+    return pos, result

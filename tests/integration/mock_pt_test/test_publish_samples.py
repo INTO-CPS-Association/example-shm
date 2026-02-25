@@ -19,9 +19,9 @@ from data.comm.mqtt import setup_mqtt_client, load_config
 @pytest.fixture(scope="function")
 def mqtt_client():
     config = load_config("config/test.json")
-    mqtt_config = config["MQTT"].copy()
+    mqtt_config = config["sysid"].copy()
     mqtt_config["ClientID"] = f"test_{uuid.uuid4().hex[:6]}"
-    client, _ = setup_mqtt_client(mqtt_config)
+    client = setup_mqtt_client(mqtt_config)
     client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     client.loop_start()
     time.sleep(1.0)
