@@ -8,7 +8,7 @@ from data.comm.mqtt import (start_mqtt, publish_to_mqtt, shutdown)
 from methods import sysid as sysID
 from methods.mode_clustering_functions.clustering import cluster_func
 from functions.util import (convert_numpy_to_list, _convert_list_to_dict_or_array)
-from functions.plot_sysid import plot_stabilization_diagram
+from functions.plot_sysid import plot_stabilization_diagram, plot_pre_stabilization_diagram
 from functions.plot_clusters import plot_clusters
 
 # pylint: disable=C0103, W0603
@@ -103,15 +103,19 @@ def cluster_plots(plot: List[bool], clusters: Dict[str,Any], sysid_output: Dict[
         fig_axes (List[plt.Fig,plt.Axes]): List of figure and axes of plots
     """
     if plot[0] == 1:
-        fig_ax1 = plot_stabilization_diagram(sysid_output,params,fig_ax=fig_axes[0])
+        fig_ax1 = plot_pre_stabilization_diagram(sysid_output,params,fig_ax=fig_axes[0])
     else:
         fig_ax1 = None
     if plot[1] == 1:
-        fig_ax2 = plot_clusters(clusters,sysid_output,params,fig_ax=fig_axes[1])
+        fig_ax2 = plot_stabilization_diagram(sysid_output,params,fig_ax=fig_axes[1])
     else:
         fig_ax2 = None
+    if plot[2] == 1:
+        fig_ax3 = plot_clusters(clusters,sysid_output,params,fig_ax=fig_axes[2])
+    else:
+        fig_ax3 = None
     plt.show(block=hold)
-    return [fig_ax1, fig_ax2]
+    return [fig_ax1, fig_ax2, fig_ax3]
 
 def cluster_from_local_sysid(config_path: str, number_of_minutes: float,
                            params: Dict[str,Any],
@@ -184,7 +188,7 @@ def subscribe_and_cluster(config: Dict[str,Any], params: Dict[str,Any]
         raise RuntimeError("Keyboard interrupt") from exc
 
 def live_mode_clustering(config: Dict[str,Any], params: Dict[str,Any],
-                        publish: bool = False, plot: List[bool] = [1,1]
+                        publish: bool = False, plot: List[bool] = [1,1,1]
                         ) -> None:
     """
     Subscribes to MQTT broker, receives one sysid message, runs mode clustering, plots results.
@@ -198,7 +202,7 @@ def live_mode_clustering(config: Dict[str,Any], params: Dict[str,Any],
 
     Returns:
     """
-    fig_axes = [None, None]
+    fig_axes = [None, None, None]
     try:
         while True:
             (sysid_output, clusters,
