@@ -13,9 +13,9 @@ from data.accel.metadata_constants import DESCRIPTOR_LENGTH_BYTES
 CONFIG_PATH = "config/replay.json"
 
 RECORDINGS_DIR = "record/mqtt_recordings"
-FILE_NAME = "recording.jsonl"
+FILE_NAME = "recording_beam_reduced.jsonl"
 
-REPLAY_SPEED = 1  # Multiplier for replay speed
+REPLAY_SPEED = 10  # Multiplier for replay speed
 
 BUSY_WAIT_THRESHOLD = 10/1000  # Threshold in seconds for busy waiting (10 ms)
 KEEP_UP_TIME = -1 # If delay time (remaining) is lower than this time, warn the user that the replay speed is two fast.
@@ -103,8 +103,8 @@ def replay_mqtt_messages(loop: int = 1) -> None:
             t_start = time.perf_counter()
             print_t = t_start
             prev_timestamp = None
-            with open(path, "r") as f:
-                for counter, line in enumerate(f):
+            with open(path, "r", encoding="utf-8") as replay_file:
+                for counter, line in enumerate(replay_file):
                     record = json.loads(line.strip())
                     payload = record["payload"]
                     topic_key = record.get("topic")
@@ -112,6 +112,8 @@ def replay_mqtt_messages(loop: int = 1) -> None:
 
                     if isinstance(payload, list):
                         payload_bytes = bytes(payload)
+                    elif isinstance(payload, str):
+                        payload_bytes = bytes.fromhex(payload)
                     else:
                         raise ValueError("Invalid payload format")
                     if "metadata" not in topic_key:
@@ -138,10 +140,18 @@ def replay_mqtt_messages(loop: int = 1) -> None:
                         print("[WARNING] Can't keep up. Replay speed to fast.")
                         print(sleep_time,target_time,time_now)
                     if sleep_time > BUSY_WAIT_THRESHOLD:
-                        time.sleep(sleep_time)
+                        time.sleep(sleep_time - BUSY_WAIT_THRESHOLD)
+                    while time.perf_counter() < target_time:
+                        time.sleep(0)  # Yield CPU while busy-waiting for sub-10ms precision
+
+                    # if sleep_time < KEEP_UP_TIME:
+                    #     print("[WARNING] Can't keep up. Replay speed to fast.")
+                    #     print(sleep_time,target_time,time_now)
+                    # if sleep_time > BUSY_WAIT_THRESHOLD:
+                    #     time.sleep(sleep_time)
                     publish_massage(publish_client,MQTT_config["TopicsToPublish"],qos,topic_key,payload_bytes)
                     prev_timestamp = timestamp
-                f.close()
+                replay_file.close()
                 print(f"[REPLAYED {counter+1}/{total_lines}]")
             t_end = time.perf_counter()
             print(f"\nTime it took to publish: {(t_end-t_start):.3f}s")
@@ -149,6 +159,14 @@ def replay_mqtt_messages(loop: int = 1) -> None:
             print("since_start_counter final",SINCE_START_COUNTER)
             if ii+1 >= loop:
                 print("Restart replay function.")
+            while publish_client._out_messages:
+                remaining_count = len(publish_client._out_messages)
+                text = (
+                    f"Remaining messages to be sent: "
+                    f"{str(remaining_count).zfill(len(str(total_lines)))}"
+                )
+                time.sleep(1)
+                print(text, end="\r")
         publish_client.loop_stop()
     except KeyboardInterrupt:
         print("Keyboard interrupt.")
