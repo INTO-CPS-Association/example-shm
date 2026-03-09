@@ -62,6 +62,7 @@ def plot_clusters(clusters: Dict[str,dict],
 
     ax1.set_ylabel("Model order", fontsize=20, color = 'black')
     ax1.set_ylim(0, sysid_params['model_order'] + 1)
+    ax1.set_title("Clustered stabilization diagram")
     if legend is True:
         ax1.legend(prop={'size': 10})
     ax1.set_title(f"Clustered stabilization diagram. Data set: {title_number}")
