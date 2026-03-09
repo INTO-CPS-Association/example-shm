@@ -70,8 +70,6 @@ def plot_stabilization_diagram(
         sysid_params: Dict[str, Any],
         fig_ax)-> Tuple[matplotlib.figure.Figure,
                         Tuple[matplotlib.axes.Axes,matplotlib.axes.Axes]]:
-        fig_ax)-> Tuple[matplotlib.figure.Figure,
-                        Tuple[matplotlib.axes.Axes,matplotlib.axes.Axes]]:
     """
     Plot stabilization of sysid data before after pre-cleaning
 
