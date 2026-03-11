@@ -15,7 +15,7 @@ CONFIG_PATH = "config/replay.json"
 RECORDINGS_DIR = "record/mqtt_recordings"
 FILE_NAME = "recording_beam_reduced.jsonl"
 
-REPLAY_SPEED = 10  # Multiplier for replay speed
+REPLAY_SPEED = 1  # Multiplier for replay speed
 
 BUSY_WAIT_THRESHOLD = 10/1000  # Threshold in seconds for busy waiting (10 ms)
 KEEP_UP_TIME = -1 # If delay time (remaining) is lower than this time, warn the user that the replay speed is two fast.
@@ -23,6 +23,8 @@ PRINT_INTERVAL = 5
 
 SINCE_START_COUNTER = {}
 BATCH_SIZE = 16
+
+LOOPS = 1 # Number of times to loop over the recording
 
 
 def override_counter_in_payload(topic_key,payload_bytes) -> None:
@@ -93,9 +95,9 @@ def replay_mqtt_messages(loop: int = 1) -> None:
         print(f"[Error] {e}")
 
     try:
-        with open(path, "r") as f:
-            total_lines = len(f.readlines())
-            f.close()
+        with open(path, "r", encoding="utf-8") as replay_file:
+            total_lines = len(replay_file.readlines())
+            replay_file.close()
         publish_client.loop_start()
         for ii in range(loop):
             print(f"Replay function iteration {ii+1}/{loop}.")
@@ -144,19 +146,14 @@ def replay_mqtt_messages(loop: int = 1) -> None:
                     while time.perf_counter() < target_time:
                         time.sleep(0)  # Yield CPU while busy-waiting for sub-10ms precision
 
-                    # if sleep_time < KEEP_UP_TIME:
-                    #     print("[WARNING] Can't keep up. Replay speed to fast.")
-                    #     print(sleep_time,target_time,time_now)
-                    # if sleep_time > BUSY_WAIT_THRESHOLD:
-                    #     time.sleep(sleep_time)
                     publish_massage(publish_client,MQTT_config["TopicsToPublish"],qos,topic_key,payload_bytes)
                     prev_timestamp = timestamp
                 replay_file.close()
                 print(f"[REPLAYED {counter+1}/{total_lines}]")
             t_end = time.perf_counter()
             print(f"\nTime it took to publish: {(t_end-t_start):.3f}s")
-            print("Messages per second:",total_lines/(t_end-t_start))
-            print("since_start_counter final",SINCE_START_COUNTER)
+            print("Published messages per second:",total_lines/(t_end-t_start))
+            print("Since_start_counter final",SINCE_START_COUNTER)
             if ii+1 >= loop:
                 print("Restart replay function.")
             while publish_client._out_messages:
@@ -176,4 +173,4 @@ def replay_mqtt_messages(loop: int = 1) -> None:
         print("[DONE].")
 
 if __name__ == "__main__":
-    replay_mqtt_messages(loop=2) # Times to loop
+    replay_mqtt_messages(loop=LOOPS) # Times to loop

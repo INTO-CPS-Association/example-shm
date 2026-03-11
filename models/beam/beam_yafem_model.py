@@ -14,13 +14,13 @@ def eval_yafem_model(pars=None):
     l1  = pars.setdefault('l1' ,0.030)  # [m] distance from the beam top to the top accelerometer
     l2  = pars.setdefault('l2' ,0.0675) # [m] distance between the accelerometers 0.0675
     l3  = pars.setdefault('l3' ,0.070)  # [m] distance between the supports
-    l4   = pars.setdefault('l4'  ,0.130)  # [m] VARIABLE approx. the depth of the "ground"
+    l4   = pars.setdefault('l4'  ,0.1289)  # [m] VARIABLE approx. the depth of the "ground"
     E   = pars.setdefault('E'  ,200e9)  # [Pa] Young modulus, normal steel
     b   = pars.setdefault('b'  ,29e-3)  # [m] width of the ruler
     h   = pars.setdefault('h'  ,1e-3)   # [m] thichness of the ruler
     rho = pars.setdefault('rho',7850)   # [kg/m3] density of the steel
     m   = pars.setdefault('m'  ,15e-3)  # [kg] VARIABLE tip mass
-    k_rot = pars.setdefault('k_rot' ,3.5e3) # [Nm/rad] VARIABLE rotational stiffness
+    k_rot = pars.setdefault('k_rot' ,10) # [Nm/rad] VARIABLE rotational stiffness
     modes = pars.setdefault('modes' ,3)
     dofs_sel = pars.setdefault('dofs_sel',np.array([1,1]))
 
@@ -59,7 +59,7 @@ def eval_yafem_model(pars=None):
     mass_pars['dofs'] = np.array([[8,1]])
     mass_tip = MCK(myNodes,mass_pars)
 
-    # # springs
+    # springs
     spring_pars = {}
     spring_pars['K'] = np.array([[k_rot,0],[0,k_rot]])
     spring_pars['dofs'] = np.array([[3,3],[2,3]])
@@ -136,4 +136,4 @@ def eval_yafem_model(pars=None):
     idxs_sel = myModel.find_dofs(dofs_sel)
     phi_sel = phi[idxs_sel,:]
 
-    return omega, phi, phi_sel, myModel
+    return omega, phi, phi_sel, myModel, mySimulation

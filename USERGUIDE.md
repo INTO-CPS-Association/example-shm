@@ -124,7 +124,7 @@ poetry build
 ```
 
 This will create a `.whl` file in the `dist/` directory,
-e.g., `dist/cp_sens-0.6.0-py3-none-any.whl`.
+e.g., `dist/cp_sens-0.6.1-py3-none-any.whl`.
 
 ### Step 2.2: Create and Activate a Virtual Environment
 
@@ -141,7 +141,7 @@ pip install example_shm-<version>-py3-none-any.whl
 ```
 
 Replace `<version>` with the version number found in the `.whl`
-filename. (e.g `0.6.0`).
+filename. (e.g `0.6.1`).
 
 ## Step 2.4: Create Configuration
 
@@ -226,7 +226,6 @@ Options:
 Commands:
   accelerometers
   align-readings
-  align-readings-plot
   clustering-with-local-sysid
   clustering-with-remote-sysid
   live-clustering-with-remote-sysid
@@ -256,13 +255,6 @@ To run the examples with a custom config, use:
 $example-shm
 Usage: example-shm  --config <config-file> accelerometers
 ```
-
-
-
-
-
-
-
 
 ## Distributed Setup Overview
 
