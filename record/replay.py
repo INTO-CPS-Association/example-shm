@@ -15,7 +15,7 @@ CONFIG_PATH = "config/replay.json"
 RECORDINGS_DIR = "record/mqtt_recordings"
 FILE_NAME = "recording_beam_reduced.jsonl"
 
-REPLAY_SPEED = 1  # Multiplier for replay speed
+REPLAY_SPEED = 10  # Multiplier for replay speed
 
 BUSY_WAIT_THRESHOLD = 10/1000  # Threshold in seconds for busy waiting (10 ms)
 KEEP_UP_TIME = -1 # If delay time (remaining) is lower than this time, warn the user that the replay speed is two fast.
@@ -75,7 +75,7 @@ def publish_massage(publish_client: MQTTClient, PublishTopics: Dict[str,str], qo
     except KeyboardInterrupt:
         raise RuntimeError("Replay interrupted by user.")
 
-def replay_mqtt_messages(loop: int = 1) -> None:
+def replay_mqtt_messages(config_path: str, loop: int = 1) -> None:
     """
     Replay data using jsonl file
     
@@ -84,7 +84,7 @@ def replay_mqtt_messages(loop: int = 1) -> None:
     Returns:
         None
     """
-    config = load_config(CONFIG_PATH)
+    config = load_config(config_path)
     MQTT_config = config["MQTT"]
     publish_client = setup_publish_client(MQTT_config)
     try:
@@ -173,4 +173,4 @@ def replay_mqtt_messages(loop: int = 1) -> None:
         print("[DONE].")
 
 if __name__ == "__main__":
-    replay_mqtt_messages(loop=LOOPS) # Times to loop
+    replay_mqtt_messages(CONFIG_PATH, loop=LOOPS) # Times to loop
