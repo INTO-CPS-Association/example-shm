@@ -1,8 +1,5 @@
 import numpy as np
-import sys
-from pathlib import Path
-sys.path.append(Path.cwd().__str__())
-from models.beam import beam_yafem_model as model
+from beam import beam_yafem_model as model
 
 # Constants for sysID
 WAIT_METADATA = 11 # Wait max 11 seconds for getting metadata message
