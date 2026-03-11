@@ -40,6 +40,7 @@ def plot_pre_stabilization_diagram(
     ax1 = add_plot_standard_flair(ax1,sysid_params)
 
     ax1.set_title("Stabilization diagram (pre-cleaning)")
+    ax1.set_title("Stabilization diagram (pre-cleaning)")
     ax1.set_ylabel("Model order", fontsize=20, color = 'black')
     ax1.set_ylim(0, sysid_params['model_order'] + 1)
 
@@ -52,6 +53,7 @@ def plot_pre_stabilization_diagram(
     ax2 = add_plot_annotation(ax2,x,y,y_model_order)
     ax2 = add_plot_standard_flair(ax2,sysid_params)
 
+    ax2.set_title("Damping ratios")
     ax2.set_title("Damping ratios")
     ax2.set_ylabel("Damping ratio", fontsize=20, color = 'black')
     ax2.set_ylim(0, max(y[~np.isnan(y)])+0.005)
@@ -72,6 +74,8 @@ def plot_stabilization_diagram(
     Plot stabilization of sysid data before after pre-cleaning
 
     Args:
+        sysid_results (Dict[str, Any]): PyOMA results
+        sysid_params (Dict[str, Any]): sysid parameters
         sysid_results (Dict[str, Any]): PyOMA results
         sysid_params (Dict[str, Any]): sysid parameters
     Returns:
@@ -110,7 +114,7 @@ def plot_stabilization_diagram(
     ax2 = add_plot_annotation(ax2,x,y,y_model_order)
     ax2 = add_plot_standard_flair(ax2,sysid_params)
 
-    ax1.set_title("Damping ratios")
+    ax2.set_title("Damping ratios")
     ax2.set_ylabel("Damping ratio", fontsize=20, color = 'black')
     ax2.set_ylim(0, max(y[~np.isnan(y)])+0.005)
 

@@ -40,17 +40,19 @@ def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_cluste
         #Get mode shapes
         cluster = cluster_dict[key]
         omega = cluster['median_f']
-        phi = cluster['mode_shapes'][0]
         phi_all = cluster['mode_shapes']
 
         MAC_list = []
         R_freq = []
         MAC_max_list = []
-        MAC_avg_list = []
         for key_t in tracked_clusters: #Go through all tracked clusters.
             #They are identified with keys which are integers from 0 up to total number of clusters
             if key_t == 'iteration':
                 pass
+            elif key_t in skip_tracked_cluster:
+                MAC_max = np.max(0)
+                MAC_max_list.append(0)
+                R_freq.append(10**6)
             else:
                 #Accessing all cluster in a tracked cluster group
                 tracked_cluster_list = tracked_clusters[key_t]
@@ -58,10 +60,6 @@ def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_cluste
                 for ii in range(n_last_tracked_clusters):
                     tracked_cluster = tracked_cluster_list[-1*(ii+1)]
 
-                    #median freq of last cluster in tracked cluster group
-                    omega_t = tracked_cluster['median_f']
-                    if omega_t < 0.0001:
-                        omega_t = 0.0001
                     #phi of last cluster in tracked cluster group
                     phi_t_all = tracked_cluster['mode_shapes']
 
@@ -74,25 +72,22 @@ def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_cluste
                     if np.max(MAC_matrix) > params['phi_cri']:
                         break
 
-                if key_t in skip_tracked_cluster:
-                    MAC_avg = np.mean(0)
-                    MAC_max = np.max(0)
-                    MAC_max_list.append(0)
-                    MAC_avg_list.append(0)
-                    R_freq.append(10**6)
-                else:
-                    MAC_avg = np.mean(MAC_matrix)
-                    MAC_max = np.max(MAC_matrix)
-                    MAC_max_list.append(MAC_max)
-                    MAC_avg_list.append(MAC_avg)
-                    R_freq.append(abs(omega_t-omega)/omega_t)
+                MAC_max = np.max(MAC_matrix) #Max MAC value between cluster and tracked cluster
+                MAC_max_list.append(MAC_max) 
+                #median freq of last cluster in tracked cluster group
+                tracked_cluster = tracked_cluster_list[-1]
+                omega_t = tracked_cluster['median_f']
+                if omega_t < 0.0001: #For cases where the tracked cluster has a frequency of 0
+                    omega_t = 0.0001
+
+                R_freq.append(abs(omega_t-omega)/omega_t) #Relative frequency difference
 
         #Find where the cluster matches the tracked cluster regarding the MAC criteria
         itemindex1 = np.argwhere(np.array(MAC_max_list) > params['phi_cri'])
         #Find where the cluster matches the tracked cluster regarding the MAC and frequency criteria
         itemindex = np.argwhere(np.array(R_freq)[itemindex1[:,0]] < params['freq_cri'])
         indicies = itemindex1[itemindex[:,0]]
-        if len(indicies) > 1: #If two or more clusters combly with the mode shape criteria
+        if len(indicies) > 1: #If two or more clusters combly with the criteria
             X_list = []
             R_f_list = []
             MAC_list = []

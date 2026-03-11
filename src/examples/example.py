@@ -24,6 +24,7 @@ from examples.run_model_update import (
     run_model_update_remote_sysid,
     run_live_model_update_remote_clustering
 )
+from examples.run_replay import replay_mqtt
 
 @click.group()
 @click.option('--config', default="config/production.json", help="Path to config file")
@@ -41,6 +42,11 @@ def accelerometers(ctx):
 @click.pass_context
 def align_readings(ctx):
     align_acceleration_readings(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def replay(ctx):
+    replay_mqtt(ctx.obj["CONFIG"])
 
 @cli.command()
 @click.pass_context

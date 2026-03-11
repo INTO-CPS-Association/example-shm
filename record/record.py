@@ -7,8 +7,8 @@ from paho.mqtt.client import Client as MQTTClient, CallbackAPIVersion, MQTTv5
 from data.comm.mqtt import load_config
 
 # MQTT Configuration
-config_path = "config/replay.json"
-config = load_config(config_path)
+CONFIG_PATH = "config/replay.json"
+config = load_config(CONFIG_PATH)
 MQTT_CONFIG = config["MQTT"]
 
 RECORDINGS_DIR = "record/mqtt_recordings"
@@ -32,6 +32,7 @@ def on_connect(client, userdata, flags, rc, properties):
 
 def on_message(client, userdata, msg):
     topic = msg.topic
+    print("topic",topic)
     if topic in MQTT_CONFIG["TopicsToSubscribe"]:
         timestamp = datetime.datetime.now(datetime.UTC).replace(tzinfo=None).isoformat()
         record = {

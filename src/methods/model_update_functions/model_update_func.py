@@ -40,7 +40,7 @@ def update_model(cluster_dict: Dict[str,Any], model_func: Callable[[Dict[str,Any
                 model_pars[key] = X[idx]
                 idx += 1
         updated_model_parameters = model_pars
-        omegaMU, _, __, ___ = model_func(updated_model_parameters)
+        omegaMU, _, __, ___, ____ = model_func(updated_model_parameters)
 
     except ValueError as e:
         print(f"Skipping model updating due to error: {e}")
@@ -81,7 +81,7 @@ def estimate_parameters(theta_star: List[float], cluster_dict: Dict[str,Any],
             model_parameters[key] = theta_star[idx]
             idx += 1
     # Call FE solver to get model frequencies and mode shapes
-    omegaM, _, PhiM, __ = model_func(model_parameters)
+    omegaM, _, PhiM, __, ___ = model_func(model_parameters)
 
     # Mode Pairing Start
     (paired_frequencies, paired_mode_shapes, omegaM, PhiM

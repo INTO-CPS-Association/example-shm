@@ -227,7 +227,7 @@ def live_sysid(config_path: str, number_of_minutes: float, topic_indexes: List[i
                                         sysid_output, aligner_time)
             
             dt = datetime.fromisoformat(aligner_time)-aligner_time_last
-            print(dt)
+            print("Time passed",dt)
             aligner_time_last = datetime.fromisoformat(aligner_time)
             
             if loop is False:

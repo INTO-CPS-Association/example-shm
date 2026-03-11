@@ -47,12 +47,12 @@ Inside `examples/run_sysid.py`, `examples/run_mode_clustering.py`, `examples/run
 the sample time can be changed: `number_of_minutes`.
 
 * **Parameters**
-Inside  `method/constans.py` the parameters for system identification, mode clustering, mode tracking and model updating
+Inside  `method/constants.py` the parameters for system identification, mode clustering, mode tracking and model updating
 can be changed.
 
 * **Model**
 A digital YAFEM model can be added to `models/<your_model>`.
-Inside  `method/constans.py` the model paramters can be set together with the paths to the model folder and the model function file.
+Inside  `method/constants.py` the model paramters can be set together with the paths to the model folder and the model function file.
 
 
 ## Step 1.4 Run examples
@@ -124,7 +124,7 @@ poetry build
 ```
 
 This will create a `.whl` file in the `dist/` directory,
-e.g., `dist/cp_sens-0.6.0-py3-none-any.whl`.
+e.g., `dist/cp_sens-0.6.1-py3-none-any.whl`.
 
 ### Step 2.2: Create and Activate a Virtual Environment
 
@@ -141,7 +141,7 @@ pip install example_shm-<version>-py3-none-any.whl
 ```
 
 Replace `<version>` with the version number found in the `.whl`
-filename. (e.g `0.6.0`).
+filename. (e.g `0.6.1`).
 
 ## Step 2.4: Create Configuration
 
@@ -226,7 +226,6 @@ Options:
 Commands:
   accelerometers
   align-readings
-  align-readings-plot
   clustering-with-local-sysid
   clustering-with-remote-sysid
   live-clustering-with-remote-sysid
@@ -256,13 +255,6 @@ To run the examples with a custom config, use:
 $example-shm
 Usage: example-shm  --config <config-file> accelerometers
 ```
-
-
-
-
-
-
-
 
 ## Distributed Setup Overview
 
@@ -310,7 +302,7 @@ CONFIG_PATH = "config/replay.json"
 RECORDINGS_DIR = "record/mqtt_recordings"
 FILE_NAME = "recording.jsonl"
 
-REPLAY_SPEED = 0.1  # Multiplier for replay speed
+REPLAY_SPEED = 1  # Multiplier for replay speed
 ```
 At the bottom the number of times to loop the replay function can be stated: `replay_mqtt_messages(loop=10) # Times to loop`
 

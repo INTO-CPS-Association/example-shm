@@ -65,7 +65,7 @@ def plot_clusters(clusters: Dict[str,dict],
     ax1.set_title("Clustered stabilization diagram")
     if legend is True:
         ax1.legend(prop={'size': 10})
-    ax1.set_title(f"Data set: {title_number}")
+    ax1.set_title(f"Clustered stabilization diagram. Data set: {title_number}")
 
     # # # ............................................................................
 
