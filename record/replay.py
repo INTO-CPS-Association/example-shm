@@ -1,7 +1,7 @@
-import os
 import json
 import time
 import struct
+from pathlib import Path
 from typing import Dict
 from datetime import datetime
 from paho.mqtt.client import Client as MQTTClient
@@ -12,7 +12,7 @@ from data.accel.metadata_constants import DESCRIPTOR_LENGTH_BYTES
 # MQTT Configuration
 CONFIG_PATH = "config/replay.json"
 
-RECORDINGS_DIR = "record/mqtt_recordings"
+RECORDINGS_DIR = Path(__file__).parent / "mqtt_recordings"
 FILE_NAME = "recording_beam_reduced.jsonl"
 
 REPLAY_SPEED = 10  # Multiplier for replay speed
@@ -88,8 +88,8 @@ def replay_mqtt_messages(config_path: str, loop: int = 1) -> None:
     MQTT_config = config["MQTT"]
     publish_client = setup_publish_client(MQTT_config)
     try:
-        path = os.path.join(RECORDINGS_DIR, FILE_NAME)
-        if not os.path.exists(path):
+        path = RECORDINGS_DIR / FILE_NAME
+        if not path.exists():
             raise ValueError(f"[Error] File not found: {path}")
     except Exception as e:
         print(f"[Error] {e}")
@@ -154,7 +154,7 @@ def replay_mqtt_messages(config_path: str, loop: int = 1) -> None:
             print(f"\nTime it took to publish: {(t_end-t_start):.3f}s")
             print("Published messages per second:",total_lines/(t_end-t_start))
             print("Since_start_counter final",SINCE_START_COUNTER)
-            if ii+1 >= loop:
+            if ii+1 > loop:
                 print("Restart replay function.")
             while publish_client._out_messages:
                 remaining_count = len(publish_client._out_messages)
