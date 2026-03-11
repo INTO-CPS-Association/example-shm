@@ -63,9 +63,9 @@ def cluster_expansion(cluster: Dict[str,Any], data: Dict[str,Any],
         index_f = np.argwhere(cluster_points['f'] == cluster['f'])
     if len(index_f[:,0]) > 1:
         index_row = np.argwhere(cluster_points['row'][index_f[:,0]] == cluster['row'][0])
-        ip_id = int(index_f[index_row[:,0]][:,0])
+        ip_id = int(index_f[index_row[0,0],0])
     else:
-        ip_id = int(index_f[:,0])
+        ip_id = int(index_f[0,0])
     indecies = list(range(len(cluster_points['f'])))
     poped_id = indecies.pop(ip_id)
     indecies.insert(0,poped_id)
