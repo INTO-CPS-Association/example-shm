@@ -19,7 +19,7 @@ from data.comm.mqtt import setup_mqtt_client, load_config
 @pytest.fixture(scope="function")
 def mqtt_client():
     config = load_config("config/test.json")
-    mqtt_config = config["MQTT"].copy()
+    mqtt_config = config["sysid"].copy()
     mqtt_config["ClientID"] = f"test_{uuid.uuid4().hex[:6]}"
     client = setup_mqtt_client(mqtt_config,mqtt_config["TopicsToSubscribe"][0])
     client.connect(mqtt_config["host"], mqtt_config["port"], 60)
