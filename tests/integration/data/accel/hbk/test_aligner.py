@@ -19,7 +19,7 @@ def mqtt_client_and_config():
     mqtt_config = config["MQTT"].copy()
     mqtt_config["ClientID"] = f"test_{uuid.uuid4().hex[:6]}"
 
-    client, _ = setup_mqtt_client(mqtt_config, topic_index=0)
+    client = setup_mqtt_client(mqtt_config, mqtt_config["TopicsToSubscribe"][0])
     client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     client.loop_start()
     time.sleep(connect_delay)
@@ -37,7 +37,7 @@ def mqtt_setup():
     mqtt_config["ClientID"] = f"test_{uuid.uuid4().hex[:6]}"
 
     # Setup MQTT client once
-    client, _ = setup_mqtt_client(mqtt_config, 0)
+    client = setup_mqtt_client(mqtt_config, mqtt_config["TopicsToSubscribe"][0])
     client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     client.loop_start()
     time.sleep(connect_delay)
