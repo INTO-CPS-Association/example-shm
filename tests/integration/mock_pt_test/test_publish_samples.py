@@ -19,9 +19,9 @@ from data.comm.mqtt import setup_mqtt_client, load_config
 @pytest.fixture(scope="function")
 def mqtt_client():
     config = load_config("config/test.json")
-    mqtt_config = config["sysid"].copy()
+    mqtt_config = config["MQTT"].copy()
     mqtt_config["ClientID"] = f"test_{uuid.uuid4().hex[:6]}"
-    client = setup_mqtt_client(mqtt_config)
+    client = setup_mqtt_client(mqtt_config,mqtt_config["TopicsToSubscribe"][0])
     client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     client.loop_start()
     time.sleep(1.0)
@@ -81,7 +81,7 @@ def test_main_falls_back_when_offset_config_is_corrupt(mock_file):
             }
         }
         mock_sensor.return_value = MagicMock()
-        mock_mqtt.return_value = (MagicMock(), "topic")
+        mock_mqtt.return_value = (MagicMock()) #, "topic"
         with patch("pt_mock.publish_samples.time.sleep", return_value=None):
             main(run_once=True)
         assert mock_send.call_count == 2

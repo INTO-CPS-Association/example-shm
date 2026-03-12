@@ -58,8 +58,8 @@ def test_setup_mqtt_client_invalid_index():
         "port": 1883
     }
 
-    with pytest.raises(ValueError):
-        setup_mqtt_client(dummy_config, topic_index=5)
+    with pytest.raises(IndexError):
+        setup_mqtt_client(dummy_config, dummy_config["TopicsToSubscribe"][5])
 
 
 def test_on_connect_callback_failure():
@@ -118,7 +118,7 @@ def test_setup_mqtt_client():
         "port": 1883
     }
     # Unpack the returned tuple
-    client, selected_topic = setup_mqtt_client(dummy_config)
+    client = setup_mqtt_client(dummy_config, dummy_config["TopicsToSubscribe"][0])
 
     # Check that the client has the correct client_id.
     client_id = client._client_id.decode() if isinstance(client._client_id, bytes) else client._client_id

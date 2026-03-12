@@ -118,7 +118,8 @@ def test_publish_oma_results_retries_and_publishes_once(mocker):
     aligner = MagicMock()
     aligner.client = MagicMock()
 
-    publish_sysid_output(0.1, aligner, mock_client, "test/topic", fs)
+    # publish_sysid_output(0.1, aligner, mock_client, "test/topic", fs)
+    publish_sysid_output(mock_client, ["test/topic"], 0.1, fs)
 
     assert mock_client.publish.called
     assert mock_client.publish.call_count == 1
@@ -129,15 +130,16 @@ def test_setup_client_with_multiple_topics(mocker):
     mqtt_config = {
         "host": "localhost",
         "port": 1883,
-        "topics": ["topic1", "topic2"]
+        "TopicsToSubscribe": ["topic1", "topic2"]
     }
 
     extract_mock = mocker.patch("methods.sysid.extract_fs_from_metadata", return_value=123.0)
 
     mock_mqtt_client = MagicMock()
-    mocker.patch("methods.sysid.setup_mqtt_client", return_value=(mock_mqtt_client, None))
+    mocker.patch("methods.sysid.setup_mqtt_client", return_value=(mock_mqtt_client))
 
     client, fs = setup_client(mqtt_config)
+    client.loop_stop()
 
     extract_mock.assert_called_once_with(mqtt_config)
     client.connect.assert_called_once_with("localhost", 1883, 60)
