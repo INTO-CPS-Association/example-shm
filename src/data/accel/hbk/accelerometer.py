@@ -100,8 +100,13 @@ class Accelerometer(IAccelerometer):
         with self._lock:
             if not self.data_map:
                 return None
-            first_key = next(iter(self.data_map))
-            return len(self.data_map[first_key])
+            x = iter(self.data_map)
+            first_key = next(x)
+            try:
+                second_key = next(x) #If second key exist then return the batchsize of this, since first_key may not be a full batch after extraction.
+                return len(self.data_map[second_key])
+            except:
+                return len(self.data_map[first_key])
 
 
     def get_sorted_keys(self) -> List[int]:

@@ -13,7 +13,7 @@ def align_acceleration_readings(config_path):
     mqtt_client.connect(sysid_config["host"], sysid_config["port"], 60)
     mqtt_client.loop_start()
 
-    aligner = Aligner(mqtt_client, topics=all_topics, map_size=2560)
+    aligner = Aligner(mqtt_client, topics=all_topics)
 
     while True:
         time.sleep(1)
