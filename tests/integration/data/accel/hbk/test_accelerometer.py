@@ -19,14 +19,16 @@ def mqtt_client():
     mqtt_config["ClientID"] = f"test_{uuid.uuid4().hex[:6]}"  
 
     topic_index = 0  
-    client, selected_topic = setup_mqtt_client(mqtt_config, topic_index)  
+    client = setup_mqtt_client(mqtt_config, topic_index)  
 
     client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     client.loop_start()  
     connect_delay = float(os.environ.get("MQTT_CONNECT_DELAY"))
     time.sleep(connect_delay)  
 
-    yield client, selected_topic
+    topic = mqtt_config["TopicsToSubscribe"][0]
+
+    yield client, topic
     client.loop_stop()
     client.disconnect()
 

@@ -104,7 +104,7 @@ class TestPublishUnit(unittest.TestCase):
         mock_load_config.return_value = {
             "MQTT": {
                 "ClientID": "test-client",
-                "host": "mqtt.eclipseprojects.io",
+                "host": "public.mqttserver.eu",
                 "port": 1883,
                 "userId": "",
                 "password": "",

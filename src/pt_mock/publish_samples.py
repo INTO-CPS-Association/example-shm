@@ -196,8 +196,8 @@ def main(config_path: str = "config/R-PI.json",
          offset_path: str = "config/offset.json",
          run_once: bool = False) -> None:
     config = load_config(config_path)
-    mqtt_config = config["sysid"]
-    mqtt_client, _, _ = setup_mqtt_client(mqtt_config)
+    mqtt_config = config["MQTT"]
+    mqtt_client = setup_mqtt_client(mqtt_config,mqtt_config["TopicsToSubscribe"][0])
 
     mqtt_client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     mqtt_client.loop_start()
