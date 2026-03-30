@@ -5,6 +5,7 @@ from methods.mode_clustering_functions.create_cluster import cluster_creation
 from methods.mode_clustering_functions.expand_cluster import cluster_expansion
 from methods.mode_clustering_functions.initialize_Ip import cluster_initial
 from methods.mode_clustering_functions.align_clusters import alignment
+from functions.calculate_mac import calculate_mac
 # pylint: disable=C0103
 
 # Following the algorithm proposed here: https://doi.org/10.1007/978-3-031-61421-7_56
@@ -75,16 +76,18 @@ def cluster_func(sysid_output: Dict[str,Any],
             kk = 0
             while expansion:
                 kk += 1
-                if kk > 10:
-                    raise RuntimeError("Expansion never ends, something is wrong.")
                 prev_cluster = clusters
                 clusters_expan = cluster_expansion(clusters,data2,params)
-                if clusters_expan['f'].shape == prev_cluster['f'].shape:
-                    if (clusters_expan['f'] == prev_cluster['f']).all():
-                        expansion = False
-                    else:
-                        clusters = clusters_expan
+                if ((clusters_expan['f'].shape == prev_cluster['f'].shape) and
+                    ((clusters_expan['f'] == prev_cluster['f']).all())):
+                    expansion = False
                 else:
+                    if kk > 10: #If expansion does not end
+                        if np.mean(clusters['MAC']) > np.mean(prev_cluster['MAC']):
+                            clusters_expan = clusters
+                        else:
+                            clusters_expan = prev_cluster
+                        expansion = False
                     clusters = clusters_expan
 
             #Sort if more than one pole exist in the cluster

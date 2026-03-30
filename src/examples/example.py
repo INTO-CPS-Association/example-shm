@@ -26,6 +26,10 @@ from examples.run_model_update import (
 )
 from examples.run_replay import replay_mqtt
 
+from examples.run_virtual_sensing import run_virtual_sensing
+
+from examples.run_stress_estimation import run_stress_and_strain_estimation
+
 @click.group()
 @click.option('--config', default="config/production.json", help="Path to config file")
 @click.pass_context
@@ -117,6 +121,16 @@ def live_model_update_with_remote_sysid(ctx):
 @click.pass_context
 def live_model_update_with_remote_clustering(ctx):
     run_live_model_update_remote_clustering(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def virtual_sensing(ctx):
+    run_virtual_sensing(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def stress_strain_estimation(ctx):
+    run_stress_and_strain_estimation(ctx.obj["CONFIG"])
 
 if __name__ == "__main__":
     cli(obj={})

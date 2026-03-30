@@ -80,6 +80,7 @@ def replay_mqtt_messages(config_path: str, loop: int = 1) -> None:
     Replay data using jsonl file
     
     Args:
+        config_path (str): Path to config file
         loop (int): Number of times to loop the recorded data
     Returns:
         None

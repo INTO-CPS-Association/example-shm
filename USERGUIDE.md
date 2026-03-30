@@ -124,7 +124,7 @@ poetry build
 ```
 
 This will create a `.whl` file in the `dist/` directory,
-e.g., `dist/cp_sens-0.6.1-py3-none-any.whl`.
+e.g., `dist/cp_sens-0.6.2-py3-none-any.whl`.
 
 ### Step 2.2: Create and Activate a Virtual Environment
 
@@ -141,7 +141,7 @@ pip install example_shm-<version>-py3-none-any.whl
 ```
 
 Replace `<version>` with the version number found in the `.whl`
-filename. (e.g `0.6.1`).
+filename. (e.g `0.6.2`).
 
 ## Step 2.4: Create Configuration
 
@@ -237,6 +237,8 @@ Commands:
   mode-tracking-with-local-sysid
   mode-tracking-with-remote-sysid
   model-update-with-local-sysid
+  virtual-sensing
+  stress-strain-estimation
   sysid-and-plot
   sysid-and-print
   sysid-and-publish

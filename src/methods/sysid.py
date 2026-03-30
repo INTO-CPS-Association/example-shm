@@ -71,7 +71,7 @@ def setup_client(mqtt_config: Dict[str, Any]) -> Tuple[MQTTClient, float]:
     try:
         fs = extract_fs_from_metadata(mqtt_config)
     except Exception:
-        print("Failed to extract FS from metadata. Using DEFAULT_FS.")
+        print("Failed to extract FS from metadata. Using DEFAULT_FS = ",DEFAULT_FS)
         fs = DEFAULT_FS
 
     data_client = setup_mqtt_client(mqtt_config, mqtt_config["TopicsToSubscribe"][0])
@@ -133,7 +133,7 @@ def get_sysid_output(
         sysid_output = sysid(data, PARAMS)
         return sysid_output, aligner_time.isoformat()
     except Exception as e:
-        print(f"sysID failed: {e}")
+        print(f"SysID failed: {e}")
         return None, None
 
 def wait_for_sysid_output(number_of_minutes: float, aligner: Aligner,
