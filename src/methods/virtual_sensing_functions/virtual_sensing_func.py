@@ -1,11 +1,11 @@
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 import numpy as np
 
 from methods.constants import (MODEL_FUNC)
-from functions.data_filtering import filter
+from functions.data_filtering import signal_filter
 from methods.virtual_sensing_functions.integration import frequency_based_integration
 
-def displacement_estimation(data: np.ndarray[float], params: Dict[str,Any], model_pars: Dict[str,Any]) -> np.ndarray[float]:
+def displacement_estimation(data: np.ndarray[float], params: Dict[str,Any], model_pars: Dict[str,Any]) -> Tuple[np.ndarray[float],np.ndarray[float]]:
     """
         Apply modal expansion to estimate data at all DOFs.
 
@@ -16,6 +16,7 @@ def displacement_estimation(data: np.ndarray[float], params: Dict[str,Any], mode
 
         Returns:
             d_hat (np.ndarray[float]): Estimated displacements at all DOFs
+            a_hat (np.ndarray[float]): Estimated accelerations at all DOFs
 
     """
     # Experimental data transformation
@@ -28,14 +29,14 @@ def displacement_estimation(data: np.ndarray[float], params: Dict[str,Any], mode
         N -= 1
         y = y[:, :N]
 
-    y = filter(y,params) #Apply filter
+    y = signal_filter(y,params) #Apply filter
 
     #Integration:
     disp = frequency_based_integration(y,params,order=params.get('detrend_integration_order',1))
     
     # Find non-measured DOF
-    model_pars['modes'] = params['expansion_modes'] #Number of model modes g must be <= to n_m
-    model_pars['dofs_sel'] = params['sensor_loc']
+    model_pars['modes'] = params['expansion_modes'].copy() #Number of model modes g must be <= to n_m
+    model_pars['dofs_sel'] = params['sensor_loc'].copy()
     _, __, __, myModel, ____ = MODEL_FUNC(model_pars)
     model_pars['dofs_sel'] = myModel.dofs
     _, __, Phi_selected, myModel2, ___ = MODEL_FUNC(model_pars)

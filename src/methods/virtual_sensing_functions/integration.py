@@ -7,8 +7,7 @@ def frequency_based_integration(y,params,order = 2):
     print("Integration with order:",order)
 
     ms, N = y.shape
-
-     # Displacement estimation with frequency-domain integration
+    # Displacement estimation with frequency-domain integration
     if params['output_type'] == 0:
         Disp = y
     else: #If the output type is not displacements apply frequency based integration

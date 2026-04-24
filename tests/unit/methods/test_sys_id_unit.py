@@ -117,9 +117,9 @@ def test_publish_oma_results_retries_and_publishes_once(mocker):
     mock_client.is_connected.return_value = True
     aligner = MagicMock()
     aligner.client = MagicMock()
+    aligner_time = datetime.fromisoformat("2025-01-01 01:01:00.00000").isoformat()
 
-    # publish_sysid_output(0.1, aligner, mock_client, "test/topic", fs)
-    publish_sysid_output(mock_client, ["test/topic"], 0.1, fs)
+    publish_sysid_output(mock_client, ["test/topic"], dummy_result, aligner_time)
 
     assert mock_client.publish.called
     assert mock_client.publish.call_count == 1

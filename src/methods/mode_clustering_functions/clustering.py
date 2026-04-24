@@ -5,7 +5,6 @@ from methods.mode_clustering_functions.create_cluster import cluster_creation
 from methods.mode_clustering_functions.expand_cluster import cluster_expansion
 from methods.mode_clustering_functions.initialize_Ip import cluster_initial
 from methods.mode_clustering_functions.align_clusters import alignment
-from functions.calculate_mac import calculate_mac
 # pylint: disable=C0103
 
 # Following the algorithm proposed here: https://doi.org/10.1007/978-3-031-61421-7_56
@@ -110,19 +109,20 @@ def cluster_func(sysid_output: Dict[str,Any],
     cluster_counter = 0
     for ii, key in enumerate(cluster_dict_aligned.keys()):
         cluster = cluster_dict_aligned[key]
-        if isinstance(cluster['f'],np.ndarray):
-            if cluster['f'].shape[0] < params['mstab']:
-                print("Cluster", np.median(cluster['f']),
-                      "too short:",cluster['f'].shape[0],
-                      "Must be: >",params['mstab'])
+        if 'f' in cluster:
+            if isinstance(cluster['f'],np.ndarray):
+                if cluster['f'].shape[0] < params['mstab']:
+                    print("Cluster", np.median(cluster['f']),
+                        "too short:",cluster['f'].shape[0],
+                        "Must be: >",params['mstab'])
+                else:
+                    print("Cluster saved:", np.median(cluster['f']))
+                    cluster_dict_cardinality[str(ii)] = cluster
+                    cluster_counter += 1
+                    data1 = remove_data_from_S(data2,cluster) #Remove clustered poles from data
             else:
-                print("Cluster saved:", np.median(cluster['f']))
-                cluster_dict_cardinality[str(ii)] = cluster
-                cluster_counter += 1
-                data1 = remove_data_from_S(data2,cluster) #Remove clustered poles from data
-        else:
-            print("cluster too short:",1,"But must be:",params['mstab'])
-            cluster_dict_aligned.pop(key)
+                print("cluster too short:",1,"But must be:",params['mstab'])
+                cluster_dict_aligned.pop(key)
 
     #Add median and confidence intervals (one sided) to cluster data
     for key in cluster_dict_cardinality.keys():

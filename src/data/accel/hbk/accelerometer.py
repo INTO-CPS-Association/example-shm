@@ -64,7 +64,6 @@ class Accelerometer(IAccelerometer):
             descriptor_length = struct.unpack("<H", raw_payload[:DESCRIPTOR_LENGTH_BYTES])[0]
             (descriptor_length, _, __, ___,
              samples_from_daq_start,) = struct.unpack("<HHQQQ", raw_payload[:descriptor_length])
-
             # Extract sensor data
             data_payload = raw_payload[descriptor_length:]
             num_samples = len(data_payload) // 4
@@ -80,14 +79,13 @@ class Accelerometer(IAccelerometer):
                 # Check if the total samples in the map exceeds the max,
                 # then remove the oldest data batch
                 while total_samples > self._map_size:
+                    print("\n Max map size is reached. Removing data")
                     oldest_key = min(self.data_map.keys())  # Find the oldest batch
                     oldest_deque = self.data_map[oldest_key]
                     oldest_deque.popleft() # Delete samples from the oldest deque
                     if not oldest_deque:  # Remove the key/deque from the map if it's empty
                         del self.data_map[oldest_key]
                     total_samples = sum(len(dq) for dq in self.data_map.values())
-            #print(f" Channel: {self.topic}  Key: {samples_from_daq_start}, Samples: {num_samples}")
-
         except Exception as e:
             print(f"Error processing message: {e}")
 
@@ -105,7 +103,7 @@ class Accelerometer(IAccelerometer):
             try:
                 second_key = next(x) #If second key exist then return the batchsize of this, since first_key may not be a full batch after extraction.
                 return len(self.data_map[second_key])
-            except:
+            except StopIteration:
                 return len(self.data_map[first_key])
 
 
@@ -157,7 +155,6 @@ class Accelerometer(IAccelerometer):
                     del self.data_map[key]
 
                 remaining_to_remove -= num_to_remove
-
 
     def read(self, requested_samples: int) -> Tuple[(int, np.ndarray)]:
         """

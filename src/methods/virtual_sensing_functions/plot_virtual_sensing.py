@@ -1,45 +1,34 @@
+from typing import Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 
-def plot_virtual_sensing(plot: list[bool], disp: np.ndarray, acc_filtered: np.ndarray, data: np.ndarray) -> None: 
+def plot_virtual_sensing(data: np.ndarray[float], DOFs: list[int], fig_ax: Tuple = None, title: (str) = None) -> None: 
     """
-    Plot vitrual sensing results
+    Plot virtual sensing results
     Args:
-        plot (list[bool]): List of bools to determine what to plot
-        disp (np.ndarray):
-        acc_filtered (np.ndarray):
         data (np.ndarray):
+        DOFs (list): List of DOFs to plot
+        fig_ax (Tuple[plt.Figure, Tuple[plt.Axes]]):
+        title (str): string for title
     Returns:
-        None
+        fig_ax (Tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]): fig and ax of plot
     Plots:
 
     """
-    DOF = [0, 5, 8, 11, 14, 17]
-    if plot[0] == 1:
-        plt.figure()
-        for ii in DOF:
-            plt.plot(acc_filtered[ii,:])
-    
-    if plot[1] == 1:
-        plt.figure()
-        for ii in range(data.shape[0]):
-            plt.plot(data[ii,:])
+    if fig_ax is None:
+        plt.ion()
+        fig, ax1 = plt.subplots(1,1,figsize=(6, 6), tight_layout=True)
+    else:
+        fig, ax1 = fig_ax
 
-    if plot[2] == 1:
-        a_data = np.load("record/simulate_beam/beam_simulation_acc.npy")
-        plt.figure()
-        for ii in range(a_data.shape[0]):
-            plt.plot(a_data[ii,:])
-
-    if plot[3] == 1:
-        plt.figure()
-        for ii in DOF:
-            plt.plot(disp[ii,:])
+    for dof in DOFs:
+        ax1.plot(data, label=("DOF" + str(dof)))
     
-    if plot[4] == 1:
-        d_data = np.load("record/simulate_beam/beam_simulation_u.npy")
-        plt.figure()
-        for ii in DOF:
-            plt.plot(d_data[ii,:])
+    ax1.legend()
+    if title is not None:
+        ax1.set_ylabel(title)
+    ax1.set_xlabel("Sample [-]")
     
     plt.show()
+
+    return fig, ax1

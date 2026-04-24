@@ -24,11 +24,16 @@ from examples.run_model_update import (
     run_model_update_remote_sysid,
     run_live_model_update_remote_clustering
 )
-from examples.run_replay import replay_mqtt
+from examples.run_record_replay import replay_mqtt, record_mqtt
 
-from examples.run_virtual_sensing import run_virtual_sensing
+from examples.run_virtual_sensing import (run_virtual_sensing, 
+                                          run_live_virtual_sensing,
+                                          run_plot_virtual_sensing)
 
-from examples.run_stress_estimation import run_stress_and_strain_estimation
+from examples.run_stress_estimation import (run_stress_and_strain_estimation_beam,
+                                            run_live_stress_and_strain_estimation_beam,
+                                            run_stress_estimation_and_plot)
+
 
 @click.group()
 @click.option('--config', default="config/production.json", help="Path to config file")
@@ -46,6 +51,11 @@ def accelerometers(ctx):
 @click.pass_context
 def align_readings(ctx):
     align_acceleration_readings(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def record(ctx):
+    record_mqtt(ctx.obj["CONFIG"])
 
 @cli.command()
 @click.pass_context
@@ -129,8 +139,30 @@ def virtual_sensing(ctx):
 
 @cli.command()
 @click.pass_context
+def virtual_sensing_and_plot(ctx):
+    run_plot_virtual_sensing(ctx.obj["CONFIG"]) 
+    
+
+@cli.command()
+@click.pass_context
+def live_virtual_sensing(ctx):
+    run_live_virtual_sensing(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
 def stress_strain_estimation(ctx):
-    run_stress_and_strain_estimation(ctx.obj["CONFIG"])
+    run_stress_and_strain_estimation_beam(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def live_stress_strain_estimation(ctx):
+    run_live_stress_and_strain_estimation_beam(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def stress_and_strain_estimation_and_plot(ctx):
+    run_stress_estimation_and_plot(ctx.obj["CONFIG"])
+
 
 if __name__ == "__main__":
     cli(obj={})

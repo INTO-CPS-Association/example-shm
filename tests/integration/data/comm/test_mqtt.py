@@ -47,21 +47,6 @@ def test_load_config_unexpected_exception(monkeypatch):
         mqtt.load_config("config.json")
 
 
-def test_setup_mqtt_client_invalid_index():
-    dummy_config = {
-        "ClientID": "test_client",
-        "userId": "test_user",
-        "password": "test_pass",
-        "TopicsToSubscribe": ["topic1"],
-        "QoS": 1,
-        "host": "localhost",
-        "port": 1883
-    }
-
-    with pytest.raises(IndexError):
-        setup_mqtt_client(dummy_config, dummy_config["TopicsToSubscribe"][5])
-
-
 def test_on_connect_callback_failure():
     topics = ["test/topic1", "test/topic2"]
     qos = 1

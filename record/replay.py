@@ -15,16 +15,18 @@ CONFIG_PATH = "config/replay.json"
 RECORDINGS_DIR = Path(__file__).parent / "mqtt_recordings"
 FILE_NAME = "recording_beam_reduced.jsonl"
 
-REPLAY_SPEED = 10  # Multiplier for replay speed
+REPLAY_SPEED = 1  # Multiplier for replay speed
+LOOPS = 1 # Number of times to loop over the recording
 
+
+
+#Non important parameters
 BUSY_WAIT_THRESHOLD = 10/1000  # Threshold in seconds for busy waiting (10 ms)
 KEEP_UP_TIME = -1 # If delay time (remaining) is lower than this time, warn the user that the replay speed is two fast.
 PRINT_INTERVAL = 5
-
-SINCE_START_COUNTER = {}
 BATCH_SIZE = 16
+SINCE_START_COUNTER = {}
 
-LOOPS = 1 # Number of times to loop over the recording
 
 
 def override_counter_in_payload(topic_key,payload_bytes) -> None:
@@ -95,6 +97,7 @@ def replay_mqtt_messages(config_path: str, loop: int = 1) -> None:
     except Exception as e:
         print(f"[Error] {e}")
 
+    origin_list = []
     try:
         with open(path, "r", encoding="utf-8") as replay_file:
             total_lines = len(replay_file.readlines())
@@ -111,6 +114,12 @@ def replay_mqtt_messages(config_path: str, loop: int = 1) -> None:
                     record = json.loads(line.strip())
                     payload = record["payload"]
                     topic_key = record.get("topic")
+                    origin = record.get("origin")
+                    if origin not in origin_list:
+                        print(f"Topic: {topic_key}, with origin topic:",origin)
+                        if topic_key in MQTT_config["TopicsToPublish"]:
+                            print("Publish topic:",MQTT_config["TopicsToPublish"][topic_key])
+                        origin_list.append(origin)
                     qos = record.get("qos", 0)
 
                     if isinstance(payload, list):
@@ -119,6 +128,7 @@ def replay_mqtt_messages(config_path: str, loop: int = 1) -> None:
                         payload_bytes = bytes.fromhex(payload)
                     else:
                         raise ValueError("Invalid payload format")
+
                     if "metadata" not in topic_key:
                         payload_bytes = override_counter_in_payload(topic_key,payload_bytes)
                     

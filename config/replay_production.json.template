@@ -1,4 +1,27 @@
 {
+    "MQTT": {
+        "host": "",
+        "port": 0,
+        "userId": "",
+        "password": "",
+        "ClientID": "ReplaySubscriber",
+        "QoS": 1,
+        "TopicsToSubscribe": {
+            "cpsens/x/y/1/acc/raw/data": "acc1",
+            "cpsens/x/y/1/acc/raw/metadata": "metadata1",
+            "cpsens/x/y/2/acc/raw/data": "acc2",
+            "cpsens/x/y/3/acc/raw/data": "acc3",
+            "cpsens/x/y/4/acc/raw/data": "acc4"
+        },
+        "TopicsToPublish": {
+            "acc1": "cpsens/recorded/1/data",
+            "metadata1": "cpsens/recorded/1/metadata",
+            "acc2": "cpsens/recorded/2/data",
+            "acc3": "cpsens/recorded/3/data",
+            "acc4": "cpsens/recorded/4/data"
+        }
+      },
+    
     "sysid": {
         "host": "",
         "port": 0,

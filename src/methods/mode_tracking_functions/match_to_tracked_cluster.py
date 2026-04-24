@@ -56,7 +56,8 @@ def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_cluste
             else:
                 #Accessing all cluster in a tracked cluster group
                 tracked_cluster_list = tracked_clusters[key_t]
-                n_last_tracked_clusters = np.min((len(tracked_cluster_list),6))
+                l = params.get('l_lastest_clusters',1) #Number of tracked clusters to compare with
+                n_last_tracked_clusters = np.min((len(tracked_cluster_list),l))
                 for ii in range(n_last_tracked_clusters):
                     tracked_cluster = tracked_cluster_list[-1*(ii+1)]
 

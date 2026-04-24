@@ -13,7 +13,7 @@ def estimate_stress_beam(Model: model, displacement : np.ndarray, extraction_dic
         stress (np.ndarray): Array of stress (elements x s) [MPa] (s = 3 in the case of a 2D beam: axial, curvature/bending at 1. node (bottom), curvature/bending at 2. node (top))
         strain (np.ndarray): Array of strain (elements x s)
     """
-    N = np.max(displacement.shape)
+    N = displacement.shape[1]
     
     s = Model.my_elements[extraction_dict['elements'][0]].s_phi.shape[0]
     stress = np.zeros((len(extraction_dict['elements']),s,N)) # s x m
