@@ -6,6 +6,7 @@
         "password": "",
         "ClientID": "NOT_NEEDED",
         "QoS": 1,
+        "TimeToSample": 0.2,
         "MetadataToSubscribe": [
           "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/raw/metadata"
         ],

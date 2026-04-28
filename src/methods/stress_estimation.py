@@ -31,7 +31,7 @@ def stress_estimation_for_beam(displacement: np.ndarray[float]):
 
     return stress, strain
 
-def live_stress_estimation_for_beam(config_path: str, number_of_minutes: float):
+def live_stress_estimation_for_beam(config_path: str):
     """
     Estimate stress based on displacements and YAFEM model
     Args:
@@ -40,7 +40,7 @@ def live_stress_estimation_for_beam(config_path: str, number_of_minutes: float):
         stress (np.ndarray): Array of stress (elements x s) [MPa] (s = 3 in the case of a 2D beam: axial, curvature/bending at 1. node (bottom), curvature/bending at 2. node (top))
         strain (np.ndarray): Array of strain (elements x s)
     """
-    aligner, data_client, _, fs = setup_sysid(config_path)
+    aligner, data_client, mqtt_config, fs = setup_sysid(config_path)
 
     _, model_parameters = load_model_parameters()
     model_parameters["dofs_sel"] = PARAMS["dofs_extract"].copy()
@@ -52,7 +52,7 @@ def live_stress_estimation_for_beam(config_path: str, number_of_minutes: float):
         PARAMS['y']
         PARAMS["dofs_extract"]
         while True:
-            displacement, accreleration = virtual_sensing(number_of_minutes, aligner, data_client, fs)
+            displacement, accreleration = virtual_sensing(mqtt_config['TimeToSample'], aligner, data_client, fs)
             moment, stress, strain = estimate_stress_beam(Model,displacement,PARAMS)
             print("Max bending stress at all DOFs [MPa]")
             print(np.max(stress[:,1]).tolist())

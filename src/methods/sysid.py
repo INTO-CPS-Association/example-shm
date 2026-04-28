@@ -188,36 +188,35 @@ def publish_sysid_output(publish_client: MQTTClient, publish_topics: List[str],
     
     publish_to_mqtt(publish_client, publish_topics, payload, "sysid output")
 
-def local_sysid(config_path: str, number_of_minutes: float, topic_indexes: List[int] = None):
+def local_sysid(config_path: str, topic_indexes: List[int] = None):
     """
     Perform local sysid using specified configuration and topic indexes.
     Args:
         config_path (str): Configuration path.
-        number_of_minutes (float): How many minutes of data to sample.
         topic_indexes (List[int]): Indexes of topics to subscribe to.
     Returns:
         mqtt_client (MQTTClient): MQTT client used for publishing results.
         sysid_output (Dict[str, Any]): System identification output data.
         aligner_time (str): Sampling frequency.
     """
-    aligner, mqtt_client, _, fs = setup_sysid(config_path, topic_indexes)
+    aligner, mqtt_client, mqtt_config, fs = setup_sysid(config_path, topic_indexes)
 
-    sysid_output, aligner_time = wait_for_sysid_output(number_of_minutes, aligner, fs)
+    sysid_output, aligner_time = wait_for_sysid_output(mqtt_config['TimeToSample'], aligner, fs)
     print("Aligned data received at:",aligner_time)
 
     return mqtt_client, sysid_output, aligner_time
 
-def live_sysid(config_path: str, number_of_minutes: float, topic_indexes: List[int] = None, loop: bool = True):
+def live_sysid(config_path: str, topic_indexes: List[int] = None, loop: bool = True):
     """
     Perform live sysid using specified configuration and topic indexes.
     Args:
         config_path (str): Configuration path.
-        number_of_minutes (float): How many minutes of data to sample.
         topic_indexes (List[int]): Indexes of topics to subscribe to.
         loop (bool): Whether to loop the sysid process continuously.
     Returns:
     """
     aligner, mqtt_client, mqtt_config, fs = setup_sysid(config_path, topic_indexes)
+    number_of_minutes = mqtt_config['TimeToSample']
     try:
         aligner_time_last = datetime.fromisoformat("2025-01-01 01:01:00.00000")
         while True:

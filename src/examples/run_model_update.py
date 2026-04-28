@@ -5,9 +5,7 @@ from methods.constants import PARAMS, MODEL_PARAMETERS
 # pylint: disable=R0914, C0103
 
 def run_model_update_local_sysid(config_path):
-    number_of_minutes = 0.2
-
-    _, clusters, _ = MC.cluster_from_local_sysid(config_path, number_of_minutes, PARAMS)
+    _, clusters, _ = MC.cluster_from_local_sysid(config_path, PARAMS)
 
     # Run model update
     _, omega_model, model_parameters = MU.estimate_updated_model(clusters,MODEL_PARAMETERS,PARAMS)

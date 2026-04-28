@@ -21,14 +21,16 @@ def plot_virtual_sensing(data: np.ndarray[float], DOFs: list[int], fig_ax: Tuple
     else:
         fig, ax1 = fig_ax
 
-    for dof in DOFs:
-        ax1.plot(data, label=("DOF" + str(dof)))
+    dof, N = data.shape #Reshape y if it is transposed
+    if N < dof:
+        data = data.T
+
+    for ii, dof in enumerate(DOFs):
+        ax1.plot(data[dof,:], label=("DOF" + str(dof)))
     
     ax1.legend()
     if title is not None:
         ax1.set_ylabel(title)
     ax1.set_xlabel("Sample [-]")
-    
-    plt.show()
 
     return fig, ax1

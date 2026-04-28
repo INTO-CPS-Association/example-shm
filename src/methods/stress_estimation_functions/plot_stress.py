@@ -24,7 +24,8 @@ def plot_stress(data: np.ndarray, elements: list, s: int, fig_ax: Tuple = None, 
         fig, ax1 = fig_ax
 
     for element in elements:
-        ax1.plot(data[element,s], label=("Element" + str(element)+"s=",s))
+        label_str = "Element " + str(element) + " s="+str(s)
+        ax1.plot(data[element,s], label=label_str)
     
     ax1.legend()
     if title is not None:
