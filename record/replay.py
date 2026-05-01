@@ -90,15 +90,12 @@ def replay_mqtt_messages(config_path: str, loop: int = 1) -> None:
     config = load_config(config_path)
     MQTT_config = config["MQTT"]
     publish_client = setup_publish_client(MQTT_config)
+    origin_list = []
     try:
         path = RECORDINGS_DIR / FILE_NAME
         if not path.exists():
             raise ValueError(f"[Error] File not found: {path}")
-    except Exception as e:
-        print(f"[Error] {e}")
 
-    origin_list = []
-    try:
         with open(path, "r", encoding="utf-8") as replay_file:
             total_lines = len(replay_file.readlines())
             replay_file.close()
@@ -165,8 +162,6 @@ def replay_mqtt_messages(config_path: str, loop: int = 1) -> None:
             print(f"\nTime it took to publish: {(t_end-t_start):.3f}s")
             print("Published messages per second:",total_lines/(t_end-t_start))
             print("Since_start_counter final",SINCE_START_COUNTER)
-            if ii+1 > loop:
-                print("Restart replay function.")
             while publish_client._out_messages:
                 remaining_count = len(publish_client._out_messages)
                 text = (

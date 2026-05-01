@@ -1,3 +1,4 @@
+from typing import Any, Dict
 import numpy as np
 from data.comm.mqtt import shutdown
 from methods.sysid import setup_sysid
@@ -8,16 +9,18 @@ from methods.virtual_sensing import virtual_sensing
 from methods.constants import (MODEL_FUNC, PARAMS)
 
 
-def stress_estimation_for_beam(displacement: np.ndarray[float]):
+def stress_estimation_for_beam(displacement: np.ndarray[float], model_parameters: Dict[str,Any] = None):
     """
     Estimate stress based on displacements and YAFEM model
     Args:
         displacement (np.ndarray): Array of displacements/rotations (DOF x N)
     Returns:
+        Moment (np.ndarray): Array of moment/forces (elements x s)
         stress (np.ndarray): Array of stress (elements x s) [MPa] (s = 3 in the case of a 2D beam: axial, curvature/bending at 1. node (bottom), curvature/bending at 2. node (top))
         strain (np.ndarray): Array of strain (elements x s)
     """
-    _, model_parameters = load_model_parameters()
+    if model_parameters is None:
+        _, model_parameters = load_model_parameters()
     model_parameters["dofs_sel"] = PARAMS["dofs_extract"].copy()
     _, __, __, Model, ____ = MODEL_FUNC(model_parameters)
     try:
@@ -26,34 +29,27 @@ def stress_estimation_for_beam(displacement: np.ndarray[float]):
         PARAMS['y']
         PARAMS["dofs_extract"]
         moment, stress, strain = estimate_stress_beam(Model,displacement,PARAMS)
+        return moment, stress, strain
     except KeyError as e:
         print("Missing PARAMS key",e)
-
-    return stress, strain
+        return None, None, None
+        
 
 def live_stress_estimation_for_beam(config_path: str):
     """
     Estimate stress based on displacements and YAFEM model
     Args:
-        displacement (np.ndarray): Array of displacements/rotations (DOF x N)
+        config_path (str): Path to config file
     Returns:
         stress (np.ndarray): Array of stress (elements x s) [MPa] (s = 3 in the case of a 2D beam: axial, curvature/bending at 1. node (bottom), curvature/bending at 2. node (top))
         strain (np.ndarray): Array of strain (elements x s)
     """
     aligner, data_client, mqtt_config, fs = setup_sysid(config_path)
-
-    _, model_parameters = load_model_parameters()
-    model_parameters["dofs_sel"] = PARAMS["dofs_extract"].copy()
-    _, __, __, Model, ____ = MODEL_FUNC(model_parameters)
     
     try:
-        PARAMS['element_type']
-        PARAMS['elements']
-        PARAMS['y']
-        PARAMS["dofs_extract"]
         while True:
-            displacement, accreleration = virtual_sensing(mqtt_config['TimeToSample'], aligner, data_client, fs)
-            moment, stress, strain = estimate_stress_beam(Model,displacement,PARAMS)
+            displacement, _, model_parameters = virtual_sensing(mqtt_config['SamplesToCollect'], aligner, data_client, fs)
+            _, stress, __ = stress_estimation_for_beam(displacement,model_parameters)
             print("Max bending stress at all DOFs [MPa]")
             print(np.max(stress[:,1]).tolist())
             print("Min. bending stress at all DOFs [MPa]")
@@ -61,11 +57,9 @@ def live_stress_estimation_for_beam(config_path: str):
     except KeyboardInterrupt as e:
         shutdown(data_client, "Virtual sensing")
         raise RuntimeError("Keyboard interrupt") from e
-    except KeyError as e:
+    except RuntimeError as e:
         shutdown(data_client, "Virtual sensing")
-        print("Missing PARAMS key",e)
-
-    return stress, strain
+        print("Runtime error",e)
 
 def stress_estimation_and_plot(stress: np.ndarray[float]):
     """

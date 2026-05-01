@@ -97,9 +97,7 @@ There are some settings that can be changed for the specific use case.
 This is how many samples should be used for sysid. The value uses the time in minutes and the sample frequency, fs,
 to calculate the correct ammount of samples.
 
-Inside `examples/run_sysid.py`, `examples/run_mode_clustering.py`, `examples/run_mode_tracking.py`, `examples/run_model_update.py`,
-`examples/run_virtual_sensing.py`, `examples/run_stress_estimation.py`
-the sample time can be changed: `number_of_minutes`.
+Inside a config file, e.c. `<config>.json`, the samples to collect can be changed: `SamplesToCollect`.
 
 * **Parameters**
 Inside  `method/constants.py` the parameters for system identification, mode clustering, mode tracking and model updating
@@ -117,6 +115,8 @@ The following experiments can be run using the package.
   accelerometer measurements from MQTT data stream.
 * **aligning_readings** demonstrates the use of `Aligner` class to collect and
   align accelerometer measurements from multiple MQTT data streams.
+* **live_align_readings_and_plot** continiuously  collect and
+  align accelerometer measurements from multiple MQTT data streams. The data is then plotted.
 
 * **record-and-replay** demonstrates the use of the record and replay function
     1. **record**: records data for a set amount of time defined in the `record.py` file.
@@ -284,6 +284,7 @@ Commands:
   align-readings
   clustering-with-local-sysid
   clustering-with-remote-sysid
+  live-align-readings-and-plot
   live-clustering-with-remote-sysid
   live-clustering-with-remote-sysid-and-publish
   live-mode-tracking-with-remote-sysid

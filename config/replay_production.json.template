@@ -29,7 +29,7 @@
         "password": "",
         "ClientID": "NOT_NEEDED",
         "QoS": 1,
-        "TimeToSample": 0.2,
+        "SamplesToCollect": 2560,
         "MetadataToSubscribe": ["cpsens/recorded/1/metadata"],
         "TopicsToSubscribe": [
             "cpsens/recorded/1/data",

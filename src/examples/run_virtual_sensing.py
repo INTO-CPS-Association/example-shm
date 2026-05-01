@@ -4,8 +4,8 @@ from methods.virtual_sensing import virtual_sensing, live_virtual_sensing, virtu
 
 def run_virtual_sensing(config_path):
     aligner, data_client, mqtt_config, fs = setup_sysid(config_path)
-    number_of_minutes = mqtt_config['TimeToSample']
-    displacement, _ = virtual_sensing(number_of_minutes, aligner, data_client, fs)
+    number_of_samples = mqtt_config['SamplesToCollect']
+    displacement, _, _ = virtual_sensing(number_of_samples, aligner, data_client, fs)
     print("Estimated displacements/rotations")
     print("Max and min for every DOF. Max:",np.max(displacement,axis=1).tolist(),"Min:",np.min(displacement,axis=1).tolist())
 
