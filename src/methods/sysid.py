@@ -71,7 +71,7 @@ def setup_client(mqtt_config: Dict[str, Any]) -> Tuple[MQTTClient, float]:
     try:
         fs = extract_fs_from_metadata(mqtt_config)
     except Exception:
-        print("Failed to extract FS from metadata. Using DEFAULT_FS.")
+        print("Failed to extract FS from metadata. Using DEFAULT_FS = ",DEFAULT_FS)
         fs = DEFAULT_FS
 
     data_client = setup_mqtt_client(mqtt_config, mqtt_config["TopicsToSubscribe"][0])
@@ -108,13 +108,13 @@ def setup_sysid(config_path, data_topic_indexes: List[int] = None) -> Tuple[IAli
     return aligner, data_client, mqtt_config, fs
 
 def get_sysid_output(
-        sampling_period: int, aligner: Aligner, fs: float
+        samples: int, aligner: Aligner, fs: float
         ) -> Optional[Tuple[Dict[str, Any], str]]:
     """
     Extracts aligned sensor data and runs system identification (sysID).
 
     Args:
-        sampling_period: How many minutes of data to pass to sysid.
+        samples: How many minutes of data to pass to sysid.
         aligner: An initialized Aligner object.
         fs: Sampling frequency to use in the sysid algorithm.
 
@@ -123,20 +123,19 @@ def get_sysid_output(
         aligner_time (str): Timestamp of the aligned data.
     """
 
-    number_of_samples = int(sampling_period * 60 * fs)
-    data, aligner_time = aligner.extract(number_of_samples)
+    data, aligner_time = aligner.extract(int(samples))
 
-    if data.size < number_of_samples:
+    if data.size < samples:
         return None, None
 
     try:
         sysid_output = sysid(data, PARAMS)
         return sysid_output, aligner_time.isoformat()
     except Exception as e:
-        print(f"sysID failed: {e}")
+        print(f"SysID failed: {e}")
         return None, None
 
-def wait_for_sysid_output(number_of_minutes: float, aligner: Aligner,
+def wait_for_sysid_output(samples: int, aligner: Aligner,
                           fs: float) -> Optional[Tuple[Dict[str, Any],str]]:
     """
     Extract system identidication results while printing elapsed time
@@ -158,9 +157,9 @@ def wait_for_sysid_output(number_of_minutes: float, aligner: Aligner,
             t2 = time.time()
             t_text = f"Waiting for data for {round(t2-t1,1)} seconds"
             print(t_text,end="\r")
-            sysid_output, aligner_time = get_sysid_output(number_of_minutes, aligner, fs)
+            sysid_output, aligner_time = get_sysid_output(samples, aligner, fs)
 
-            if (t2-t1) > 20*number_of_minutes*60:
+            if (t2-t1) > 20*samples/fs:
                 raise RuntimeError("Aligned data not received in time")
 
         print("Aligned data received at:",aligner_time)
@@ -188,40 +187,39 @@ def publish_sysid_output(publish_client: MQTTClient, publish_topics: List[str],
     
     publish_to_mqtt(publish_client, publish_topics, payload, "sysid output")
 
-def local_sysid(config_path: str, number_of_minutes: float, topic_indexes: List[int] = None):
+def local_sysid(config_path: str, topic_indexes: List[int] = None):
     """
     Perform local sysid using specified configuration and topic indexes.
     Args:
         config_path (str): Configuration path.
-        number_of_minutes (float): How many minutes of data to sample.
         topic_indexes (List[int]): Indexes of topics to subscribe to.
     Returns:
         mqtt_client (MQTTClient): MQTT client used for publishing results.
         sysid_output (Dict[str, Any]): System identification output data.
         aligner_time (str): Sampling frequency.
     """
-    aligner, mqtt_client, _, fs = setup_sysid(config_path, topic_indexes)
+    aligner, mqtt_client, mqtt_config, fs = setup_sysid(config_path, topic_indexes)
 
-    sysid_output, aligner_time = wait_for_sysid_output(number_of_minutes, aligner, fs)
+    sysid_output, aligner_time = wait_for_sysid_output(mqtt_config['SamplesToCollect'], aligner, fs)
     print("Aligned data received at:",aligner_time)
 
     return mqtt_client, sysid_output, aligner_time
 
-def live_sysid(config_path: str, number_of_minutes: float, topic_indexes: List[int] = None, loop: bool = True):
+def live_sysid(config_path: str, topic_indexes: List[int] = None, loop: bool = True):
     """
     Perform live sysid using specified configuration and topic indexes.
     Args:
         config_path (str): Configuration path.
-        number_of_minutes (float): How many minutes of data to sample.
         topic_indexes (List[int]): Indexes of topics to subscribe to.
         loop (bool): Whether to loop the sysid process continuously.
     Returns:
     """
     aligner, mqtt_client, mqtt_config, fs = setup_sysid(config_path, topic_indexes)
+    samples = mqtt_config['SamplesToCollect']
     try:
         aligner_time_last = datetime.fromisoformat("2025-01-01 01:01:00.00000")
         while True:
-            sysid_output, aligner_time = wait_for_sysid_output(number_of_minutes,
+            sysid_output, aligner_time = wait_for_sysid_output(samples,
                                                                       aligner, fs)
             publish_sysid_output(mqtt_client, mqtt_config["TopicsToPublish"],
                                         sysid_output, aligner_time)

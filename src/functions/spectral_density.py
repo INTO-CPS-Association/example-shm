@@ -10,21 +10,26 @@ def plot_spectral_density(y: np.ndarray[float],fs: float) -> None:
         fs (float): Sampling frequency (Hz)
     Returns:
     """
+
+    s, N = y.shape #Reshape y if it is transposed
+    if N < s:
+        y = y.T
+        s, N = y.shape
+
     # Spectrum test
     _, (ax1) = plt.subplots(1,1,figsize=(8, 6), tight_layout=True)
-    n = max(y.shape)
-    duration = n/256
+    duration = N/fs
     t = np.linspace(0, duration, int(fs * duration), endpoint=False)
     # Applying FFT
-    for ii, _ in enumerate(y[:,0]):
+    for ii in range(s):
         fft_result = np.fft.fft(y[ii,:])
         freq = np.fft.fftfreq(t.shape[-1], d=1/fs)
 
         # Plotting the spectrum
-        ax1.plot(freq, np.abs(fft_result))
+        ax1.plot(freq, np.abs(fft_result),label=str(ii))
         ax1.set_xlabel('Frequency (Hz)')
         ax1.set_ylabel('Amplitude')
         ax1.set_xlim(0,fs/2)
-    ax1.legend(["acc1,node7","acc2,node6","acc3,node5","acc4,node4"])
+    ax1.legend()
     ax1.set_title("Filtered FFT")
     plt.show(block=False)

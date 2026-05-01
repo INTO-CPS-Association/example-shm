@@ -1,7 +1,7 @@
 # pylint: disable=E1120
 import click
 from examples.acceleration_readings import read_accelerometers
-from examples.aligning_readings import align_acceleration_readings
+from examples.aligning_readings import (align_acceleration_readings, live_align_readings_and_plot)
 from examples.run_sysid import (
     run_sysid_and_plot,
     run_sysid_and_publish,
@@ -24,7 +24,16 @@ from examples.run_model_update import (
     run_model_update_remote_sysid,
     run_live_model_update_remote_clustering
 )
-from examples.run_replay import replay_mqtt
+from examples.run_record_replay import replay_mqtt, record_mqtt
+
+from examples.run_virtual_sensing import (run_virtual_sensing, 
+                                          run_live_virtual_sensing,
+                                          run_plot_virtual_sensing)
+
+from examples.run_stress_estimation import (run_stress_and_strain_estimation_beam,
+                                            run_live_stress_and_strain_estimation_beam,
+                                            run_stress_estimation_and_plot)
+
 
 @click.group()
 @click.option('--config', default="config/production.json", help="Path to config file")
@@ -42,6 +51,16 @@ def accelerometers(ctx):
 @click.pass_context
 def align_readings(ctx):
     align_acceleration_readings(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def live_align_readings_and_plot(ctx):
+    live_align_readings_and_plot(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def record(ctx):
+    record_mqtt(ctx.obj["CONFIG"])
 
 @cli.command()
 @click.pass_context
@@ -117,6 +136,38 @@ def live_model_update_with_remote_sysid(ctx):
 @click.pass_context
 def live_model_update_with_remote_clustering(ctx):
     run_live_model_update_remote_clustering(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def virtual_sensing(ctx):
+    run_virtual_sensing(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def virtual_sensing_and_plot(ctx):
+    run_plot_virtual_sensing(ctx.obj["CONFIG"]) 
+    
+
+@cli.command()
+@click.pass_context
+def live_virtual_sensing(ctx):
+    run_live_virtual_sensing(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def stress_strain_estimation(ctx):
+    run_stress_and_strain_estimation_beam(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def live_stress_strain_estimation(ctx):
+    run_live_stress_and_strain_estimation_beam(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def stress_strain_estimation_and_plot(ctx):
+    run_stress_estimation_and_plot(ctx.obj["CONFIG"])
+
 
 if __name__ == "__main__":
     cli(obj={})

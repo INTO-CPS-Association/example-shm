@@ -42,12 +42,12 @@ def test_sysid_transposes_data_if_needed(sysid_params):
 
 def test_get_oma_results_success(mocker):
     fs = 100
-    samples_needed = int(fs * 60 * 0.1)  # 600
+    samples_needed = 600
     mock_data = np.random.randn(samples_needed, 3)
     mock_aligner = MagicMock()
     mock_aligner.extract.return_value = (mock_data, datetime.now())
 
-    result, ts = get_sysid_output(0.1, mock_aligner, fs)
+    result, ts = get_sysid_output(600, mock_aligner, fs)
 
     assert result is not None
     assert "Fn_poles" in result
@@ -57,7 +57,7 @@ def test_get_oma_results_no_data(mocker):
     mock_aligner = MagicMock()
     mock_aligner.extract.return_value = (np.empty((0, 3)), datetime.now())
 
-    result, ts = get_sysid_output(1, mock_aligner, fs)
+    result, ts = get_sysid_output(6000, mock_aligner, fs)
 
     assert result is None
     assert ts is None
@@ -69,7 +69,7 @@ def test_get_oma_results_not_enough_samples(mocker):
     data = np.random.randn(100, 3)
     mock_aligner.extract.return_value = (data, datetime.now())
 
-    result, ts = get_sysid_output(10, mock_aligner, fs)  # ask for too many samples
+    result, ts = get_sysid_output(1000, mock_aligner, fs)  # ask for too many samples
 
     assert result is None
     assert ts is None
@@ -117,9 +117,9 @@ def test_publish_oma_results_retries_and_publishes_once(mocker):
     mock_client.is_connected.return_value = True
     aligner = MagicMock()
     aligner.client = MagicMock()
+    aligner_time = datetime.fromisoformat("2025-01-01 01:01:00.00000").isoformat()
 
-    # publish_sysid_output(0.1, aligner, mock_client, "test/topic", fs)
-    publish_sysid_output(mock_client, ["test/topic"], 0.1, fs)
+    publish_sysid_output(mock_client, ["test/topic"], dummy_result, aligner_time)
 
     assert mock_client.publish.called
     assert mock_client.publish.call_count == 1

@@ -117,7 +117,7 @@ def cluster_plots(plot: List[bool], clusters: Dict[str,Any], sysid_output: Dict[
     plt.show(block=hold)
     return [fig_ax1, fig_ax2, fig_ax3]
 
-def cluster_from_local_sysid(config_path: str, number_of_minutes: float,
+def cluster_from_local_sysid(config_path: str,
                            params: Dict[str,Any],
                            data_topic_indexes: List[int] = None) -> Tuple[Dict[str,Any],
                                                                         Dict[str,Any],
@@ -127,7 +127,6 @@ def cluster_from_local_sysid(config_path: str, number_of_minutes: float,
 
     Args:
         config_path (str): Path to config JSON.
-        number_of_minutes (float): Number of mintues of data to align
         data_topic_indexes (List[int]): Indexes of topics to subscribe to
         params (Dict[str,Any]): clustering parameters
 
@@ -137,7 +136,7 @@ def cluster_from_local_sysid(config_path: str, number_of_minutes: float,
         median_frequencies (List[float]): Median frequencies of clusters
     """
 
-    mqtt_client, sysid_output, _ = sysID.local_sysid(config_path, number_of_minutes,
+    mqtt_client, sysid_output, _ = sysID.local_sysid(config_path,
                                                               data_topic_indexes)
     shutdown(mqtt_client)
 

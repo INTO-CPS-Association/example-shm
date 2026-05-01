@@ -4,7 +4,7 @@ from beam import beam_yafem_model as model
 # Constants for sysID
 WAIT_METADATA = 11 # Wait max 11 seconds for getting metadata message
 
-DEFAULT_FS = 250 # In case the Fs from metadata doesn't arrive
+DEFAULT_FS = 256 # In case the Fs from metadata doesn't arrive
 
 MIN_SAMPLES_NEEDED = 540  # Minimum samples for running sysid
 
@@ -30,9 +30,13 @@ PARAMS['allignment_factor'] = [0.05,0.01]       # Factors for allignment
 PARAMS['phi_cri'] = 0.8 #0.98                   # MAC criteria [%]
 PARAMS['freq_cri'] = 0.2 #0.2                   # Frequency difference criteria [%]
 PARAMS['obj_cri'] = 0.1
+PARAMS['phi_cri'] = 0.8                 # MAC criteria [%]
+PARAMS['freq_cri'] = 0.2                  # Frequency difference criteria [%]
+PARAMS['obj_cri'] = 0.1                   # criteria for closely related clusters
 # If more clusters match, an it is not clear what cluster is best,
 # then check if the difference of the objective function values are less than the criteria.
 # Then it is probably the one with higest MAC rather than frequency [difference]
+PARAMS['l_lastest_clusters'] = 5                # l number of clusters to compare with
 
 # Params for model updating
 PARAMS['tMAC_MU'] = 0.7
@@ -52,3 +56,20 @@ MODEL_PARAMETERS = {'modes': PARAMS['modes_search_paring'],
             'l4': 0.1289,
             'm': None,
             }
+
+
+# Params for modal expansion:
+PARAMS['expansion_modes'] = PARAMS['MU_modes']
+PARAMS['filter_order'] = 4                                          # Order/strength of butterworth filter 
+PARAMS['filter_type'] = 'bandpass'                                   # 'lowpass', 'bandpass', 'highpass' or None
+PARAMS['filter_cut-off'] = np.array([0.5,90])                           # Cut of frequency(ies) for the butterworth filter [lower/upper cut-off value] or [>lower cut-off value<,upper cut-off value]
+PARAMS['output_type'] = 2                                           # system output type: 0-displacement; 1-velocities, 2-acceleration
+PARAMS['detrend_integration_order'] = 2                             # Order of detrend applied integrated signal, 0 = mean, 1 = linear, 2 = second order etc.
+PARAMS['beam_elements'] = np.array([3,4,5,6,7,8,9])                 # Order of elements in myModel that is beams
+PARAMS['sensor_loc'] = np.array([[7,1],[6,1],[5,1],[4,1]])          # sensor location
+
+# For estimating stress
+PARAMS['element_type'] = np.array(["beam2d","beam2d","beam2d","beam2d","beam2d","beam2d","beam2d"])
+PARAMS['elements'] = np.array([3,4,5,6,7,8,9])
+PARAMS['y'] = np.array([1e-3/2,1e-3/2,1e-3/2,1e-3/2,1e-3/2,1e-3/2,1e-3/2])
+PARAMS["dofs_extract"] = np.array([[8,3],[8,2],[8,1],[7,3],[7,2],[7,1],[6,3],[6,2],[6,1],[5,3],[5,2],[5,1],[4,3],[4,2],[4,1],[3,3],[2,3],[1,3],[1,2],[1,1]])

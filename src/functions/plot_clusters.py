@@ -21,7 +21,7 @@ def plot_clusters(clusters: Dict[str,dict],
         sysid_results (Dict[str,dict]): PyOMA results
         sysid_params (Dict[str,dict]): System identification parameters
         fix_ax (Tuple[plt.Figure, Tuple[plt.Axes]]): fig and ax of plot to redraw
-        legend
+        legend (bool): Plot legend or not
     Returns:
         fig_ax (Tuple[plt.Figure, Tuple[plt.Axes]]): fig and ax of plot
 

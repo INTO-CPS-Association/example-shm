@@ -75,16 +75,18 @@ def cluster_func(sysid_output: Dict[str,Any],
             kk = 0
             while expansion:
                 kk += 1
-                if kk > 10:
-                    raise RuntimeError("Expansion never ends, something is wrong.")
                 prev_cluster = clusters
                 clusters_expan = cluster_expansion(clusters,data2,params)
-                if clusters_expan['f'].shape == prev_cluster['f'].shape:
-                    if (clusters_expan['f'] == prev_cluster['f']).all():
-                        expansion = False
-                    else:
-                        clusters = clusters_expan
+                if ((clusters_expan['f'].shape == prev_cluster['f'].shape) and
+                    ((clusters_expan['f'] == prev_cluster['f']).all())):
+                    expansion = False
                 else:
+                    if kk > 10: #If expansion does not end
+                        if np.mean(clusters['MAC']) > np.mean(prev_cluster['MAC']):
+                            clusters_expan = clusters
+                        else:
+                            clusters_expan = prev_cluster
+                        expansion = False
                     clusters = clusters_expan
 
             #Sort if more than one pole exist in the cluster
@@ -107,19 +109,20 @@ def cluster_func(sysid_output: Dict[str,Any],
     cluster_counter = 0
     for ii, key in enumerate(cluster_dict_aligned.keys()):
         cluster = cluster_dict_aligned[key]
-        if isinstance(cluster['f'],np.ndarray):
-            if cluster['f'].shape[0] < params['mstab']:
-                print("Cluster", np.median(cluster['f']),
-                      "too short:",cluster['f'].shape[0],
-                      "Must be: >",params['mstab'])
+        if 'f' in cluster:
+            if isinstance(cluster['f'],np.ndarray):
+                if cluster['f'].shape[0] < params['mstab']:
+                    print("Cluster", np.median(cluster['f']),
+                        "too short:",cluster['f'].shape[0],
+                        "Must be: >",params['mstab'])
+                else:
+                    print("Cluster saved:", np.median(cluster['f']))
+                    cluster_dict_cardinality[str(ii)] = cluster
+                    cluster_counter += 1
+                    data1 = remove_data_from_S(data2,cluster) #Remove clustered poles from data
             else:
-                print("Cluster saved:", np.median(cluster['f']))
-                cluster_dict_cardinality[str(ii)] = cluster
-                cluster_counter += 1
-                data1 = remove_data_from_S(data2,cluster) #Remove clustered poles from data
-        else:
-            print("cluster too short:",1,"But must be:",params['mstab'])
-            cluster_dict_aligned.pop(key)
+                print("cluster too short:",1,"But must be:",params['mstab'])
+                cluster_dict_aligned.pop(key)
 
     #Add median and confidence intervals (one sided) to cluster data
     for key in cluster_dict_cardinality.keys():

@@ -4,10 +4,7 @@ from methods.constants import PARAMS
 
 # pylint: disable=R0914
 def run_mode_clustering_with_local_sysid(config_path):
-    number_of_minutes = 0.2
-
     sysid_output, clusters, median_frequencies = MC.cluster_from_local_sysid(config_path,
-                                                                           number_of_minutes,
                                                                            PARAMS)
     # Print frequencies
     print("\nMedian frequencies:", median_frequencies)

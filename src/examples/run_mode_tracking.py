@@ -5,10 +5,8 @@ from methods.constants import PARAMS
 
 # pylint: disable=R0914
 def run_mode_tracking_with_local_sysid(config_path):
-    number_of_minutes = 0.2
 
     sysid_ouput, clusters, median_frequencies = MC.cluster_from_local_sysid(config_path,
-                                                                          number_of_minutes,
                                                                           PARAMS)
 
     # Print frequencies

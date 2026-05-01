@@ -211,7 +211,7 @@ def shutdown(mqtt_client: MQTTClient,name: str = None):
     Returns:
     """
     if name is not None:
-        print("Shutting down",name)
+        print("\nShutting down",name)
     mqtt_client.loop_stop()
     mqtt_client.disconnect()
     sys.stdout.flush()

@@ -59,7 +59,9 @@ def subscribe_cluster_output(config: Dict[str,Any]) -> Tuple[str, Dict[str,Any]]
 
 
     try:
-        result_ready.wait() # Wait until message arrives
+        # Use timeout to allow keyboard interrupt to work
+        while not result_ready.wait(timeout=2.0):
+            pass  # Keep checking with timeout
 
         if cluster_global is None:
             raise RuntimeError("Failed to receive cluster data.")

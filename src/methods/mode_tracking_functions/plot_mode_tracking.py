@@ -33,9 +33,7 @@ def plot_tracked_modes(
     ii = 0
     max_x = []
     for key in tracked_clusters.keys():
-        if key == "iteration":
-            pass
-        else:
+        if key != "iteration":
             tracked_cluster_list = tracked_clusters[key]
             m_f = []
             x = []
@@ -44,7 +42,7 @@ def plot_tracked_modes(
                 x.append(cluster['id'])
             sc = ax1.scatter(x, m_f, marker="o", s=50)
             col2 = sc.get_facecolors().tolist()
-            ax1.plot(x, m_f, color=col2[0])
+            ax1.plot(x, m_f, color=col2[0],label="Tracked cluster "+key+", f="+str(f"{np.mean(m_f):.2f}")+" [Hz]")
             max_x.append(max(x))
             ii += 1
 

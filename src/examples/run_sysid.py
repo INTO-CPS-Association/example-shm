@@ -5,10 +5,7 @@ from methods.constants import PARAMS
 from data.comm.mqtt import shutdown
 
 def run_sysid_and_plot(config_path):
-    number_of_minutes = 0.05
-
-    mqtt_client, sysid_output, _ = sysID.local_sysid(config_path,
-                                                              number_of_minutes)
+    mqtt_client, sysid_output, _ = sysID.local_sysid(config_path)
     mqtt_client.disconnect()
 
     _ = plot_pre_stabilization_diagram(sysid_output, PARAMS, fig_ax=None)
@@ -17,9 +14,7 @@ def run_sysid_and_plot(config_path):
 
 
 def run_sysid_and_print(config_path):
-    number_of_minutes = 0.2
-    mqtt_client, sysid_output, _ = sysID.local_sysid(config_path,
-                                                              number_of_minutes)
+    mqtt_client, sysid_output, _ = sysID.local_sysid(config_path)
 
     print(f"\n System Frequencies \n {sysid_output['Fn_poles']}")
     print(f"\n Cov \n{sysid_output['Fn_poles_cov']}")
@@ -29,9 +24,7 @@ def run_sysid_and_print(config_path):
     shutdown(mqtt_client,"sysid client")
 
 def run_sysid_and_publish(config_path):
-    number_of_minutes = 0.2
-    sysID.live_sysid(config_path, number_of_minutes, loop = False)
+    sysID.live_sysid(config_path, loop = False)
 
 def live_sysid_and_publish(config_path):
-    number_of_minutes = 0.2
-    sysID.live_sysid(config_path, number_of_minutes, loop = True)
+    sysID.live_sysid(config_path, loop = True)

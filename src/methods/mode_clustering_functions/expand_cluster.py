@@ -61,11 +61,14 @@ def cluster_expansion(cluster: Dict[str,Any], data: Dict[str,Any],
         index_f = np.argwhere(cluster_points['f'] == cluster['f'][0])
     else:
         index_f = np.argwhere(cluster_points['f'] == cluster['f'])
-    if len(index_f[:,0]) > 1:
+    if len(index_f[:,0]) > 1: #Make sure that the pole has the correct row if multiple exist
         index_row = np.argwhere(cluster_points['row'][index_f[:,0]] == cluster['row'][0])
         ip_id = int(index_f[index_row[0,0],0])
     else:
         ip_id = int(index_f[0,0])
+    
+    #Make the id of the expansion point be first, such that the indicies are e.g. [5,0,1,2,3,8,9,10],
+    # where 5 is the expansion point
     indecies = list(range(len(cluster_points['f'])))
     poped_id = indecies.pop(ip_id)
     indecies.insert(0,poped_id)
