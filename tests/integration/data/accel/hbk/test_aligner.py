@@ -95,7 +95,7 @@ def test_aligner_continuous_block_required(mqtt_setup):
     aligned, _ = aligner.extract(128)  # Should use keys 96, 128, 160, 192 (128 samples)
 
     assert aligned.shape == (3, 128), f"Expected 128 aligned rows, got {aligned.shape}"
-    assert np.allclose(aligned[0, :5], np.arange(5)), "Check data from channel 1"
+    assert np.allclose(aligned[0, :5], np.arange(5)), f"Check data from channel 1. {aligned[0, :5]},{np.arange(5)}"
     assert np.allclose(aligned[2, :5], np.arange(5)), "Check data from channel 3"
 
 
