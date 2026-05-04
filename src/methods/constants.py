@@ -52,9 +52,9 @@ MODEL_PARS_NAME = "beam_pars.jsonl"
 MODEL_FUNC = model.eval_yafem_model
 MODEL_PARAMETERS = {'modes': PARAMS['modes_search_paring'],
             'dofs_sel': np.array([[7,1],[6,1],[5,1],[4,1]]),
-            'k_rot': None, 
+            'k_rot': 1, 
             'l4': 0.1289,
-            'm': None,
+            'm': 0,
             }
 
 

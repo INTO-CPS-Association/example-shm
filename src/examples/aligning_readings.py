@@ -73,7 +73,7 @@ def wait_for_data(samples: int, aligner: Aligner,
 
 from methods import sysid as sysID
 
-def live_align_readings_and_plot(config_path):
+def live_align_readings_plot(config_path):
     number_of_samples = 2560
     
     import numpy as np
