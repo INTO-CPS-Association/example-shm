@@ -122,7 +122,6 @@ def estimate_updated_model(clusters: Dict[str,Any], model_parameters: Dict[str,A
                                                                     params)
         if omega_model is not None:
             print("Model frequencies:",omega_model,"[Hz]")
-
         return (X, omega_model, updated_model_parameters)
     except Exception as e:
         print('Model update is not succesful.', e)
@@ -201,7 +200,8 @@ def load_model_parameters() -> Optional[Tuple[str, Dict[str,Any]]]:
     try:
         path = Path(MODEL_DIR) / MODEL_PARS_NAME
         if not path.exists():
-            print(f"File not found: {path}. Proceed with standard parameters.")
+            print(f"File not found: {path}. Proceed with standard parameters from model and constants.py..")
+            _, __, ___, ____, _____ = MODEL_FUNC(MODEL_PARAMETERS) #Adds standard model parameters to variable
             model_parameters = MODEL_PARAMETERS
             timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
             return timestamp, model_parameters
@@ -211,9 +211,11 @@ def load_model_parameters() -> Optional[Tuple[str, Dict[str,Any]]]:
             timestamp = data['timestamp']
             model_parameters = data['parameters']
             if model_parameters is None:
-                print("Stored model_parameters are None. Proceed with standard parameters.")
+                print("Stored model_parameters are None. Proceed with standard parameters from model and constants.py.")
+                _, __, ___, ____, _____ = MODEL_FUNC(MODEL_PARAMETERS)
                 model_parameters = MODEL_PARAMETERS
-            print("Model parameters loaded successfully from:", path,"at:", timestamp)
+            else:
+                print("Model parameters loaded successfully from:", path,"at:", timestamp)
 
             return timestamp, model_parameters
     except Exception as e:

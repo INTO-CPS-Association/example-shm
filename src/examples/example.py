@@ -1,7 +1,7 @@
 # pylint: disable=E1120
 import click
 from examples.acceleration_readings import read_accelerometers
-from examples.aligning_readings import (align_acceleration_readings, live_align_readings_and_plot)
+from examples.aligning_readings import (align_acceleration_readings, live_align_readings_plot)
 from examples.run_sysid import (
     run_sysid_and_plot,
     run_sysid_and_publish,
@@ -55,7 +55,7 @@ def align_readings(ctx):
 @cli.command()
 @click.pass_context
 def live_align_readings_and_plot(ctx):
-    live_align_readings_and_plot(ctx.obj["CONFIG"])
+    live_align_readings_plot(ctx.obj["CONFIG"])
 
 @cli.command()
 @click.pass_context

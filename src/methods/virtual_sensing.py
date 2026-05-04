@@ -24,7 +24,6 @@ def virtual_sensing(number_of_samples, aligner, data_client, fs):
 
     """
     _, model_parameters = load_model_parameters()
-
     try:
         data, aligner_time = wait_for_data(number_of_samples, aligner, fs)
         try:
