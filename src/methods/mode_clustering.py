@@ -171,7 +171,8 @@ def subscribe_and_cluster(config: Dict[str,Any], params: Dict[str,Any]
     mqtt_client, _, __ = start_mqtt(config["mode_cluster"], _on_connect, _on_message=_on_message)
     print("Waiting for sysid data...")
     try:
-        result_ready.wait()  # Wait until message arrives
+        while not result_ready.wait(timeout=2.0):
+            pass  # Keep checking with timeout
         if sysid_output_global is None:
             raise RuntimeError("Failed to receive sysid data.")
 
