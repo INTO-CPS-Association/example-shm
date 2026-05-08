@@ -37,9 +37,9 @@ def get_data(
     Extracts aligned sensor data and runs system identification (sysID).
 
     Args:
-        sampling_period: How many minutes of data to pass to sysid.
+        samples (int): How many minutes of data to pass to sysid.
         aligner: An initialized Aligner object.
-        fs: Sampling frequency to use in the sysid algorithm.
+        fs (float): Sampling frequency to use in the sysid algorithm.
 
     Returns:
         A tuple (sysid_output, timestamp) if successful, or None if data is not ready.
@@ -80,7 +80,7 @@ def live_align_readings_plot(config_path):
     from functions.plot_aligned_readings import plot_timeseries, plot_timeseries_1
 
     fig_ax = None
-    aligner, mqtt_client, mqtt_config, fs = sysID.setup_sysid(config_path)
+    aligner, mqtt_client, mqtt_config, fs = sysID.setup_aligner(config_path)
     # try:
     prev_aligner_time = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
     prev_key = 0

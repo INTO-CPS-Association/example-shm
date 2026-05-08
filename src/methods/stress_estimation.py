@@ -1,13 +1,76 @@
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
+import datetime
+import threading
+import json
 import numpy as np
-from data.comm.mqtt import shutdown
-from methods.sysid import setup_sysid
+from paho.mqtt.client import Client as MQTTClient, MQTTMessage
+from data.comm.mqtt import (shutdown, start_mqtt)
+from methods.sysid import setup_aligner
 from methods.model_update import load_model_parameters
 from methods.stress_estimation_functions.stress_estimation_func import estimate_stress_beam
 from methods.stress_estimation_functions.plot_stress import plot_stress
 from methods.virtual_sensing import virtual_sensing
+from methods.mode_clustering import publish_data
+from methods.model_update import subscribe_data
 from methods.constants import (MODEL_FUNC, PARAMS)
 
+result_ready = threading.Event()
+data_global = None  # will store received cluster data inside callback
+timestamp_global = None
+
+# def _on_message(_client: MQTTClient, _userdata: Dict, msg: MQTTMessage) -> None:
+#     """Callback when a message is received."""
+#     global data_global
+#     global timestamp_global
+#     print(f"Message received on topic: {msg.topic}")
+#     try:
+#         raw = json.loads(msg.payload.decode("utf-8"))
+#         data = _convert_list_to_dict_or_array(raw["data"])
+#         timestamp = raw["timestamp"]
+#         print(f"Received cluster data at timestamp: {timestamp}")
+#         data_global = data
+#         timestamp_global = timestamp
+#         result_ready.set()
+
+#     except Exception as e:
+#         print(f"Error processing message: {e}")
+
+# def subscribe_data(config: Dict[str,Any]) -> Tuple[str, Dict[str,Any]]:
+#     """
+#     Args:
+#         config (Dict[str,Any]): Configuration dictionary
+#     Returns:
+#         data (Dict[str,Any]): data
+#         timestamp (str): timestamp string
+#     """
+#     global data_global
+#     global timestamp_global
+
+#     data_global = None  # Reset in case old data is present
+#     timestamp_global = None
+#     result_ready.clear()
+
+#     mqtt_client, _, _ = start_mqtt(config, _on_connect, _on_message=_on_message)
+#     print("Waiting for data...")
+
+
+#     try:
+#         # Use timeout to allow keyboard interrupt to work
+#         while not result_ready.wait(timeout=2.0):
+#             pass  # Keep checking with timeout
+
+#         if data_global is None:
+#             raise RuntimeError("Failed to receive data.")
+#         data_dict = data_global
+#         timestamp = timestamp_global
+#         print(f"Data received at {timestamp}.")
+
+#         shutdown(mqtt_client)
+#         return data_dict, timestamp
+
+#     except KeyboardInterrupt as exc:
+#         shutdown(mqtt_client,"data subscription")
+#         raise RuntimeError("Keyboard interrupt") from exc
 
 def stress_estimation_for_beam(displacement: np.ndarray[float], model_parameters: Dict[str,Any] = None):
     """
@@ -35,30 +98,51 @@ def stress_estimation_for_beam(displacement: np.ndarray[float], model_parameters
         return None, None, None
         
 
+def live_stress_estimation_subscribe_and_publish(config_path: str):
+    """
+    Estimate stress based on displacements and YAFEM model and publish
+    Args:
+        config_path (str): Path to config file
+    Returns:
+    """
+    aligner, data_client, config, fs = setup_aligner(config_path, config_name="stress")
+    
+    try:
+        while True:
+            data_dict, timestamp = subscribe_data(config)
+            data = data_dict['data']
+            model_parameters = data_dict['model_parameters']
+            _, stress, __ = stress_estimation_for_beam(data,model_parameters)
+            publish_data(config, timestamp, stress)
+    except KeyboardInterrupt as e:
+        shutdown(data_client, "stress estimation")
+        raise RuntimeError("Keyboard interrupt") from e
+    except RuntimeError as e:
+        shutdown(data_client, "stress estimation")
+        print("Runtime error",e)
+
 def live_stress_estimation_for_beam(config_path: str):
     """
     Estimate stress based on displacements and YAFEM model
     Args:
         config_path (str): Path to config file
     Returns:
-        stress (np.ndarray): Array of stress (elements x s) [MPa] (s = 3 in the case of a 2D beam: axial, curvature/bending at 1. node (bottom), curvature/bending at 2. node (top))
-        strain (np.ndarray): Array of strain (elements x s)
     """
-    aligner, data_client, mqtt_config, fs = setup_sysid(config_path)
+    aligner, data_client, mqtt_config, fs = setup_aligner(config_path)
     
     try:
         while True:
-            displacement, _, model_parameters = virtual_sensing(mqtt_config['SamplesToCollect'], aligner, data_client, fs)
+            displacement, _, model_parameters, __ = virtual_sensing(mqtt_config['SamplesToCollect'], aligner, data_client, fs)
             _, stress, __ = stress_estimation_for_beam(displacement,model_parameters)
             print("Max bending stress at all DOFs [MPa]")
             print(np.max(stress[:,1]).tolist())
             print("Min. bending stress at all DOFs [MPa]")
             print(np.min(stress[:,1]).tolist())
     except KeyboardInterrupt as e:
-        shutdown(data_client, "Virtual sensing")
+        shutdown(data_client, "stress estimation")
         raise RuntimeError("Keyboard interrupt") from e
     except RuntimeError as e:
-        shutdown(data_client, "Virtual sensing")
+        shutdown(data_client, "stress estimation")
         print("Runtime error",e)
 
 def stress_estimation_and_plot(stress: np.ndarray[float]):

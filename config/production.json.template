@@ -8,15 +8,15 @@
         "QoS": 1,
         "SamplesToCollect": 2560,
         "MetadataToSubscribe": [
-          "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/raw/metadata"
+          "cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/ANALYSIS/METADATA"
         ],
         "TopicsToSubscribe": [
-          "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/raw/data",
-          "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/2/acc/raw/data",
-          "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/3/acc/raw/data",
-          "cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/4/acc/raw/data"
+          "cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/ANALYSIS/DATA",
+          "cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/ANALYSIS/DATA",
+          "cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/ANALYSIS/DATA",
+          "cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/ANALYSIS/DATA"
         ],
-        "TopicsToPublish": ["cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/sysid/data"]
+        "TopicsToPublish": ["cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/SYSID/DATA"]
       },
 
     "mode_cluster": {
@@ -26,8 +26,8 @@
         "password": "",
       "ClientID": "NOT_NEEDED",
       "QoS": 2,
-      "TopicsToSubscribe": ["cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/sysid/data"],
-      "TopicsToPublish": ["cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/mode_cluster/data"]
+      "TopicsToSubscribe": ["cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/SYSID/DATA"],
+      "TopicsToPublish": ["cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/MODE_CLUSTER/DATA"]
     },
 
     "model_update": {
@@ -37,8 +37,48 @@
         "password": "",
       "ClientID": "NOT_NEEDED",
       "QoS": 2,
-      "TopicsToSubscribe": ["cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/mode_cluster/data"],
-      "TopicsToPublish": ["cpsens/d8-3a-dd-37-d2-7e/3050-A-060_sn_106209/1/acc/model_update/data"]
+      "TopicsToSubscribe": ["cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/MODE_CLUSTER/DATA"],
+      "TopicsToPublish": ["cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/MODEL_UPDATE/DATA"]
+    },
+
+    "virtual_sensing": {
+      "host": "",
+      "port": 0,
+      "userId": "",
+      "password": "",
+      "ClientID": "NOT_NEEDED",
+      "QoS": 2,
+      "SamplesToCollect": 2560,
+      "MetadataToSubscribe": [ "cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/ANALYSIS/METADATA"],
+      "TopicsToSubscribe": [
+          "cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/ANALYSIS/DATA",
+          "cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/ANALYSIS/DATA",
+          "cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/ANALYSIS/DATA",
+          "cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/ANALYSIS/DATA"
+        ],
+      "TopicsToPublish": ["cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/VIRTUAL_SENSING/DATA"]
+    },
+
+    "stress": {
+      "host": "",
+      "port": 0,
+      "userId": "",
+      "password": "",
+      "ClientID": "NOT_NEEDED",
+      "QoS": 2,
+      "TopicsToSubscribe": ["cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/VIRTUAL_SENSING/DATA"],
+      "TopicsToPublish": ["cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/STRESS/DATA"]
+    },
+
+    "fatigue": {
+      "host": "",
+      "port": 0,
+      "userId": "",
+      "password": "",
+      "ClientID": "NOT_NEEDED",
+      "QoS": 2,
+      "TopicsToSubscribe": ["cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/STRESS/DATA"],
+      "TopicsToPublish": []
     }
 }
 

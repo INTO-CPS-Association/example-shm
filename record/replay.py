@@ -89,7 +89,7 @@ def replay_mqtt_messages(config_path: str, loop: int = 1) -> None:
     """
     config = load_config(config_path)
     MQTT_config = config["MQTT"]
-    publish_client = setup_publish_client(MQTT_config)
+    publish_client, publish_topics = setup_publish_client(MQTT_config, verbose = False)
     origin_list = []
     try:
         path = RECORDINGS_DIR / FILE_NAME
@@ -99,7 +99,6 @@ def replay_mqtt_messages(config_path: str, loop: int = 1) -> None:
         with open(path, "r", encoding="utf-8") as replay_file:
             total_lines = len(replay_file.readlines())
             replay_file.close()
-        publish_client.loop_start()
         for ii in range(loop):
             print(f"Replay function iteration {ii+1}/{loop}.")
             accumulated_delay = 0.0
@@ -114,8 +113,8 @@ def replay_mqtt_messages(config_path: str, loop: int = 1) -> None:
                     origin = record.get("origin")
                     if origin not in origin_list:
                         print(f"Topic: {topic_key}, with origin topic:",origin)
-                        if topic_key in MQTT_config["TopicsToPublish"]:
-                            print("Publish topic:",MQTT_config["TopicsToPublish"][topic_key])
+                        if topic_key in publish_topics:
+                            print("Publish topic:",publish_topics[topic_key])
                         origin_list.append(origin)
                     qos = record.get("qos", 0)
 

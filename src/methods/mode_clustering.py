@@ -4,7 +4,7 @@ from typing import Any, List, Dict, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
 from paho.mqtt.client import Client as MQTTClient, MQTTMessage, Properties
-from data.comm.mqtt import (start_mqtt, publish_to_mqtt, shutdown)
+from data.comm.mqtt import (start_mqtt, setup_publish_client, publish_to_mqtt, shutdown)
 from methods import sysid as sysID
 from methods.mode_clustering_functions.clustering import cluster_func
 from functions.util import (convert_numpy_to_list, _convert_list_to_dict_or_array)
@@ -61,27 +61,27 @@ def cluster_sysid_output(sysid_output: Any, params: Dict[str,Any]) -> Tuple[Dict
                                    for key in dictionary_clusters.keys()])
     return dictionary_clusters, median_frequencies
 
-def publish_clusters(config: Dict[str,Any], timestamp: str,
-                     clusters: Dict[str,Any]) -> None:
+def publish_data(config: Dict[str,Any], timestamp: str,
+                     data: Any) -> None:
     """
     Publish clusters to publish topic
 
     Args:
         config (Dict[str,Any]): Configuration dictionary
         timestamp (str): Timestamp of data
-        clusters (Dict[str,Any]): Dictionary of clusters
+        data (Any): Any data to publish
 
     Returns:
     """
    
-    publish_client, _, publish_topics = start_mqtt(config["mode_cluster"], _on_connect)
+    publish_client, publish_topics = setup_publish_client(config)
 
     payload = {
                     "timestamp": timestamp,
-                    "cluster_dictionary": convert_numpy_to_list(clusters)
+                    "data": convert_numpy_to_list(data)
                 }
     
-    publish_to_mqtt(publish_client,publish_topics, payload, "clusters")
+    publish_to_mqtt(publish_client,publish_topics, payload, "data")
     shutdown(publish_client)
 
 def cluster_plots(plot: List[bool], clusters: Dict[str,Any], sysid_output: Dict[str, Any],
@@ -210,7 +210,7 @@ def live_mode_clustering(config: Dict[str,Any], params: Dict[str,Any],
 
             fig_axes = cluster_plots(plot, clusters, sysid_output, params, fig_axes)
             if publish:
-                publish_clusters(config, timestamp, clusters)
+                publish_data(config['mode_cluster'], timestamp, clusters)
     except KeyboardInterrupt:
         print("Keyboard interrupt of live clustering\n")
     except Exception as e:

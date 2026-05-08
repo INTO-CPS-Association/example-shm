@@ -19,7 +19,7 @@ def load_config(config_path: str) -> dict:
         config_path (str): Path to the JSON configuration file.
 
     Returns:
-        dict: The loaded configuration.
+        json_config (dict): The loaded configuration.
 
     Raises:
         FileNotFoundError: If the file is not found.
@@ -115,7 +115,7 @@ def setup_mqtt_client(config: Dict[str,Any], topic_to_subscribe: str):
 
     return mqttc
 
-def setup_publish_client(config: Dict[str,Any]) -> MQTTClient:
+def setup_publish_client(config: Dict[str,Any], verbose: bool = True) -> MQTTClient:
     """
     Generate publish client
     Args:
@@ -130,8 +130,12 @@ def setup_publish_client(config: Dict[str,Any]) -> MQTTClient:
     )
     if config["userId"]:
         publish_client.username_pw_set(config["userId"], config["password"])
+    if verbose:
+        publish_client.on_publish = create_on_publish_callback()
     publish_client.connect(config["host"], config["port"], keepalive=60)
-    return publish_client
+    publish_client.loop_start()
+    publish_topics = config["TopicsToPublish"]
+    return publish_client, publish_topics
 
 def start_mqtt(config: Dict[str,Any], _on_connect: Callable, _on_message: Callable = None) -> Tuple[MQTTClient,List[str],List[str]]:
     """
@@ -196,8 +200,13 @@ def publish_to_mqtt(publish_client: MQTTClient, publish_topics: List[str],
         _ = reconnect_client(publish_client)
 
         for topic in publish_topics:
-            publish_client.publish(topic, message, qos=1)
-            print(f"Published {name} to {topic}")
+            result, mid = publish_client.publish(topic, message, qos=1)
+            if result == 0:
+                print(f"Published {name} to {topic} (mid: {mid})")
+            else:
+                print(f"Failed to publish {name} to {topic}: MQTT error code {result}")
+                #Code 3 = server unavailable
+                #Code 7 = payload to large
 
     except Exception as e:
         print(f"\nFailed to publish {name}: {e}")

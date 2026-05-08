@@ -49,6 +49,7 @@ The format of configuration file is,
         "password": "",
         "ClientID": "NOT_NEEDED",
         "QoS": 1,
+        "SamplesToCollect": 2560,
         "MetadataToSubscribe":["sensors/1/acc/raw/metadata"],
         "TopicsToSubscribe": [
           "sensors/1/acc/raw/data",
@@ -79,7 +80,48 @@ The format of configuration file is,
       "QoS": 2,
       "TopicsToSubscribe": ["sensors/1/acc/mode_cluster/data"],
       "TopicsToPublish": ["sensors/1/acc/model_update/data"]
+    },
+
+    "virtual_sensing": {
+      "host": "",
+      "port": 0,
+      "userId": "",
+        "password": "",
+      "ClientID": "NOT_NEEDED",
+      "QoS": 2,
+      "SamplesToCollect": 2560,
+      "MetadataToSubscribe":["sensors/1/acc/raw/metadata"],
+      "TopicsToSubscribe": [
+          "sensors/1/acc/raw/data",
+          "sensors/2/acc/raw/data",
+          "sensors/3/acc/raw/data",
+          "sensors/4/acc/raw/data"
+        ],
+        "TopicsToPublish": ["sensors/1/acc/virtual_sensing/data"]
+    },
+
+    "stress": {
+      "host": "",
+      "port": 0,
+      "userId": "",
+        "password": "",
+      "ClientID": "NOT_NEEDED",
+      "QoS": 2,
+      "TopicsToSubscribe": ["sensors/1/acc/virtual_sensing/data"],
+      "TopicsToPublish": ["sensors/1/acc/stress/data"]
+    },
+
+    "fatigue": {
+      "host": "",
+      "port": 0,
+      "userId": "",
+        "password": "",
+      "ClientID": "NOT_NEEDED",
+      "QoS": 2,
+      "TopicsToSubscribe": ["sensors/1/acc/stress/data"],
+      "TopicsToPublish": []
     }
+}
 }
 ```
 Where the MQTT topic structure follows the pattern:
@@ -158,11 +200,21 @@ The following experiments can be run using the package.
     1. **virtual-sensing**: Reads latest model parameters, applies a filter if specified and estimates the displacements and accelerations for all unmeasured DOFs.
     2. **virtual-sensing-and-plot**: Reads latest model parameters, applies a filter if specified and estimates the displacements and accelerations for all unmeasured DOFs. The accelerations are plotted in the end.
     3. **live-virtual-sensing**: Continuously runs `virtual-sensing`. Reads latest model parameters, applies a filter if specified and estimates the displacements and accelerations for all unmeasured DOFs.
+    4. **live-virtual-sensing-and-publish**: Continuously runs `virtual-sensing`. Reads latest model parameters, applies a filter if specified and estimates the displacements and accelerations for all unmeasured DOFs. These displacements and model parameters are published.
 
 * **stress-strain-estimation** demonstrates the use of `stress_strain_estimation` with three cases:
     1. **stress-strain-estimation**: Reads latest model parameters and calculates the bending stress and forces for a 2D beam.
     2. **stress-strain-estimation-and-plot**: Reads latest model parameters and calculates and plots the bending stress and forces for a 2D beam.
     3. **live-stress-strain-estimation**: Continuously runs `stress-strain-estimation`. Reads latest model parameters and calculates the bending stress and forces for a 2D beam.
+    4. **live-stress-estimation-subscribe-and-publish**: Continuously subscribes to virtual sensing results and apply stress estimation. The stresses are then published.
+
+* **fatigue**
+    1. **fatigue-with-local-stress-estimation**: Run stress-stain-estimation and run fatigue calculations and plot fatigue the results.
+    2. **live-fatigue-with-local-stress-estimation**: Continuously run stress-stain-estimation and run fatigue calculations and plot fatigue the results.
+    3. **live-fatigue-with-remote-stress-estimation**: Continuously subscribe to stress-estimation results and run fatigue calculations and plot fatigue the results.
+    4. **plot-rainflow-counting**: Plots rainflow counting algorithm
+
+
 
 ```bash
 python .\src\examples\example.py align-readings  # run an experiment with real data (Needs "production.json" Config)
@@ -234,7 +286,7 @@ poetry build
 ```
 
 This will create a `.whl` file in the `dist/` directory,
-e.g., `dist/cp_sens-0.6.2-py3-none-any.whl`.
+e.g., `dist/cp_sens-0.7.0-py3-none-any.whl`.
 
 ### Step 2.2: Create and Activate a Virtual Environment
 
@@ -251,7 +303,7 @@ pip install example_shm-<version>-py3-none-any.whl
 ```
 
 Replace `<version>` with the version number found in the `.whl`
-filename. (e.g `0.6.2`).
+filename. (e.g `0.7.0`).
 
 ## Step 2.5: Use
 
@@ -284,18 +336,24 @@ Commands:
   align-readings
   clustering-with-local-sysid
   clustering-with-remote-sysid
+  fatigue-with-local-stress-estimation
   live-align-readings-and-plot
   live-clustering-with-remote-sysid
   live-clustering-with-remote-sysid-and-publish
+  live-fatigue-with-local-stress-estimation
+  live-fatigue-with-remote-stress-estimation
   live-mode-tracking-with-remote-sysid
   live-model-update-with-remote-clustering
   live-model-update-with-remote-sysid
+  live-stress-estimation-subscribe-and-publish
   live-stress-strain-estimation
   live-sysid-publish
   live-virtual-sensing
+  live-virtual-sensing-and-publish
   mode-tracking-with-local-sysid
   mode-tracking-with-remote-sysid
   model-update-with-local-sysid
+  plot-rainflow-counting
   record
   replay
   stress-strain-estimation
