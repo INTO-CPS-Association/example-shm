@@ -127,7 +127,7 @@ def rainflow_c(series: list[float],
             Delta_stress = R2
             try: # If stress range and mean already exists add 1 to existing count
                 result[R2,stress_mean] += 1
-            except: # If stress range and mean does not already exists
+            except KeyError: # If stress range and mean does not already exists
                 result[R2,stress_mean] = 1   
             stress_list.append(R2)
             mean_list.append(stress_mean)
@@ -317,13 +317,8 @@ def cycles_SN(sn_curve: dict[str, Any], stress_list: list[float],
                     res_stress.append(x)
                     cycles.append(C[j]/(x**m[j]))
                     n_cycles.append(n_count[i])
-                    try:
-                        res_mean.append(mean_list[i])
-                    except:
-                        pass
-                    break
-                else:
-                    break
+                    res_mean.append(mean_list[i])
+                break
     
     return cycles, n_cycles, res_stress, res_mean
 
@@ -347,10 +342,8 @@ def damage(N1: list[float], n1: list[int],
     if N1 == [0]: #If no cycles are counted
         return 0, 0
 
-    try: #Try if the damage output should be summed or listed for all cycles
-        list_D = kwargs["list_D"]
-    except:
-        list_D = False
+    #Try if the damage output should be summed or listed for all cycles
+    list_D = kwargs.get("list_D",False)
 
     if (type(n1) == int) or (type(n1) == float): # If value given is not a list, then make it a list
         n1 = [n1]

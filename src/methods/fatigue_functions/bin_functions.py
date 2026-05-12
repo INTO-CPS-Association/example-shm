@@ -99,7 +99,7 @@ def bin_func(xx: list[float], hist_data: dict[str, Any], **kwargs: Optional[Any]
         hist_prev = hist_data["hist"]
         bins_prev = hist_data["bin_edges"]
         
-    except:
+    except KeyError:
         hist_prev = np.zeros((1,1))
         bins_prev = [[],[]]
 
@@ -248,7 +248,7 @@ def bin_func2D(xx: list[float], hist_data: dict[str,any],
             #Added hisogram and bin edges
             hist = np.add(hist_new,hist_prev.astype(dtype=np.float64)) #Add hist counts together
         except RuntimeError as e:
-            raise("hist_new and hist_prev could not be added together")
+            raise RuntimeError("hist_new and hist_prev could not be added together")
         nbins_x = hist.shape[1]
         nbins_y = hist.shape[0]
         xbin_edges = np.linspace(0,max(max(xbins_new),max(xbins_prev)),round(nbins_x)+1)
@@ -261,7 +261,7 @@ def bin_func2D(xx: list[float], hist_data: dict[str,any],
         hist_prev = hist_data["hist"]
         bins_prev = hist_data["bin_edges"]
         
-    except:
+    except KeyError:
         hist_prev = np.zeros((1,1))
         bins_prev = [[],[]]
 

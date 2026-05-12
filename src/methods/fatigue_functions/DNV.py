@@ -78,7 +78,7 @@ def dnv_sn(joint_type: str,enviroment: str,**kwargs: Optional[Any])-> dict[str, 
             if (joint_type.lower() == "bolt"): #If bolt is chosen, try if stress_type is supplied
                 try:
                     stress_type = kwargs['stress_type'].lower()
-                except:
+                except (KeyError, AttributeError):
                     print("No stress type is given for the bolt. Default = tension is used.")
                     stress_type = "tension" #Default for bolts
             else:
@@ -93,8 +93,8 @@ def dnv_sn(joint_type: str,enviroment: str,**kwargs: Optional[Any])-> dict[str, 
                         pass
                     else:
                         raise ValueError('Invalid detail. E.g. detail="B1"')
-                except:
-                    raise ValueError('Joint must be provided with a detail')
+                except (KeyError, AttributeError):
+                    raise KeyError('Joint must be provided with a detail')
             
             if joint_type.lower() == "forges_node":
                 pass
@@ -105,7 +105,7 @@ def dnv_sn(joint_type: str,enviroment: str,**kwargs: Optional[Any])-> dict[str, 
                 #         detail = "B1"
                 #     else:
                 #         detail = "C"
-                # except:
+                # except KeyError:
                 #     print("No DFF given. Default detail of C is choosen.")
                 #     detail = "C"
             if joint_type.lower() == "cast_node":
@@ -124,12 +124,10 @@ def dnv_sn(joint_type: str,enviroment: str,**kwargs: Optional[Any])-> dict[str, 
 
                 try: #Test if detail is a pipe detail
                     detail = kwargs["detail"].upper()
-                    if detail in pipe_detail:
-                        pass
-                    else:
-                        raise ValueError('Invalid detail. E.g. detail="F1"')
-                except:
-                    pass          
+                    if detail not in pipe_detail:
+                        raise KeyError('Invalid detail. E.g. detail="F1"')
+                except (KeyError, AttributeError) as e:
+                    raise KeyError("Key error",e)         
 
 
             if (joint_type.lower() == "bolt") and (stress_type == "shear"): #If bolt is in shear
@@ -264,23 +262,19 @@ def dnv_sn(joint_type: str,enviroment: str,**kwargs: Optional[Any])-> dict[str, 
                 detail = kwargs["detail"].upper()
                 if enviroment.lower() == "seawater_cp":
                     detail_list = ['BM1','BM2','BM3','BM4']
-                    if detail in detail_list:
-                        pass
-                    else:
+                    if detail not in detail_list:
                         raise ValueError('Invalid detail. Eg. detail="BM1"')
                 else:
                     detail_list = ['BM1','BM2','BM3','BM4','BM5']
-                    if detail in detail_list:
-                        pass
-                    else:
+                    if detail not in detail_list:
                         raise ValueError('Invalid detail. Eg. detail="BM1"')
-            except:
-                raise ValueError('Joint must be provided with a detail')
+            except KeyError:
+                raise KeyError('Joint must be provided with a detail')
             
             try:
                 surf = kwargs["surf"]
-            except:
-                raise ValueError('Joint must be provided with a surface roughness, R_a [µm]. E.g. surf=3.2')
+            except KeyError:
+                raise KeyError('Joint must be provided with a surface roughness, R_a [µm]. E.g. surf=3.2')
 
 
             if enviroment.lower() == "air":
