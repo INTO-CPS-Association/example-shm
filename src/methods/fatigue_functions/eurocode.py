@@ -42,8 +42,8 @@ def eurocode_sn(DC: int, stress_type: str, SF: Optional[float]=1,
                     pass
                 else:
                     raise ValueError('Unknown signal type, use eg. signal_type = "VA" or "CA"')
-            except:
-                raise ValueError('Signal type must be specefied, eg. signal_type = "VA" or "CA"')
+            except ValueError as e:
+                raise ValueError('Signal type must be specefied, eg. signal_type = "VA" or "CA"',e)
 
             if DC >= 71: #For large DC the slope is defined
                 m1 = 7
@@ -54,12 +54,12 @@ def eurocode_sn(DC: int, stress_type: str, SF: Optional[float]=1,
             else: #At other DC the slopes vary
                 try:
                     m1 = kwargs["m1"]
-                except:
-                    raise ValueError("m1-slope must be provided")
+                except KeyError:
+                    raise KeyError("m1-slope must be provided")
                 
                 try: #Most DC have m2 as m1+2. So m2 is mostly not needed.
                     m2 = kwargs["m2"]
-                except:
+                except KeyError:
                     m2 = m1+2
 
                 N_DC = 2*10**6 #Cycles at Detail Catagory
@@ -101,16 +101,16 @@ def eurocode_sn(DC: int, stress_type: str, SF: Optional[float]=1,
                         pass
                     else:
                         raise ValueError('Unknown signal type, use eg. signal_type = "VA" or "CA"')
-                except:
+                except ValueError:
                     raise ValueError('Signal type must be specefied, eg. signal_type = "VA" or "CA"')
 
                 try: #For override of slope
                     m1 = kwargs["m1"]
-                except:
+                except KeyError:
                     m1 = 3 #Slope
                 try: #For override of slope
                     m2 = kwargs["m2"]
-                except:
+                except KeyError:
                     m2 = 5
 
                 N_DC = 2*10**6 #Cycles at Detail Catagory
@@ -145,7 +145,7 @@ def eurocode_sn(DC: int, stress_type: str, SF: Optional[float]=1,
             elif stress_type.lower() == "tau": # Shear stress
                 try: #For override of slope
                     m1 = kwargs["m1"]
-                except:
+                except KeyError:
                     m1 = 5 #Slope
                 N_DC = 2*10**6 #Cycles at Detail Catagory
                 N_D = 1*10**8 #Cycles at constant amplitude
@@ -170,7 +170,7 @@ def eurocode_sn(DC: int, stress_type: str, SF: Optional[float]=1,
                         pass
                     else:
                         raise ValueError('Unknown signal type, use eg. signal_type = "VA" or "CA"')
-                except:
+                except ValueError:
                     raise ValueError('Signal type must be specefied, eg. signal_type = "VA" or "CA"')
                 
                 # Find the nearest DC above the given DC*
@@ -181,12 +181,12 @@ def eurocode_sn(DC: int, stress_type: str, SF: Optional[float]=1,
 
                 try: #For override of slope
                     m1 = kwargs["m1"]
-                except:
+                except KeyError:
                     m1 = 3 #Slope
 
                 try: #For override of slope
                     m2 = kwargs["m2"]
-                except:
+                except KeyError:
                     m2 = 5
                 N_DC = 2*10**6 #Cycles at Detail Catagory
                 N_D_CA = 1*10**7 #Cycles at constant amplitude

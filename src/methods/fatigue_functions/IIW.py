@@ -42,7 +42,7 @@ def iiw_sn(FAT: int, stress_type: str,SF: Optional[float] = 1,
                 pass
             else:
                 raise ValueError('Unknown signal type, use eg. signal_type = "VA" or "CA"')
-        except:
+        except ValueError:
             raise ValueError('Signal type must be specefied, eg. signal_type = "VA" or "CA"')
 
 
@@ -54,38 +54,38 @@ def iiw_sn(FAT: int, stress_type: str,SF: Optional[float] = 1,
             if material.lower()[0:2] == "al":
                 try: #Slope override
                     m1 = kwargs["m1"]
-                except:
+                except KeyError:
                     if FAT >= 70:
                         m1 = 5
                     elif FAT in FAT_list_alu:
                         try:
                             m1 = kwargs["m1"]
-                        except:
-                            raise ValueError("m1 must be supplied in the case of FAT 50, 45, 40")
+                        except KeyError:
+                            raise KeyError("m1 must be supplied in the case of FAT 50, 45, 40")
                     else:
                         m1 = 3
             else: #steel
                 try: #Slope override
                     m1 = kwargs["m1"]
-                except:
+                except KeyError:
                     if FAT > 125:
                         m1 = 5
                     elif FAT == 125:
                         try:
                             m1 = kwargs["m1"]
-                        except:
-                            raise ValueError("m1 must be supplied in the case of FAT 125")
+                        except KeyError:
+                            raise KeyError("m1 must be supplied in the case of FAT 125")
                     else:
                         m1 = 3
             try: #Slope override
                 m2 = kwargs["m2"]
-            except:
+            except KeyError:
                 if signal_type == "CA": #IIW 4.2.2
                     m2 = 22
                 elif signal_type == "VA": #IIW 4.2.3
                     m2 = 2*m1-1
                 else:
-                    raise ValueError('Unknown signal type, use eg. signal_type = "VA" or "CA"')
+                    raise KeyError('Unknown signal type, use eg. signal_type = "VA" or "CA"')
         
             N_FAT = 2*10**6 #Cycles at Detail Catagory
             N_D = 10**7 #Cycles at constant amplitude
@@ -136,12 +136,12 @@ def iiw_sn(FAT: int, stress_type: str,SF: Optional[float] = 1,
         elif stress_type.lower() == "tau":
             try: #Slope override
                 m1 = kwargs["m1"]
-            except: 
+            except KeyError: 
                 m1 = 5
 
             try: #Slope override
                 m2 = kwargs["m2"]
-            except:
+            except KeyError:
                 if signal_type == "CA": #IIW 4.2.2
                     m2 = 22
                 elif signal_type == "VA": #IIW 4.2.3
