@@ -1,5 +1,4 @@
-from typing import Dict, Any, Optional, List
-import numpy as np
+from typing import Dict, Any
 from datetime import datetime
 from data.comm.mqtt import (shutdown, load_config)
 from methods.sysid import setup_aligner

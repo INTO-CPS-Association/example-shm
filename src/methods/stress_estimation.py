@@ -1,8 +1,7 @@
 from typing import Any, Dict
 import threading
 import numpy as np
-from paho.mqtt.client import Client as MQTTClient, MQTTMessage
-from data.comm.mqtt import (shutdown, start_mqtt)
+from data.comm.mqtt import (shutdown)
 from methods.sysid import setup_aligner
 from methods.model_update import load_model_parameters
 from methods.stress_estimation_functions.stress_estimation_func import estimate_stress_beam

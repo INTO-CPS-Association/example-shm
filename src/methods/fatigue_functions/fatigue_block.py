@@ -1,5 +1,4 @@
 from typing import Optional, Any
-from datetime import datetime
 import numpy as np
 from methods.fatigue_functions.synthetic import synthetic_sn
 from methods.fatigue_functions.eurocode import eurocode_sn
