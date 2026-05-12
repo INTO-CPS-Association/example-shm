@@ -1,5 +1,5 @@
 from typing import Dict, Any, Optional, List, Self
-from methods.fatigue_functions.fatigue_block import fatigue
+import methods.fatigue_functions.fatigue_block as fatigue
 from methods.fatigue_functions.fatigue_plots import plot_rainflow
 
 class fatigue_analysis():

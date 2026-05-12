@@ -1,6 +1,8 @@
 from typing import Dict, Any
 import numpy as np
 import matplotlib.pyplot as plt
+from data.accel.hbk.aligner import Aligner
+from paho.mqtt.client import Client as MQTTClient
 from data.comm.mqtt import (shutdown)
 from methods.sysid import setup_aligner
 from methods.model_update import load_model_parameters
@@ -10,12 +12,13 @@ from methods.virtual_sensing_functions.virtual_sensing_func import displacement_
 from methods.virtual_sensing_functions.plot_virtual_sensing import plot_virtual_sensing
 from methods.constants import PARAMS
 
-def virtual_sensing(number_of_samples, aligner, data_client, fs):
+def virtual_sensing(number_of_samples: int, aligner: Aligner, data_client: MQTTClient, fs: float) -> tuple[np.ndarray[float, Any], np.ndarray[float, Any], Dict[str,Any], str] :
     """
     Continuously estimate displacement with virtual sensing
     Args:
         number_of_samples (int): Number og minutes to sample data
-        aligner: Aligner
+        aligner (Aligner): Aligner to align data
+        data_client (MQTTClient): MQTT client
         fs (float): Sample frequency
 
     Returns:
@@ -44,7 +47,7 @@ def virtual_sensing(number_of_samples, aligner, data_client, fs):
         print("Keyboard interrupt of virtual sensing\n")
         return None, None, None, None
 
-def live_virtual_sensing(config_path):
+def live_virtual_sensing(config_path: str) -> None:
     """
     Estimate displacement with virtual sensing 
     Args:
@@ -67,7 +70,7 @@ def live_virtual_sensing(config_path):
         shutdown(data_client, "Virtual sensing")
         print("Keyboard interrupt ofvVirtual sensing\n")
 
-def live_virtual_sensing_publish(config_path):
+def live_virtual_sensing_publish(config_path: str) -> None:
     """
     Estimate displacement with virtual sensing 
     Args:
@@ -92,7 +95,7 @@ def live_virtual_sensing_publish(config_path):
         shutdown(data_client, "Virtual sensing")
         print("Keyboard interrupt of virtual sensing\n")
 
-def virtual_sensing_and_plot(config_path):
+def virtual_sensing_and_plot(config_path: str) -> None:
     """
     Estimate displacement with virtual sensing 
     Args:

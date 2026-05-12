@@ -1,6 +1,6 @@
 import numpy as np
 from beam import beam_yafem_model as model
-from methods.fatigue_functions.fatigue_block import fatigue as fat
+from methods.fatigue_functions.IIW import iiw_sn
 
 # Constants for sysID
 WAIT_METADATA = 11 # Wait max 11 seconds for getting metadata message
@@ -83,6 +83,6 @@ mean_stress = 25 #To be adjusted
 R_m = 360 #MPa #Ultimate tensile strength Low value for s235
 k_mean = 1# 1 - mean_stress/R_m #Modified Goodman
 SaftyFactor = 1 * 1/k_thick * 1/k_rs * 1/k_mean
-SN_CURVE = fat.IIW_SN(140,"sigma",SF=SaftyFactor,signal_type="VA")
+SN_CURVE = iiw_sn(140,"sigma",SF=SaftyFactor,signal_type="VA")
 FATIGUE_DOF = [3, 2]
 DAMAGE_SUM = 0.5

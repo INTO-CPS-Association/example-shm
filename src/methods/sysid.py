@@ -5,7 +5,6 @@ from datetime import datetime
 import numpy as np
 from paho.mqtt.client import Client as MQTTClient
 from pyoma2.setup.single import SingleSetup
-from data.accel.aligner import IAligner
 from data.comm.mqtt import (load_config,setup_mqtt_client,shutdown,publish_to_mqtt)
 from data.accel.metadata import extract_fs_from_metadata
 from data.accel.hbk.aligner import Aligner
@@ -79,7 +78,7 @@ def setup_client(mqtt_config: Dict[str, Any]) -> Tuple[MQTTClient, float]:
     data_client.loop_start()
     return data_client, fs
 
-def setup_aligner(config_path, config_name: str = "sysid", data_topic_indexes: List[int] = None) -> Tuple[IAligner, MQTTClient,
+def setup_aligner(config_path, config_name: str = "sysid", data_topic_indexes: List[int] = None) -> Tuple[Aligner, MQTTClient,
                                                           Dict[str,Any], float]:
     """
     Helper function to set up aligner.
@@ -90,7 +89,7 @@ def setup_aligner(config_path, config_name: str = "sysid", data_topic_indexes: L
         data_topic_indexes (list): Indexes of topics to subscribe to.
 
     Returns:
-        Aligner (IAligner): The aligner object for data alignment.
+        Aligner (Aligner): The aligner object for data alignment.
         data_client (MQTTClient): The MQTT client used for data subscription.
         mqtt_config (Dict[str,Any]): Configuration dictionary for the MQTT client.
         fs (float): Sampling frequency.
@@ -143,7 +142,7 @@ def wait_for_sysid_output(samples: int, aligner: Aligner,
 
     Args:
         sampling_period (float): How many minutes of data to pass to sysid.
-        aligner (IAligner): An initialized Aligner object.
+        aligner (Aligner): An initialized Aligner object.
         fs (float): Sampling frequency to use in the sysid algorithm.
 
     Returns:

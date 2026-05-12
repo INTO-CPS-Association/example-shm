@@ -15,7 +15,7 @@ result_ready = threading.Event()
 data_global = None  # will store received cluster data inside callback
 timestamp_global = None
 
-def stress_estimation_for_beam(displacement: np.ndarray[float], model_parameters: Dict[str,Any] = None):
+def stress_estimation_for_beam(displacement: np.ndarray[float], model_parameters: Dict[str,Any] = None) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Estimate stress based on displacements and YAFEM model
     Args:
@@ -41,7 +41,7 @@ def stress_estimation_for_beam(displacement: np.ndarray[float], model_parameters
         return None, None, None
         
 
-def live_stress_estimation_subscribe_and_publish(config_path: str):
+def live_stress_estimation_subscribe_and_publish(config_path: str) -> None:
     """
     Estimate stress based on displacements and YAFEM model and publish
     Args:
@@ -64,7 +64,7 @@ def live_stress_estimation_subscribe_and_publish(config_path: str):
         shutdown(data_client, "stress estimation")
         print("Runtime error",e)
 
-def live_stress_estimation_for_beam(config_path: str):
+def live_stress_estimation_for_beam(config_path: str) -> None:
     """
     Estimate stress based on displacements and YAFEM model
     Args:
@@ -88,7 +88,7 @@ def live_stress_estimation_for_beam(config_path: str):
         shutdown(data_client, "stress estimation")
         print("Runtime error",e)
 
-def stress_estimation_and_plot(stress: np.ndarray[float]):
+def stress_estimation_and_plot(stress: np.ndarray[float]) -> None:
     """
     Estimate stress based on displacements and YAFEM model
     Args:
