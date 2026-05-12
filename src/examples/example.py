@@ -200,7 +200,7 @@ def live_fatigue_with_remote_stress_estimation(ctx):
 
 @cli.command()
 @click.pass_context
-def plot_rainflow_counting(ctx):
+def plot_rainflow(ctx):
     run_plot_rainflow_counting(ctx.obj["CONFIG"])
 
 

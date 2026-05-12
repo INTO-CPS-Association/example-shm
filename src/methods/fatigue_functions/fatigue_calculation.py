@@ -59,29 +59,29 @@ class fatigue_analysis():
 
         result = {}
         key_list = list(result1.keys())
-        for x in key_list:
-            if x == 'stress':
-                result[x] = result1[x]
-                result['stress_residual'] = result2[x]
-            elif x == 'mean_rain':
-                result[x] = result1[x]
+        for key in key_list:
+            if key == 'stress':
+                result[key] = result1[key]
+                result['stress_residual'] = result2[key]
+            elif key == 'mean_rain':
+                result[key] = result1[key]
                 result['mean_rain_residual'] = result2['mean_rain']
-            elif x == 'n_rain':
-                result[x] = result1[x]
-                result['n_rain_residual'] = result2[x]
-            elif x == 'residual_signal':
-                result[x] = result2[x]
-            elif x == 'D':
-                result[x] = result1[x]
-                result['D_residual'] = result2[x]
-            elif x == 'stress_res':
-                result[x] = result1[x]
-                result['stress_res_residual'] = result2[x]
-            elif x == 'n':
-                result[x] = result1[x]
-                result['n_residual'] = result2[x]
+            elif key == 'n_rain':
+                result[key] = result1[key]
+                result['n_rain_residual'] = result2[key]
+            elif key == 'residual_signal':
+                result[key] = result2[key]
+            elif key == 'D':
+                result[key] = result1[key]
+                result['D_residual'] = result2[key]
+            elif key == 'stress_res':
+                result[key] = result1[key]
+                result['stress_res_residual'] = result2[key]
+            elif key == 'n':
+                result[key] = result1[key]
+                result['n_residual'] = result2[key]
             else:
-                result[x] = result1[x] + result2[x]
+                result[key] = result1[key] + result2[key]
 
         self.result = fatigue.damage_accum(result,prev_result)
         return self

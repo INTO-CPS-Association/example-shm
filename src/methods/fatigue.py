@@ -24,7 +24,7 @@ def fatigue_local(config_path: str, SN_curve: Dict[str,Any]) -> fatigue_analysis
     aligner, data_client, mqtt_config, fs = setup_aligner(config_path)
     fatigue_object = fatigue_analysis(SN_curve)
     try:
-        displacement, _, model_parameters = virtual_sensing(mqtt_config['SamplesToCollect'], aligner, data_client, fs)
+        displacement, _, model_parameters, __ = virtual_sensing(mqtt_config['SamplesToCollect'], aligner, data_client, fs)
         _, stress, __ = stress_estimation_for_beam(displacement,model_parameters)
         dof_stress = stress[FATIGUE_DOF[0],FATIGUE_DOF[1]]
         print(f"Stress shape:{dof_stress.shape}")
@@ -33,7 +33,6 @@ def fatigue_local(config_path: str, SN_curve: Dict[str,Any]) -> fatigue_analysis
     except KeyboardInterrupt as e:
         shutdown(data_client, "fatigue analysis")
         raise RuntimeError("Keyboard interrupt") from e
-        return None
     except RuntimeError as e:
         shutdown(data_client, "fatigue analysis")
         print("Runtime error",e)
@@ -71,7 +70,7 @@ def live_fatigue_local(config_path: str, SN_curve: Dict[str,Any]) -> fatigue_ana
             current_time = datetime.fromisoformat(aligner_time)
             if fig_ax4 is None:
                 inital_time = current_time
-            fig_ax4 = plot_eol_rul(fatigue_object.result, inital_time, current_time, output_time_unit = "hrs", damage_sum = 1, x_length = 50, fig_ax = fig_ax4)
+            fig_ax4 = plot_eol_rul(fatigue_object.result, inital_time, current_time, output_time_unit = "hrs", damage_sum = DAMAGE_SUM, x_length = 50, fig_ax = fig_ax4)
             fig_ax5 = plot_cld(SN_curve,250,300,fatigue_object.result, fig_ax=fig_ax5)
     except KeyboardInterrupt as e:
         shutdown(data_client, "fatigue analysis")
@@ -111,7 +110,7 @@ def live_fatigue_remote(config_path: str, SN_curve: Dict[str,Any]) -> fatigue_an
             current_time = datetime.fromisoformat(timestamp)
             if fig_ax4 is None:
                 inital_time = current_time
-            fig_ax4 = plot_eol_rul(fatigue_object.result, inital_time, current_time, output_time_unit = "hrs", damage_sum = 1, x_length = 50, fig_ax = fig_ax4)
+            fig_ax4 = plot_eol_rul(fatigue_object.result, inital_time, current_time, output_time_unit = "hrs", damage_sum = DAMAGE_SUM, x_length = 50, fig_ax = fig_ax4)
             fig_ax5 = plot_cld(SN_curve,250,300,fatigue_object.result, fig_ax=fig_ax5)
     except KeyboardInterrupt as e:
         raise RuntimeError("Keyboard interrupt") from e

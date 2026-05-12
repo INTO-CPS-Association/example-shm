@@ -5,7 +5,9 @@ import matplotlib.pyplot as plt
 import matplotlib.figure
 import matplotlib.dates as mdates
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from methods.fatigue_functions.fatigue_block import fatigue as fat
+from methods.fatigue_functions.bin_functions import (bin_func, bin_func2D)
+from methods.fatigue_functions.EOF_RUL import eof_rul
+
 plt.rcParams['font.family'] = 'serif'
 plt.rcParams['font.sans-serif'] = 'cm'
 plt.rcParams['mathtext.fontset'] = 'cm'
@@ -41,10 +43,10 @@ def plot_sn_curve(sn_curve: dict[str, Any], result: dict[str, Any], hist_data: d
     stress_list_ = stress_list_1+stress_list_2
 
     # For plotting with residual part together with previous hist
-    hist_tot, bin_edges = fat.bin_func(stress_list_, hist_data,**kwargs)
+    hist_tot, bin_edges = bin_func(stress_list_, hist_data,**kwargs)
 
     #For next plot, without residual data
-    hist_next, bin_edges_next = fat.bin_func(stress_list_1, hist_data,**kwargs)
+    hist_next, bin_edges_next = bin_func(stress_list_1, hist_data,**kwargs)
 
     #Clear previous figure
     if fig_ax is None:
@@ -180,16 +182,15 @@ def sn_curve_plotdata(sn_curve: dict[str, Any],result: dict[str, Any],hist_prev,
     stress_list_ = stress_list_1+stress_list_2
 
     #For plotting with residual part together with previous hist
-    hist_tot, bin_edges = fat.bin_func(stress_list_,hist_prev,**kwargs)
+    hist_tot, bin_edges = bin_func(stress_list_,hist_prev,**kwargs)
     #For next plot, without residual data
-    hist_next, bin_edges_next = fat.bin_func(stress_list_1,hist_prev,**kwargs)
+    hist_next, bin_edges_next = bin_func(stress_list_1,hist_prev,**kwargs)
 
     bin_edges = bin_edges.tolist()
     hist = hist_tot.tolist()
     if hist_type == "spectrum":
         hist.reverse()
         bin_edges.reverse()
-        y_points = bin_edges
         hist = [0] + hist #Start hist from 0
         hist = np.add.accumulate(hist).tolist() #Make an acummulated list of hist
 
@@ -274,9 +275,9 @@ def plot_histogram(result: dict[str, Any], fig_ax = None, **kwargs: Optional[Any
 
     #Histogram data and bins
     #For plotting with residual part together with previous hist
-    hist, x_edges, y_edges = fat.bin_func2D(xx,yy=yy,**kwargs)
+    hist, x_edges, y_edges = bin_func2D(xx,yy=yy,**kwargs)
     #For next iteration
-    hist_next, x_edges_next, y_edges_next = fat.bin_func2D(xx1,yy=yy1,**kwargs)
+    hist_next, x_edges_next, y_edges_next = bin_func2D(xx1,yy=yy1,**kwargs)
 
     #Save for next plot
     hist_data = {
@@ -390,9 +391,9 @@ def heatmap_data(hist2d_prev,result: dict[str, Any],**kwargs: Optional[Any]) -> 
 
     #Histogram data and bins
     #For plotting with residual part together with previous hist
-    hist2d, x_edges, y_edges = fat.bin_func2D(xx,hist2d_prev,yy,**kwargs)
+    hist2d, x_edges, y_edges = bin_func2D(xx,hist2d_prev,yy,**kwargs)
     #For next iteration
-    hist_next, x_edges_next, y_edges_next = fat.bin_func2D(xx1,hist2d_prev,yy1,**kwargs)
+    hist_next, x_edges_next, y_edges_next = bin_func2D(xx1,hist2d_prev,yy1,**kwargs)
 
     x_hist_next = np.sum(hist2d,axis=0)
     y_hist_next = np.sum(hist2d,axis=1)
@@ -710,7 +711,7 @@ def plot_eol_rul(result: dict[str, Any], inital_time: datetime,
         # ax2.clear()
 
     time_passed = current_time - inital_time
-    eol, rul = fat.EOF_RUL(result,time_passed,output_time_unit,damage_sum=damage_sum)
+    eol, rul = eof_rul(result,time_passed,output_time_unit,damage_sum=damage_sum)
 
     xdata_eol = xdata_eol + [current_time]
     ydata_eol = ydata_eol + [eol]

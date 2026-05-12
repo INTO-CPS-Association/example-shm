@@ -1,7 +1,5 @@
-from typing import Any, Dict, Tuple
-import datetime
+from typing import Any, Dict
 import threading
-import json
 import numpy as np
 from paho.mqtt.client import Client as MQTTClient, MQTTMessage
 from data.comm.mqtt import (shutdown, start_mqtt)
@@ -17,60 +15,6 @@ from methods.constants import (MODEL_FUNC, PARAMS)
 result_ready = threading.Event()
 data_global = None  # will store received cluster data inside callback
 timestamp_global = None
-
-# def _on_message(_client: MQTTClient, _userdata: Dict, msg: MQTTMessage) -> None:
-#     """Callback when a message is received."""
-#     global data_global
-#     global timestamp_global
-#     print(f"Message received on topic: {msg.topic}")
-#     try:
-#         raw = json.loads(msg.payload.decode("utf-8"))
-#         data = _convert_list_to_dict_or_array(raw["data"])
-#         timestamp = raw["timestamp"]
-#         print(f"Received cluster data at timestamp: {timestamp}")
-#         data_global = data
-#         timestamp_global = timestamp
-#         result_ready.set()
-
-#     except Exception as e:
-#         print(f"Error processing message: {e}")
-
-# def subscribe_data(config: Dict[str,Any]) -> Tuple[str, Dict[str,Any]]:
-#     """
-#     Args:
-#         config (Dict[str,Any]): Configuration dictionary
-#     Returns:
-#         data (Dict[str,Any]): data
-#         timestamp (str): timestamp string
-#     """
-#     global data_global
-#     global timestamp_global
-
-#     data_global = None  # Reset in case old data is present
-#     timestamp_global = None
-#     result_ready.clear()
-
-#     mqtt_client, _, _ = start_mqtt(config, _on_connect, _on_message=_on_message)
-#     print("Waiting for data...")
-
-
-#     try:
-#         # Use timeout to allow keyboard interrupt to work
-#         while not result_ready.wait(timeout=2.0):
-#             pass  # Keep checking with timeout
-
-#         if data_global is None:
-#             raise RuntimeError("Failed to receive data.")
-#         data_dict = data_global
-#         timestamp = timestamp_global
-#         print(f"Data received at {timestamp}.")
-
-#         shutdown(mqtt_client)
-#         return data_dict, timestamp
-
-#     except KeyboardInterrupt as exc:
-#         shutdown(mqtt_client,"data subscription")
-#         raise RuntimeError("Keyboard interrupt") from exc
 
 def stress_estimation_for_beam(displacement: np.ndarray[float], model_parameters: Dict[str,Any] = None):
     """

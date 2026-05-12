@@ -212,7 +212,7 @@ The following experiments can be run using the package.
     1. **fatigue-with-local-stress-estimation**: Run stress-stain-estimation and run fatigue calculations and plot fatigue the results.
     2. **live-fatigue-with-local-stress-estimation**: Continuously run stress-stain-estimation and run fatigue calculations and plot fatigue the results.
     3. **live-fatigue-with-remote-stress-estimation**: Continuously subscribe to stress-estimation results and run fatigue calculations and plot fatigue the results.
-    4. **plot-rainflow-counting**: Plots rainflow counting algorithm
+    4. **plot-rainflow**: Plots rainflow counting algorithm
 
 
 
@@ -353,7 +353,7 @@ Commands:
   mode-tracking-with-local-sysid
   mode-tracking-with-remote-sysid
   model-update-with-local-sysid
-  plot-rainflow-counting
+  plot-rainflow
   record
   replay
   stress-strain-estimation
