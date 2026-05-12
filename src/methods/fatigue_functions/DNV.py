@@ -246,7 +246,7 @@ def dnv_sn(joint_type: str,enviroment: str,**kwargs: Optional[Any])-> dict[str, 
                 k = 0
     
 
-            if enviroment.lower() == "seawater_cp":
+            elif enviroment.lower() == "seawater_cp":
                 N_D = 0
                 m1 = 4.7
                 Delta_sigma_R_D = 0
@@ -342,8 +342,6 @@ def dnv_sn(joint_type: str,enviroment: str,**kwargs: Optional[Any])-> dict[str, 
 
         else:
             raise ValueError('Unknown joint type given. Try "plate", "tubular", "cast_nodes" or "forged_nodes')
-        
-        log_a_bar1 = np.log10(C1) #Calculates log_a_bar
 
         #Construct the SN-curve dictionary
         C = []

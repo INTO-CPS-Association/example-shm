@@ -6,7 +6,6 @@ from methods.sysid import setup_aligner
 from methods.stress_estimation import stress_estimation_for_beam
 from methods.virtual_sensing import virtual_sensing
 from methods.fatigue_functions.fatigue_calculation import fatigue_analysis
-import methods.fatigue_functions.fatigue_block as fat
 from methods.fatigue_functions.fatigue_plots import (plot_damage, plot_histogram, plot_sn_curve, plot_eol_rul, plot_cld)
 from methods.constants import FATIGUE_DOF, DAMAGE_SUM
 from methods.stress_estimation import subscribe_data
@@ -129,13 +128,6 @@ def plot_rainflow_counting(config_path: str, SN_curve: Dict[str,Any]) -> fatigue
     """
     aligner, data_client, mqtt_config, fs = setup_aligner(config_path)
     fatigue_object = fatigue_analysis(SN_curve)
-    fig_ax1 = None
-    fig_ax2 = None
-    fig_ax3 = None
-    fig_ax4 = None
-    fig_ax5 = None
-    hist = None
-    SN_data = None
     try:
         displacement, _, model_parameters, _ = virtual_sensing(mqtt_config['SamplesToCollect'], aligner, data_client, fs)
         _, stress, __ = stress_estimation_for_beam(displacement,model_parameters)
