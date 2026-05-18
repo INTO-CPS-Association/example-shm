@@ -53,7 +53,6 @@ def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_cluste
                 pass
             elif skip_tracked_cluster is not None:
                 if key_t in skip_tracked_cluster:
-                    MAC_max = np.max(0)
                     MAC_max_list.append(0)
                     R_freq.append(10**6)
             else:

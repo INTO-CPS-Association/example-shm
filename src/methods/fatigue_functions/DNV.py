@@ -37,10 +37,10 @@ def dnv_sn(joint_type: str,enviroment: str,**kwargs: Optional[Any])-> dict[str, 
     m2 = -1 #if m2 == -1, then m2 does not exist. If m2 == 0 there are run-outs/cut-off
     k = 0
     detail = "None"
-    t_ref = 25
+    # t_ref = 25
 
-    if joint_type.lower() is ("plate","pile","forged_node","cast_node", "bolt", "pipe"):
-        t_ref = 25
+    if joint_type.lower() in ("plate","pile","forged_node","cast_node", "bolt", "pipe"):
+        # t_ref = 25
 
         detail_list = ['B1','B2','C','C1','C2','D','E','F','F1','F3','G','W1','W2','W3']
         curves_air = {'B1':[4.0,106.97,0], #m, stress at N=10**7, k
@@ -99,11 +99,12 @@ def dnv_sn(joint_type: str,enviroment: str,**kwargs: Optional[Any])-> dict[str, 
         if joint_type.lower() == "forges_node":
             pass
         if joint_type.lower() == "cast_node":
-            t_ref = 38 #Or reduced effective thickness
+            pass
+            # t_ref = 38 #Or reduced effective thickness
 
         if joint_type.lower() == "pipe":
         #Internal cyclic pressure is not available
-            t_ref = 25
+            # t_ref = 25
 
             pipe_detail = {'D':0.15,
                         'E':0,
@@ -182,7 +183,7 @@ def dnv_sn(joint_type: str,enviroment: str,**kwargs: Optional[Any])-> dict[str, 
         #2.4.11 C-Mn steels?
 
     elif joint_type.lower() == "tubular":
-        t_ref = 16
+        # t_ref = 16
 
         if enviroment.lower() == "air":
             N_D = 10**7
