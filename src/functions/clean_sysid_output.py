@@ -1,5 +1,6 @@
 from typing import Any, Dict, Tuple
 import numpy as np
+# pylint: disable=R0914
 
 def remove_complex_conjugates(sysid_output: Dict[str, Any]) -> Tuple[np.ndarray[float],
                                                                      np.ndarray[float],

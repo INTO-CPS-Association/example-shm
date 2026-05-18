@@ -10,12 +10,15 @@ from methods.virtual_sensing import virtual_sensing
 from methods.mode_clustering import publish_data
 from methods.model_update import subscribe_data
 from methods.constants import (MODEL_FUNC, PARAMS)
+# pylint: disable=C0103, C0301, W0104
 
 result_ready = threading.Event()
 data_global = None  # will store received cluster data inside callback
 timestamp_global = None
 
-def stress_estimation_for_beam(displacement: np.ndarray[float], model_parameters: Dict[str,Any] = None) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def stress_estimation_for_beam(displacement: np.ndarray[float],
+                        model_parameters: Dict[str,Any] = None
+                        ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Estimate stress based on displacements and YAFEM model
     Args:
@@ -39,7 +42,7 @@ def stress_estimation_for_beam(displacement: np.ndarray[float], model_parameters
     except KeyError as e:
         print("Missing PARAMS key",e)
         return None, None, None
-        
+
 
 def live_stress_estimation_subscribe_and_publish(config_path: str) -> None:
     """
@@ -48,8 +51,8 @@ def live_stress_estimation_subscribe_and_publish(config_path: str) -> None:
         config_path (str): Path to config file
     Returns:
     """
-    aligner, data_client, config, fs = setup_aligner(config_path, config_name="stress")
-    
+    _, data_client, config, __ = setup_aligner(config_path, config_name="stress")
+
     try:
         while True:
             data_dict, timestamp = subscribe_data(config)
@@ -72,10 +75,11 @@ def live_stress_estimation_for_beam(config_path: str) -> None:
     Returns:
     """
     aligner, data_client, mqtt_config, fs = setup_aligner(config_path)
-    
+
     try:
         while True:
-            displacement, _, model_parameters, __ = virtual_sensing(mqtt_config['SamplesToCollect'], aligner, data_client, fs)
+            displacement, _, model_parameters, __ = virtual_sensing(mqtt_config['SamplesToCollect'],
+                                                                    aligner, data_client, fs)
             _, stress, __ = stress_estimation_for_beam(displacement,model_parameters)
             print("Max bending stress at all DOFs [MPa]")
             print(np.max(stress[:,1]).tolist())
@@ -96,4 +100,4 @@ def stress_estimation_and_plot(stress: np.ndarray[float]) -> None:
     Returns:
     """
     elements = [0, 1, 2, 3, 4, 5, 6]
-    fig_ax = plot_stress(stress,elements,2,fig_ax=None,title="Bending moment [MPa]")
+    _ = plot_stress(stress,elements,2,fig_ax=None,title="Bending moment [MPa]")

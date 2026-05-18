@@ -7,9 +7,9 @@ subscriptions, and message publishing using the Paho MQTT library.
 from typing import Any, Dict, List, Tuple
 import json
 import uuid
-from paho.mqtt.client import Client as MQTTClient, CallbackAPIVersion, MQTTv5  # type: ignore
-from collections.abc import Callable
 import sys
+from collections.abc import Callable
+from paho.mqtt.client import Client as MQTTClient, CallbackAPIVersion, MQTTv5  # type: ignore
 
 def load_config(config_path: str) -> dict:
     """

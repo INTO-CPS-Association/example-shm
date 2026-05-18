@@ -1,6 +1,6 @@
 from typing import Any, List, Dict
 import numpy as np
-# pylint: disable=C0103
+# pylint: disable=C0103, R0914
 
 def cluster_initial(ip: List[float], data: Dict[str,Any], bound: float = 2) -> Dict[str,Any]:
     """

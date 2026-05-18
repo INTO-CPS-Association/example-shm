@@ -10,8 +10,7 @@ from methods.mode_clustering_functions.clustering import cluster_func
 from functions.util import (convert_numpy_to_list, _convert_list_to_dict_or_array)
 from functions.plot_sysid import plot_stabilization_diagram, plot_pre_stabilization_diagram
 from functions.plot_clusters import plot_clusters
-
-# pylint: disable=C0103, W0603
+# pylint: disable=C0103, W0603, R0913, R0917
 
 # Global threading event to wait for sysid data
 result_ready = threading.Event()
@@ -73,25 +72,25 @@ def publish_data(config: Dict[str,Any], timestamp: str,
 
     Returns:
     """
-   
+
     publish_client, publish_topics = setup_publish_client(config)
 
     payload = {
                     "timestamp": timestamp,
                     "data": convert_numpy_to_list(data)
                 }
-    
+
     publish_to_mqtt(publish_client,publish_topics, payload, "data")
     shutdown(publish_client)
 
-def cluster_plots(plot: List[bool], clusters: Dict[str,Any], sysid_output: Dict[str, Any],
+def cluster_plots(plot: Tuple[bool], clusters: Dict[str,Any], sysid_output: Dict[str, Any],
                   params: Dict[str, Any], fig_axes: List[Tuple[plt.Figure,plt.Axes]],
                   hold: bool = False) -> List[Tuple[plt.Figure,plt.Axes]]:
     """
     Plot clusters and stabilization diagram
 
     Args:
-        plot (List[bool]): List of bools to state what plots should be made/updated
+        plot (Tuple[bool]): Tuple of bools to state what plots should be made/updated
         clusters (Dict[str,Any]): Dictionary of new clusters
         sysid_output (Any): sysid output from SSI.
         params (Dict[str,Any]): Parameters ("Fs", "freq_variance_treshold"
@@ -188,7 +187,7 @@ def subscribe_and_cluster(config: Dict[str,Any], params: Dict[str,Any]
         raise RuntimeError("Keyboard interrupt") from exc
 
 def live_mode_clustering(config: Dict[str,Any], params: Dict[str,Any],
-                        publish: bool = False, plot: List[bool] = [1,1,1]
+                        publish: bool = False, plot: Tuple[bool] = (1,1,1)
                         ) -> None:
     """
     Subscribes to MQTT broker, receives one sysid message, runs mode clustering, plots results.
@@ -198,7 +197,7 @@ def live_mode_clustering(config: Dict[str,Any], params: Dict[str,Any],
         config (Dict[str,Any]): Configuration dictionary
         params (Dict[str,Any]): clustering parameters
         publish (bool): Whether to publish clustering results
-        plot (list[bool]): Array describing what plots to show
+        plot (Tuple[bool]): Array describing what plots to show
 
     Returns:
     """

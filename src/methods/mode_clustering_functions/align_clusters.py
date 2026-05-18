@@ -1,7 +1,7 @@
 from typing import Any, Dict
 import numpy as np
 from functions.calculate_mac import calculate_mac
-# pylint: disable=C0103
+# pylint: disable=C0103, R1702, R0912, R0914
 
 def alignment(cluster_dict: Dict[str,dict], params: Dict[str,Any]) -> Dict[str,dict]:
     """
@@ -35,7 +35,7 @@ def alignment(cluster_dict: Dict[str,dict], params: Dict[str,Any]) -> Dict[str,d
         mask = (diff > 0) & (diff < min(m_f*params['allignment_factor'][0],
                                         params['Fs']/2*params['allignment_factor'][1]))
         #Indicies of clusters that are closely located in frequency
-        indices = np.argwhere(mask == True)
+        indices = np.argwhere(mask is True)
 
         if indices.shape[0] > 0:# If one or more clusters are found
             ids = indices[:,0]

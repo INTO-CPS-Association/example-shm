@@ -1,8 +1,9 @@
 from typing import Dict, Any, Optional, List, Self
 import methods.fatigue_functions.fatigue_block as fatigue
 from methods.fatigue_functions.fatigue_plots import plot_rainflow
+# pylint: disable=C0103, C0301, R0912, R0914, R0915, R1702
 
-class fatigue_analysis():
+class FatigueAnalysis():
     """Fatigue analysis run
     Args:
         sn_curve (dict): Dictionary consisting of SN curve parameters.
@@ -110,7 +111,10 @@ class fatigue_analysis():
         plot_rf = kwargs.get("plot_rainflow",False)
         if residual is None:
             residual = []
-        stress_list, mean_list, n_count, residual, plot_data = fatigue.rainflow_c(time_series,residual,output="list",plot=plot_rf)
+        stress_list, mean_list, n_count, residual, plot_data = fatigue.rainflow_c(time_series,
+                                                                                  residual,
+                                                                                  output="list",
+                                                                                  plot=plot_rf)
         if plot_rf is True:
             plot_rainflow(plot_data)
 

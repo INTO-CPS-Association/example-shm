@@ -7,6 +7,7 @@ import matplotlib.dates as mdates
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from methods.fatigue_functions.bin_functions import (bin_func, bin_func2D)
 from methods.fatigue_functions.EOF_RUL import eof_rul
+# pylint: disable=C0103, C0301, R0912, R0913, R0914, R0915, R0917, W3301, W1401
 
 plt.rcParams['font.family'] = 'serif'
 plt.rcParams['font.sans-serif'] = 'cm'
@@ -14,7 +15,9 @@ plt.rcParams['mathtext.fontset'] = 'cm'
 plt.rcParams["font.family"] = "Times New Roman"
 
 
-def plot_sn_curve(sn_curve: dict[str, Any], result: dict[str, Any], hist_data: dict[str, Any] = None, fig_ax = None,**kwargs) -> tuple[matplotlib.figure.Figure, dict[str,Any]]:
+def plot_sn_curve(sn_curve: dict[str, Any], result: dict[str, Any],
+                  hist_data: dict[str, Any] = None, fig_ax = None,**kwargs
+                  ) -> tuple[matplotlib.figure.Figure, dict[str,Any]]:
     """Plot SN curve
 
     Args:
@@ -110,13 +113,13 @@ def plot_sn_curve(sn_curve: dict[str, Any], result: dict[str, Any], hist_data: d
     ax.set(ylim = (1,max(max(bin_edges)*2,1000)), xlim=(1,xlim2))
     ax.set(ylim = (1,10000), xlim=(1,10**8))
 
-    D_t = result["D_t"]
-    ax.text(5*10**6, 1.8, "$D_{\mathrm{tot}}$ = "+ f"{float(D_t):.3e}", size=13, rotation=0.,
+    d_t = result["D_t"]
+    ax.text(5*10**6, 1.8, "$D_{\mathrm{tot}}$ = "+ f"{float(d_t):.3e}", size=13, rotation=0.,
     ha="center", va="center",
-    bbox=dict(boxstyle="Square",
-            ec=(1., 0.5, 0.5),
-            fc=(1., 0.8, 0.8),
-            ) #ec edge color, fc face color
+    bbox={"boxstyle": "Square",
+            "ec": (1., 0.5, 0.5),
+            "fc": (1., 0.8, 0.8)
+            } #ec edge color, fc face color
     )
 
     ax.set_title(title_string)
@@ -134,7 +137,8 @@ def plot_sn_curve(sn_curve: dict[str, Any], result: dict[str, Any], hist_data: d
             }
     return (fig, ax), hist_data
 
-def sn_curve_plotdata(sn_curve: dict[str, Any],result: dict[str, Any],hist_prev,**kwargs) -> tuple[list[float], list[float], list[float], list[float], dict[str,Any]]:
+def sn_curve_plotdata(sn_curve: dict[str, Any], result: dict[str, Any], hist_prev,**kwargs
+                    ) -> tuple[list[float], list[float], list[float], list[float], dict[str,Any]]:
     """Plot SN curve
 
     Args
@@ -209,13 +213,15 @@ def sn_curve_plotdata(sn_curve: dict[str, Any],result: dict[str, Any],hist_prev,
 
     return x_curve, y_curve, x_points, y_points, hist_data
 
-def plot_histogram(result: dict[str, Any], fig_ax = None, **kwargs: Optional[Any]) -> tuple[matplotlib.figure.Figure, dict[str,Any]]:
+def plot_histogram(result: dict[str, Any], fig_ax = None, hist_data: dict[str,Any] = None,
+                   **kwargs: Optional[Any]) -> tuple[matplotlib.figure.Figure, dict[str,Any]]:
     """Bin the given stress list
     Optionally save a histogram
 
     Args:
         result (dict): Dictionary of results from continous data stream
         fig_ax (Tuple[plt.Figure, Tuple[plt.Axes]]): fig and ax of plot
+        hist_data (dict): Previous histogram data, should be applied together with stress_list and n_count
         **kwargs    :   n_counts, list of int
             Counts of stress ranges
         **kwargs    :   s_mean, list of float
@@ -224,10 +230,6 @@ def plot_histogram(result: dict[str, Any], fig_ax = None, **kwargs: Optional[Any
             Use ad fixed width for bins
         **kwargs    :   title_string, str
             String for title name
-        **kwargs    :   hist_data, dict
-            Previous histogram data, should be applied together with stress_list and n_count
-        **kwargs    :   figure, object
-            figure to redraw
         **kwargs    :   colormap, str
             Name of a valid colormap, default=plasma
 
@@ -275,9 +277,9 @@ def plot_histogram(result: dict[str, Any], fig_ax = None, **kwargs: Optional[Any
 
     #Histogram data and bins
     #For plotting with residual part together with previous hist
-    hist, x_edges, y_edges = bin_func2D(xx,yy=yy,**kwargs)
+    hist, x_edges, y_edges = bin_func2D(xx,yy,hist_data,**kwargs)
     #For next iteration
-    hist_next, x_edges_next, y_edges_next = bin_func2D(xx1,yy=yy1,**kwargs)
+    hist_next, x_edges_next, y_edges_next = bin_func2D(xx1,yy1,hist_data,**kwargs)
 
     #Save for next plot
     hist_data = {
@@ -338,7 +340,8 @@ def plot_histogram(result: dict[str, Any], fig_ax = None, **kwargs: Optional[Any
 
     return (fig, ax, cax, ax_histx, ax_histy), hist_data
 
-def heatmap_data(hist2d_prev,result: dict[str, Any],**kwargs: Optional[Any]) -> tuple[np.ndarray, list[float], list[float], np.ndarray]:
+def heatmap_data(hist2d_prev, result: dict[str, Any], **kwargs: Optional[Any]
+                 ) -> tuple[np.ndarray, list[float], list[float], np.ndarray]:
     """Bin the given stress list
     Optionally save a histogram
 
@@ -407,7 +410,8 @@ def heatmap_data(hist2d_prev,result: dict[str, Any],**kwargs: Optional[Any]) -> 
 
     return hist2d, x_edges, y_edges, hist2d_next
 
-def plot_damage(result: dict[str, Any], fig_ax = None, **kwargs: Optional[Any]) -> matplotlib.figure.Figure:
+def plot_damage(result: dict[str, Any], fig_ax = None,
+                **kwargs: Optional[Any]) -> matplotlib.figure.Figure:
     """Plot PM damage in a running graph
 
     Args:
@@ -485,7 +489,8 @@ def plot_damage(result: dict[str, Any], fig_ax = None, **kwargs: Optional[Any]) 
 
     return fig, ax
 
-def plot_cld(sn_curve: dict[str, Any],s_y,s_u,result: dict[str, Any], fig_ax = None,**kwargs: Optional[Any]) -> matplotlib.figure.Figure:
+def plot_cld(sn_curve: dict[str, Any],s_y,s_u,result: dict[str, Any],
+             fig_ax = None,**kwargs: Optional[Any]) -> matplotlib.figure.Figure:
     """Plot Haigh diagram with Goodman line.
     Also called a constant life diagram (CLD)
 
@@ -718,7 +723,7 @@ def plot_eol_rul(result: dict[str, Any], inital_time: datetime,
 
     xdata_rul = xdata_rul + [current_time]
     ydata_rul = ydata_rul + [rul]
-    
+
 
     plt.xticks(rotation=45)
     ax1.plot(xdata_eol,ydata_eol,'*-',label="EOL",zorder=0)

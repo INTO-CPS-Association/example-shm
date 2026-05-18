@@ -26,7 +26,7 @@ from examples.run_model_update import (
 )
 from examples.run_record_replay import replay_mqtt, record_mqtt
 
-from examples.run_virtual_sensing import (run_virtual_sensing, 
+from examples.run_virtual_sensing import (run_virtual_sensing,
                                           run_live_virtual_sensing,
                                           run_live_virtual_sensing_and_publish,
                                           run_plot_virtual_sensing)
@@ -151,7 +151,7 @@ def virtual_sensing(ctx):
 @cli.command()
 @click.pass_context
 def virtual_sensing_and_plot(ctx):
-    run_plot_virtual_sensing(ctx.obj["CONFIG"]) 
+    run_plot_virtual_sensing(ctx.obj["CONFIG"])
 
 @cli.command()
 @click.pass_context
@@ -177,7 +177,7 @@ def live_stress_strain_estimation(ctx):
 @click.pass_context
 def live_stress_estimation_subscribe_and_publish(ctx):
     run_live_stress_estimation_subscribe_and_publish(ctx.obj["CONFIG"])
-    
+
 @cli.command()
 @click.pass_context
 def stress_strain_estimation_and_plot(ctx):

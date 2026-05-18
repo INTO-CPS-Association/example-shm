@@ -3,9 +3,9 @@ import numpy as np
 from functions.clean_sysid_output import (remove_highly_uncertain_points,transform_sysid_features)
 from methods.mode_clustering_functions.create_cluster import cluster_creation
 from methods.mode_clustering_functions.expand_cluster import cluster_expansion
-from methods.mode_clustering_functions.initialize_Ip import cluster_initial
+from methods.mode_clustering_functions.initialize_ip import cluster_initial
 from methods.mode_clustering_functions.align_clusters import alignment
-# pylint: disable=C0103
+# pylint: disable=C0103, R0912, R0914, R0915, R1702
 
 # Following the algorithm proposed here: https://doi.org/10.1007/978-3-031-61421-7_56
 # JVM 22/10/2025
@@ -125,7 +125,7 @@ def cluster_func(sysid_output: Dict[str,Any],
                 cluster_dict_aligned.pop(key)
 
     #Add median and confidence intervals (one sided) to cluster data
-    for key in cluster_dict_cardinality.keys():
+    for key in cluster_dict_cardinality:
         cluster = cluster_dict_cardinality[key]
         cluster['median_f'] = np.median(cluster['f'])
         ci_f = np.sqrt(cluster['cov_f']) * params['bound_multiplier']

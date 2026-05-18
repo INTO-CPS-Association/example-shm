@@ -2,9 +2,9 @@ import datetime
 import threading
 import json
 from typing import Any, List, Dict, Optional, Tuple
+from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
-from pathlib import Path
 from paho.mqtt.client import Client as MQTTClient, MQTTMessage
 from data.comm.mqtt import (shutdown,start_mqtt, publish_to_mqtt)
 from functions.util import (convert_numpy_to_list, _convert_list_to_dict_or_array)
@@ -15,7 +15,7 @@ from methods.model_update_functions import model_update_func
 from methods.constants import (MODEL_DIR, MODEL_PARS_NAME, MODEL_PARAMETERS, MODEL_FUNC)
 from methods.mode_clustering import _on_connect
 
-# pylint: disable=C0103, W0603
+# pylint: disable=C0103, C0301, W0603
 
 # Global threading event to wait for cluster data
 result_ready = threading.Event()
@@ -205,19 +205,19 @@ def load_model_parameters() -> Optional[Tuple[str, Dict[str,Any]]]:
             model_parameters = MODEL_PARAMETERS
             timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
             return timestamp, model_parameters
-        else:
-            with path.open('r') as json_file:
-                data = json.loads(json_file.readlines()[-1])
-            timestamp = data['timestamp']
-            model_parameters = data['parameters']
-            if model_parameters is None:
-                print("Stored model_parameters are None. Proceed with standard parameters from model and constants.py.")
-                _, __, ___, ____, _____ = MODEL_FUNC(MODEL_PARAMETERS)
-                model_parameters = MODEL_PARAMETERS
-            else:
-                print("Model parameters loaded successfully from:", path,"at:", timestamp)
 
-            return timestamp, model_parameters
+        with path.open('r') as json_file:
+            data = json.loads(json_file.readlines()[-1])
+        timestamp = data['timestamp']
+        model_parameters = data['parameters']
+        if model_parameters is None:
+            print("Stored model_parameters are None. Proceed with standard parameters from model and constants.py.")
+            _, __, ___, ____, _____ = MODEL_FUNC(MODEL_PARAMETERS)
+            model_parameters = MODEL_PARAMETERS
+        else:
+            print("Model parameters loaded successfully from:", path,"at:", timestamp)
+
+        return timestamp, model_parameters
     except Exception as e:
         print('Could not find previous model data.',e)
         return None, None

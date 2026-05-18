@@ -10,7 +10,7 @@ def run_stress_and_strain_estimation_beam(config_path):
     aligner, data_client, sysid_config, fs = setup_aligner(config_path)
     number_of_samples = sysid_config['SamplesToCollect']
     displacement, _, __, ___ = virtual_sensing(number_of_samples, aligner, data_client, fs)
-    _, stress, strain = stress_estimation_for_beam(displacement)
+    _, stress, __ = stress_estimation_for_beam(displacement)
     print("Max bending stress at all DOFs [MPa]")
     print(np.max(stress[:,1]).tolist())
     print("Min. bending stress at all DOFs [MPa]")
@@ -25,6 +25,7 @@ def run_live_stress_estimation_subscribe_and_publish(config_path):
 def run_stress_estimation_and_plot(config_path):
     aligner, data_client, sysid_config, fs = setup_aligner(config_path)
     number_of_samples = sysid_config['SamplesToCollect']
-    displacement, _, model_parameters, __ = virtual_sensing(number_of_samples, aligner, data_client, fs)
+    displacement, _, model_parameters, __ = virtual_sensing(number_of_samples,
+                                                            aligner, data_client, fs)
     stress, _, __ = stress_estimation_for_beam(displacement,model_parameters)
     stress_estimation_and_plot(stress)

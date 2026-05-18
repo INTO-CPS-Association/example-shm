@@ -88,7 +88,7 @@ def test_get_oma_results_integration(mocker):
 
     mock_aligner.extract.return_value = (mock_data, mock_timestamp)
 
-    sysid_output, timestamp = sysid.get_sysid_output(samples, mock_aligner, fs)
+    sysid_output, timestamp = sysid.get_sysid_output(samples, mock_aligner)
 
     assert isinstance(sysid_output, dict)
     assert "Fn_poles" in sysid_output

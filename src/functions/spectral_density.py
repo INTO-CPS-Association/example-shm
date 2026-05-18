@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+# pylint: disable=C0103
 
 def plot_spectral_density(y: np.ndarray[float],fs: float) -> None:
     """

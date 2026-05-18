@@ -4,7 +4,7 @@ from methods.mode_tracking_functions.match_to_tracked_cluster import (
     match_cluster_to_tracked_cluster)
 from methods.mode_tracking_functions.resolve_nonunique_matches import (
     resolve_nonunique_matches)
-# pylint: disable=C0103
+# pylint: disable=C0103, R0914, R0915, R0912, R1702
 # JVM 22/10/2025
 
 def cluster_tracking(cluster_dict: Dict[str,Any],tracked_clusters: Dict[str,Any],
@@ -13,12 +13,12 @@ def cluster_tracking(cluster_dict: Dict[str,Any],tracked_clusters: Dict[str,Any]
     Tracking of modes across experiments
 
     Args:
-        cluster_dict (dict): Dictionary of clusters
-        tracked_clusters (dict): Previously tracked clusters
-        params (dict): tracking parameters
+        cluster_dict (Dict[str,Any]): Dictionary of clusters
+        tracked_clusters (Dict[str,Any]): Previously tracked clusters
+        params (Dict[str,Any]): tracking parameters
 
     Returns:
-        tracked_clusters (dict): Previously tracked clusters
+        tracked_clusters (Dict[str,Any]): Previously tracked clusters
 
     """
     if params is None:
@@ -95,7 +95,8 @@ def cluster_tracking(cluster_dict: Dict[str,Any],tracked_clusters: Dict[str,Any]
                     if possible_match_id == "new": #Do nothing if "new"
                         pass
                     else:
-                        #Test if "new" is present. If so, then we must match with str instead of int.
+                        #Test if "new" is present.
+                        # If so, then we must match with str instead of int.
                         test_if_str = np.argwhere(
                             np.array(list(result.values())) == "new")
                         if len(test_if_str) > 0: #Find the index of the unique cluster match
@@ -111,7 +112,8 @@ def cluster_tracking(cluster_dict: Dict[str,Any],tracked_clusters: Dict[str,Any]
                                 possible_match_id, itemindex, result, cluster_dict,
                                 tracked_clusters)
                             #Skip the best tracked cluster which is matced with another cluster.
-                            cluster_index = itemindex[:,0] # The indecies of clusters that have the same match (formatted)
+                            cluster_index = itemindex[:,0] # The indecies of clusters that have
+                                                            # the same match (formatted)
                             skip_tracked_cluster.append(str(result[str(cluster_index[pos])]))
                             #Skip the best tracked cluster which is matced with another cluster.
                             skip_cluster.append(cluster_index[pos])
@@ -132,7 +134,8 @@ def cluster_tracking(cluster_dict: Dict[str,Any],tracked_clusters: Dict[str,Any]
                 cluster['id'] = iteration
                 if pos == "new":
                     new_key = len(tracked_clusters)-1
-                    #Why -1? -1 for "iteration" which is not a cluster, + 1 for adding a new cluster and -1 for starting at 0 = -1
+                    # Why -1? -1 for "iteration" which is not a cluster,
+                    # + 1 for adding a new cluster and -1 for starting at 0 = -1
                     tracked_clusters[str(new_key)] = [cluster]
                 else:
                     cluster_to_add_to = tracked_clusters[str(pos)]

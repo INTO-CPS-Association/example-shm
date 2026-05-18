@@ -1,7 +1,7 @@
 from typing import Any, Dict
 import numpy as np
 from functions.calculate_mac import calculate_mac
-# pylint: disable=C0103
+# pylint: disable=C0103, R0912, R0914, R0915
 
 def cluster_creation(IP: Dict[str,Any],params: Dict[str,Any]) -> Dict[str,Any]: #Algorithm 2
     """
@@ -240,7 +240,8 @@ def cluster_from_mac(cluster: Dict[str,Any], IP: Dict[str,Any],
     clustered_id = []
     for row_c in cluster['row']: #For every entry in row cluster
         for ii, row_IP in enumerate(IP['row']): #For every entry in row IPu
-            if row_IP == row_c: #If row_IP is a entry of "row" in the cluster, then save that row for later.
+            if row_IP == row_c: #If row_IP is a entry of "row" in the cluster,
+                                # then save that row for later.
                 clustered_id.append(ii)
 
     all_id = np.array(list(range(len(IP['row']))))
@@ -324,7 +325,7 @@ def cluster_from_mac_IPm(cluster: Dict[str,Any], IPm: Dict[str,Any],
 
             #Find the mask for the poles that meets the MAC criteria
             mask = MAC > params['tMAC']
-            pos_MAC = np.argwhere(mask==True) #Get indicies
+            pos_MAC = np.argwhere(mask == True) #Get indicies
 
             #Formatting of the indicies
             if pos_MAC.shape[0] > 1: #more than one indice

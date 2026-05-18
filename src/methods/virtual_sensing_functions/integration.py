@@ -1,24 +1,37 @@
+from typing import Any, Dict
 from scipy.fft import fft, ifft
 import numpy as np
 from numpy.polynomial import Polynomial
+# pylint: disable=C0103, R0914
+def frequency_based_integration(y: np.ndarray[float], params: Dict[str,Any],
+                                order: int = 2) -> np.ndarray[float]:
+    """
+    Apply frequency based integration to a signal, y.
 
-def frequency_based_integration(y,params,order = 2):
-    
+    Args:
+        y (np.ndarray[flaot]): Signal
+        params (Dict[str,Any]): Parameter dictionary containing 'output_type' (int), 'Fs' (float)
+        order (int): Order of polynomial fit
+
+    Returns:
+        disp (np.ndarray[float]): Displacements
+
+    """
     print("Integration with order:",order)
 
-    ms, N = y.shape
+    _, N = y.shape
     # Displacement estimation with frequency-domain integration
     if params['output_type'] == 0:
         Disp = y
     else: #If the output type is not displacements apply frequency based integration
         y_ = y - np.mean(y, axis=1, keepdims=True)
-        YY = fft(y_.T, axis=0)
+        YY = np.array(fft(y_.T, axis=0))
         Y = YY.T
         Nh = (N + 1) // 2
         cK = np.arange(1, Nh)
         D = np.zeros_like(Y, dtype=complex)
         omj = 1j * 2 * np.pi * cK * params['Fs'] / N
-        
+
         if params['output_type'] == 1: #Velocity outputs
             D[:, 1:Nh] = Y[:, 1:Nh] / omj
             D[:, Nh:] = np.conj(np.flip(D[:, 1:Nh], axis=1))
@@ -29,7 +42,7 @@ def frequency_based_integration(y,params,order = 2):
             raise ValueError('Unknown measurement type - please fix.')
 
         #Convert from frequency to physical domain
-        Disp2 = ifft(D.T, axis=0)
+        Disp2 = np.array(ifft(D.T, axis=0))
         #print(f"Disp2: {Disp2.shape}")
         x = np.arange(Disp2.shape[0])  # Time indices or sample points
         Disp1 = np.zeros_like(Disp2)  # Initialize the detrended array with the same shape
@@ -44,7 +57,7 @@ def frequency_based_integration(y,params,order = 2):
 
     if np.linalg.norm(np.imag(Disp)) > np.linalg.norm(np.real(Disp)) * 1e-8:
         raise ValueError('The displacements are complex-valued - please fix.')
-    else:
-        Disp = np.real(Disp)
-    
+
+    Disp = np.real(Disp)
+
     return Disp

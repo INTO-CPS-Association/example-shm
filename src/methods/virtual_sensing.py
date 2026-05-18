@@ -1,16 +1,17 @@
 from typing import Dict, Any
 import numpy as np
 import matplotlib.pyplot as plt
-from data.accel.hbk.aligner import Aligner
 from paho.mqtt.client import Client as MQTTClient
+from data.accel.hbk.aligner import Aligner
 from data.comm.mqtt import (shutdown)
 from methods.sysid import setup_aligner
 from methods.model_update import load_model_parameters
-from examples.aligning_readings import wait_for_data
 from methods.mode_clustering import publish_data
 from methods.virtual_sensing_functions.virtual_sensing_func import displacement_estimation
 from methods.virtual_sensing_functions.plot_virtual_sensing import plot_virtual_sensing
 from methods.constants import PARAMS
+from examples.aligning_readings import wait_for_data
+# pylint: disable=C0103, C0301, W0104
 
 def virtual_sensing(number_of_samples: int, aligner: Aligner, data_client: MQTTClient, fs: float) -> tuple[np.ndarray[float, Any], np.ndarray[float, Any], Dict[str,Any], str] :
     """
@@ -42,7 +43,7 @@ def virtual_sensing(number_of_samples: int, aligner: Aligner, data_client: MQTTC
             shutdown(data_client, "Virtual sensing")
             print("PARAMS key error",e)
             return None, None, None, None
-    except KeyboardInterrupt as e:
+    except KeyboardInterrupt:
         shutdown(data_client, "Virtual sensing")
         print("Keyboard interrupt of virtual sensing\n")
         return None, None, None, None
@@ -66,7 +67,7 @@ def live_virtual_sensing(config_path: str) -> None:
     except KeyboardInterrupt as e:
         shutdown(data_client, "Virtual sensing")
         print("PARAMS key error",e)
-    except RuntimeError as e:
+    except RuntimeError:
         shutdown(data_client, "Virtual sensing")
         print("Keyboard interrupt ofvVirtual sensing\n")
 
@@ -91,7 +92,7 @@ def live_virtual_sensing_publish(config_path: str) -> None:
     except KeyboardInterrupt as e:
         shutdown(data_client, "Virtual sensing")
         print("PARAMS key error",e)
-    except RuntimeError as e:
+    except RuntimeError:
         shutdown(data_client, "Virtual sensing")
         print("Keyboard interrupt of virtual sensing\n")
 
@@ -111,8 +112,7 @@ def virtual_sensing_and_plot(config_path: str) -> None:
     number_of_samples = mqtt_config['SamplesToCollect']
     disp, acc, _, __ = virtual_sensing(number_of_samples, aligner, data_client, fs)
 
-
     DOFs = [0, 5, 8, 11, 14, 17]
-    fig_ax1 = plot_virtual_sensing(disp,DOFs,fig_ax=None,title="Estimated displacements")
-    fig_ax2 = plot_virtual_sensing(acc,DOFs,fig_ax=None,title="Estimated accelerations")
+    _ = plot_virtual_sensing(disp,DOFs,fig_ax=None,title="Estimated displacements")
+    _ = plot_virtual_sensing(acc,DOFs,fig_ax=None,title="Estimated accelerations")
     plt.show(block=True)

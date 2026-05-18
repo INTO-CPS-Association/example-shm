@@ -4,9 +4,9 @@ from methods.fatigue_functions.synthetic import synthetic_sn
 from methods.fatigue_functions.eurocode import eurocode_sn
 from methods.fatigue_functions.IIW import iiw_sn
 from methods.fatigue_functions.DNV import dnv_sn
+# pylint: disable=C0103, C0301, R0912, R0914, R0915, R1702
 
-"""Fatigue analysis functions"""
-"""
+"""Fatigue analysis functions
 [1] Four-point rainflow counting https://doi.org/10.1016/0142-1123(94)90343-3. Standardization of the rainflow counting method for fatigue analysis C. Amzallag et al.
 [2] Rainflow counting for continuous data https://doi.org/10.1016/j.ijfatigue.2015.10.007
 
@@ -33,8 +33,6 @@ log_a_bar: is the log10 of fatigue capacity (used in DNV: C = 10**log_a_bar)
 SF: Safety factor
 
 DC,FAT,detail: Detail catagory from code
-
-
 """
 
 def rainflow_c(series: list[float],
@@ -60,16 +58,16 @@ def rainflow_c(series: list[float],
         n_count (list(float)): List of counts of each stress range (and associated stress mean)
         time_series ():
         plot_data ():
-    """               
+    """
 
     # Reapeating values are scaled down a tiny bit,
     # so the extremes() function can keep the extremes
-    def repeating_values(time_series): 
+    def repeating_values(time_series):
         for i in range(len(time_series)-1):
             if time_series[i] == time_series[i+1]: #If consecutive values are identical
-                time_series[i+1] = time_series[i+1]*0.999999 
+                time_series[i+1] = time_series[i+1]*0.999999
         return time_series
-    
+
     # Reducing time series to extremum points
     def extremes(time_series):
         time_series_extremes = [time_series[0]] # Keep the first value of the time series
@@ -80,34 +78,28 @@ def rainflow_c(series: list[float],
                 time_series_extremes.append(time_series[i])
         time_series_extremes.append(time_series[-1]) # Keep the last value of the time series
         return time_series_extremes
-    
+
     time_series = series.copy()
 
     if residual != []: #If residual is not empty
         time_series = residual+time_series #Add residual before time series
-            
 
     if (max(time_series) == min(time_series)) or (len(time_series)<3): #Test to verify the time series is valid for rainflow counting
         raise Exception('Time series is either too short or flat')
-    
+
     plot_data = {} #Plot data:
-    if plot == True:
+    if plot is True:
         plot_data["0"] = time_series.copy() #Plot data:
 
     time_series = repeating_values(time_series) #Take care of repeated values before extremums are found
 
-    if plot == True:
+    if plot is True:
         plot_data["1"] = time_series.copy() #Plot data:
 
     time_series = extremes(time_series) #Reducing time_series to extreme points
 
-    if plot == True:
+    if plot is True:
         plot_data["2"] = time_series.copy() #Plot data:
-
-    # time_series2 = time_series.copy()
-    # idx = time_series.index(max(time_series))
-    # time_series2.pop(idx)
-    # print(max(time_series),max(time_series2))
 
     #Four-point rainflow counting
     result = {}
@@ -116,8 +108,7 @@ def rainflow_c(series: list[float],
     mean_list = []
     n_list = []
     i2 = -1
-    while ((i+3)<len(time_series)): #As long as the lenght of the remaining time series is longer than 3 values
-            
+    while (i+3)<len(time_series): #As long as the lenght of the remaining time series is longer than 3 values
         R1 = abs(time_series[i+1]-time_series[i])
         R2 = abs(time_series[i+2]-time_series[i+1]) #Middle line
         R3 = abs(time_series[i+3]-time_series[i+2])
@@ -128,7 +119,7 @@ def rainflow_c(series: list[float],
             try: # If stress range and mean already exists add 1 to existing count
                 result[R2,stress_mean] += 1
             except KeyError: # If stress range and mean does not already exists
-                result[R2,stress_mean] = 1   
+                result[R2,stress_mean] = 1
             stress_list.append(R2)
             mean_list.append(stress_mean)
             n_list.append(1)
@@ -136,31 +127,32 @@ def rainflow_c(series: list[float],
             del time_series[i+1]
             i = 0
 
-            if plot == True:
+            if plot is True:
                 i2 += 1 #Plot data:
                 plot_data[str(i2+3)] = time_series.copy() #Plot data:
-            
+
         else:
             i +=1
 
         #if len(time_series) < 3: #Exrta stop criterium
-    
+
     stress_keys = list(result.keys())
-    Delta_stress = [stress_keys[x][0] for x in range(len(stress_keys))] #Unpacking stress ranges from dictionary keys
-    stress_mean = [stress_keys[x][1] for x in range(len(stress_keys))] #Unpacking stress ranges from dictionary keys
+    #Unpacking stress ranges from dictionary keys
+    Delta_stress = [stress_keys[x][0] for x in range(len(stress_keys))]
+    #Unpacking stress ranges from dictionary keys
+    stress_mean = [stress_keys[x][1] for x in range(len(stress_keys))]
     n_count = list(result.values()) #unpacking counts from dictionary values
 
-    if n_count == []: #If no counts are done, mainly done to prevent errors in later analysis.
+    if not n_count: #If no counts are done, mainly done to prevent errors in later analysis.
         Delta_stress = [0]
         stress_mean = [0]
         n_count = [0]
 
     if output == "unique":
         return Delta_stress, stress_mean, n_count, time_series, plot_data
-    else:
-        return stress_list, mean_list, n_list, time_series, plot_data
+    return stress_list, mean_list, n_list, time_series, plot_data
 
-def synthetic_SN(material: str, R_m: float, SF: Optional[float] = 1) -> dict[str, Any]: 
+def synthetic_SN(material: str, R_m: float, SF: Optional[float] = 1) -> dict[str, Any]:
     """Synthetic SN curve generator.
     Generates SN curves from material data and safety factors.
 
@@ -184,7 +176,7 @@ def synthetic_SN(material: str, R_m: float, SF: Optional[float] = 1) -> dict[str
             - 'C' (List(float)): Fatigue capacity.
             - 'Delta_s_R_D' (List(float)): Fatigue limit at knee point(s).
             - 'm' List(int): SN-curve slope(s).
-    """  
+    """
     return synthetic_sn(material, R_m, SF)
 
 def eurocode_SN(DC: int, stress_type: str, SF: Optional[float]=1,
@@ -243,7 +235,7 @@ def IIW_SN(FAT: int, stress_type: str,SF: Optional[float] = 1,
     Definitions
     ------
     FAT = DC in IIW language
-    """ 
+    """
     return iiw_sn(FAT, stress_type, SF, material, **kwargs)
 
 def DNV_SN(joint_type: str,enviroment: str,**kwargs: Optional[Any])-> dict[str, Any]: #2016 version
@@ -293,8 +285,8 @@ def cycles_SN(sn_curve: dict[str, Any], stress_list: list[float],
         n_cycles (List(float)): List of of counts associated with the significant stress ranges.
         res_stress (List(float)): List of significant stress ranges.
         res_mean (List(float)): List of mean stress associated to significant stress.
-    """ 
-    
+    """
+
     if stress_list == [0]: #error handling if rainflow results in 0 counts
         return [0], [0], [0], [0]
 
@@ -302,7 +294,7 @@ def cycles_SN(sn_curve: dict[str, Any], stress_list: list[float],
     n_cycles = [] #Cycle count list for significant stresses
     res_stress = [] #Stress list for significant stresses
     res_mean = [] #Mean stress list
-    
+
     m = sn_curve['m']
     knee_stress = sn_curve['Delta_s_R_D'].copy()
     if m[-1] != 0: #If there are no cut-offs
@@ -319,13 +311,15 @@ def cycles_SN(sn_curve: dict[str, Any], stress_list: list[float],
                     n_cycles.append(n_count[i])
                     res_mean.append(mean_list[i])
                 break
-    
+
     return cycles, n_cycles, res_stress, res_mean
 
 def damage(N1: list[float], n1: list[int],
-            N2: Optional[list[float]] = [], n2: Optional[list[int]] = [], **kwargs) -> float | list[float]: #Palmgren-Miner damage
+            N2: Optional[list[float]] = None,
+            n2: Optional[list[int]] = None, **kwargs) -> float | list[float]: #Palmgren-Miner damage
     """Calculate the Palmgren-Miner damage
-    for both uni- and multiaxial stress ranges (sigma and tau). Multiaxial damage following Eurocode 3.
+    for both uni- and multiaxial stress ranges (sigma and tau).
+    Multiaxial damage following Eurocode 3.
     IIW uses Gough-Pollard elipse to asses multiaxial stress state in welds. (Not implemented)
 
     Args:
@@ -338,45 +332,41 @@ def damage(N1: list[float], n1: list[int],
 
     Returns:
         - damage (float/List(float)): Damage
-    """ 
+    """
     if N1 == [0]: #If no cycles are counted
         return 0, 0
 
     #Try if the damage output should be summed or listed for all cycles
     list_D = kwargs.get("list_D",False)
 
-    if (type(n1) == int) or (type(n1) == float): # If value given is not a list, then make it a list
+    if isinstance(n1,(int,float)): # If value given is not a list, then make it a list
         n1 = [n1]
-    
+
     N1 = np.array(N1) #Use np.arrays
     n1 = np.array(n1)
 
-    if list_D == True: #Output as list
-        if N2 != []: #Multiaxial damage
-            if (type(n2) == int) or (type(n2) == float):
+    if list_D is True: #Output as list
+        if N2 is not None: #Multiaxial damage
+            if isinstance(n2,(int,float)):
                 n2 = [n2]
-            
+
             N2 = np.array(N2)
             n2 = np.array(n2)
             D = np.array([np.multiply(n1,np.reciprocal(N1)),np.multiply(n2,np.reciprocal(N2))])
-
 
         else: # Uniaxial damage
             D = np.multiply(n1,np.reciprocal(N1)) #np.sum(n1*np.reciprocal(N1)) works too
 
     else: #Output as sum
-        if N2 != []: #Multiaxial damage
-            if (type(n2) == int) or (type(n2) == float):
+        if N2 is not None: #Multiaxial damage
+            if isinstance(n2,(int,float)):
                 n2 = [n2]
             N2 = np.array(N2)
             n2 = np.array(n2)
             D = np.matmul(n1,np.reciprocal(N1)) + np.matmul(n2,np.reciprocal(N2))
 
-
         else: # Uniaxial damage
             D = np.matmul(n1,np.reciprocal(N1)) #np.sum(n1*np.reciprocal(N1)) works too
-
-
 
     return D.tolist() #Convert back to native float/list from np.float/np.array
 
