@@ -4,7 +4,7 @@ import methods.mode_clustering as MC
 from methods.mode_tracking_functions.mode_tracking_func import cluster_tracking
 from methods.mode_tracking_functions.plot_mode_tracking import plot_tracked_modes
 from functions.plot_clusters import plot_clusters
-# pylint: disable=C0103, W0603
+# pylint: disable=C0103, W0603, R0913, R0917
 
 def track_clusters(cluster_dict: Dict[str,Any], tracked_clusters: Dict[str,Any],
                       params: Dict[str,Any]) -> Dict[str,Any]:
@@ -75,7 +75,7 @@ def subscribe_and_track_clusters(config: Dict[str,Any],
     return sysid_output, clusters, tracked_clusters
 
 def live_mode_tracking(config: Dict[str,Any],
-                        params: Dict[str,Any], plot: List[bool] = [1,1]
+                        params: Dict[str,Any], plot: Tuple[bool] = (1,1)
                         ) -> None:
     """
     Subscribes to MQTT broker, receives one OMA message, runs mode tracking, plot results.
@@ -84,7 +84,7 @@ def live_mode_tracking(config: Dict[str,Any],
     Args:
         mqtt_config (mqtt.Client): Configuration dictionary for the MQTT client.
         config (Dict[str,Any]): Configuration dictionary
-        plot (List[bool]): Array describing what plots to show
+        plot (Tuple[bool]): Array describing what plots to show
 
     Returns:
 
@@ -101,7 +101,7 @@ def live_mode_tracking(config: Dict[str,Any],
                                                                 tracked_clusters, params)
             if clusters is not None:
                 fig_axes = tracked_cluster_plots(plot,tracked_clusters,
-                                                 clusters,sysid_output,params,fig_axes)
+                                                    clusters,sysid_output,params,fig_axes)
 
     except KeyboardInterrupt:
         print("Keyboard interrupt of live mode tracking\n")

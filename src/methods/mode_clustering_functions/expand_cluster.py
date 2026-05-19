@@ -1,7 +1,7 @@
 from typing import Any, Dict
 import numpy as np
 from methods.mode_clustering_functions.create_cluster import cluster_creation
-# pylint: disable=C0103
+# pylint: disable=C0103, R0914
 
 def cluster_expansion(cluster: Dict[str,Any], data: Dict[str,Any],
                       params: Dict[str,Any]) -> Dict[str,Any]:
@@ -66,8 +66,8 @@ def cluster_expansion(cluster: Dict[str,Any], data: Dict[str,Any],
         ip_id = int(index_f[index_row[0,0],0])
     else:
         ip_id = int(index_f[0,0])
-    
-    #Make the id of the expansion point be first, such that the indicies are e.g. [5,0,1,2,3,8,9,10],
+
+    #Make the id of the expansion point be first, such that the indicies are e.g. [5,0,1,2,3,8,9,10]
     # where 5 is the expansion point
     indecies = list(range(len(cluster_points['f'])))
     poped_id = indecies.pop(ip_id)

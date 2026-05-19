@@ -1,5 +1,7 @@
 import numpy as np
 from beam import beam_yafem_model as model
+from methods.fatigue_functions.IIW import iiw_sn
+# pylint: disable=C0103, C0301
 
 # Constants for sysID
 WAIT_METADATA = 11 # Wait max 11 seconds for getting metadata message
@@ -60,7 +62,7 @@ MODEL_PARAMETERS = {'modes': PARAMS['modes_search_paring'],
 
 # Params for modal expansion:
 PARAMS['expansion_modes'] = PARAMS['MU_modes']
-PARAMS['filter_order'] = 4                                          # Order/strength of butterworth filter 
+PARAMS['filter_order'] = 4                                          # Order/strength of butterworth filter
 PARAMS['filter_type'] = 'bandpass'                                   # 'lowpass', 'bandpass', 'highpass' or None
 PARAMS['filter_cut-off'] = np.array([0.5,90])                           # Cut of frequency(ies) for the butterworth filter [lower/upper cut-off value] or [>lower cut-off value<,upper cut-off value]
 PARAMS['output_type'] = 2                                           # system output type: 0-displacement; 1-velocities, 2-acceleration
@@ -73,3 +75,15 @@ PARAMS['element_type'] = np.array(["beam2d","beam2d","beam2d","beam2d","beam2d",
 PARAMS['elements'] = np.array([3,4,5,6,7,8,9])
 PARAMS['y'] = np.array([1e-3/2,1e-3/2,1e-3/2,1e-3/2,1e-3/2,1e-3/2,1e-3/2])
 PARAMS["dofs_extract"] = np.array([[8,3],[8,2],[8,1],[7,3],[7,2],[7,1],[6,3],[6,2],[6,1],[5,3],[5,2],[5,1],[4,3],[4,2],[4,1],[3,3],[2,3],[1,3],[1,2],[1,1]])
+
+t = 2
+k_thick = 1 #(25/t)**(0.1) #Base material. k_thick = 1 for t under 25mm
+R = -120/160 # sigma_min / sigma_max
+k_rs = -0.4*R + 1.2 #Low residual stress
+mean_stress = 25 #To be adjusted
+R_m = 360 #MPa #Ultimate tensile strength Low value for s235
+k_mean = 1# 1 - mean_stress/R_m #Modified Goodman
+SaftyFactor = 1 * 1/k_thick * 1/k_rs * 1/k_mean
+SN_CURVE = iiw_sn(140,"sigma",SF=SaftyFactor,signal_type="VA")
+FATIGUE_DOF = [3, 2]
+DAMAGE_SUM = 0.5

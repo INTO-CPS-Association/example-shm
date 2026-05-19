@@ -5,12 +5,13 @@ import threading
 import datetime
 from paho.mqtt.client import Client as MQTTClient, CallbackAPIVersion, MQTTv5
 from data.comm.mqtt import load_config
+# pylint: disable=W0613
 
 # MQTT Configuration
 CONFIG_PATH = "config/replay.json"
 RECORDINGS_DIR = "record/mqtt_recordings"
 FILE_NAME = "recording2.jsonl"
-DURATION_SECONDS = 20  # Recording duration in seconds 
+DURATION_SECONDS = 20  # Recording duration in seconds
 
 # Ensure output directory exists
 os.makedirs(RECORDINGS_DIR, exist_ok=True)
@@ -51,7 +52,8 @@ def record_mqtt(config_path: str):
 
     file_locks = {topic: threading.Lock() for topic in mqtt_config["TopicsToSubscribe"]}
 
-    client = MQTTClient(client_id=mqtt_config["ClientID"], protocol=MQTTv5, callback_api_version=CallbackAPIVersion.VERSION2)
+    client = MQTTClient(client_id=mqtt_config["ClientID"], protocol=MQTTv5,
+                        callback_api_version=CallbackAPIVersion.VERSION2)
     client.username_pw_set(mqtt_config["userId"], mqtt_config["password"])
     client.on_connect = on_connect
     client.on_message = on_message

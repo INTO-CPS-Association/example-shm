@@ -1,12 +1,12 @@
 from typing import Any, Dict, List
 import numpy as np
 from functions.calculate_mac import calculate_mac
-# pylint: disable=C0103
+# pylint:  disable=C0103, R0912, R0913, R0914, R0915, R0917, R1702
 
 def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_clusters: Dict[str,Any],
-                                     params: Dict[str,Any], result_pairs_prev: Dict[str,Any] = {},
-                                     skip_cluster: List = [],
-                                     skip_tracked_cluster: List = []) -> Dict[str,Any]:
+                                     params: Dict[str,Any], result_pairs_prev: Dict[str,Any] = None,
+                                     skip_cluster: List = None,
+                                     skip_tracked_cluster: List = None) -> Dict[str,Any]:
     """
     Match clusters to tracked clusters
 
@@ -23,7 +23,7 @@ def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_cluste
         cluster_dict (dict): Dictionary of clusters
         tracked_clusters (dict): Previously tracked clusters
         params (dict): tracking parameters
-        result_prev (dict): Dictionary of previous match result
+        result_pairs_prev (dict): Dictionary of previous match result
         skip_cluster (list): List of clusters that are the optimal match with a tracked cluster
         skip_tracked_cluster (list): List of tracked clusters are an optimal match with a cluster
 
@@ -33,9 +33,11 @@ def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_cluste
     """
     result_pairs = {}
     for idx, key in enumerate(cluster_dict): #Go through all clusters
-        if idx in skip_cluster: #If this cluster is already matched skip it
-            result_pairs[str(idx)] = result_pairs_prev[str(idx)]
-            continue
+        if skip_cluster is not None:
+            if result_pairs_prev is not None:
+                if idx in skip_cluster: #If this cluster is already matched skip it
+                    result_pairs[str(idx)] = result_pairs_prev[str(idx)]
+                    continue
 
         #Get mode shapes
         cluster = cluster_dict[key]
@@ -49,10 +51,10 @@ def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_cluste
             #They are identified with keys which are integers from 0 up to total number of clusters
             if key_t == 'iteration':
                 pass
-            elif key_t in skip_tracked_cluster:
-                MAC_max = np.max(0)
-                MAC_max_list.append(0)
-                R_freq.append(10**6)
+            elif skip_tracked_cluster is not None:
+                if key_t in skip_tracked_cluster:
+                    MAC_max_list.append(0)
+                    R_freq.append(10**6)
             else:
                 #Accessing all cluster in a tracked cluster group
                 tracked_cluster_list = tracked_clusters[key_t]
@@ -74,12 +76,12 @@ def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_cluste
                         break
 
                 MAC_max = np.max(MAC_matrix) #Max MAC value between cluster and tracked cluster
-                MAC_max_list.append(MAC_max) 
+                MAC_max_list.append(MAC_max)
                 #median freq of last cluster in tracked cluster group
                 tracked_cluster = tracked_cluster_list[-1]
                 omega_t = tracked_cluster['median_f']
-                if omega_t < 0.0001: #For cases where the tracked cluster has a frequency of 0
-                    omega_t = 0.0001
+                #For cases where the tracked cluster has a frequency of 0
+                omega_t = max(0.0001,omega_t)
 
                 R_freq.append(abs(omega_t-omega)/omega_t) #Relative frequency difference
 

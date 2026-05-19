@@ -1,6 +1,7 @@
-from scipy import signal
-import numpy as np
 from typing import Dict, Any
+import numpy as np
+from scipy import signal
+# pylint: disable=C0103
 
 def signal_filter(data: np.ndarray[float], params: Dict[str,Any]) -> np.ndarray[float]:
     """
@@ -31,12 +32,13 @@ def signal_filter(data: np.ndarray[float], params: Dict[str,Any]) -> np.ndarray[
         filter_type = params.get('filter_type', 'bandpass')
         filter_cut_off = params.get('filter_cut-off', np.array([0,10**6]))
         if filter_type is not None:
-            sos = signal.butter(filter_order, filter_cut_off, filter_type, analog=False, fs = params['Fs'], output='sos')
+            sos = signal.butter(filter_order, filter_cut_off, filter_type,
+                                analog=False, fs = params['Fs'], output='sos')
             y = signal.sosfilt(sos, y)
-            
-    except Exception as e:
-            raise RuntimeError("Unexpected error in signal filtering") from e
-    
+
+    except Exception as exc:
+        raise RuntimeError("Unexpected error in signal filtering") from exc
+
     if N < ms:
         y = y.T
 

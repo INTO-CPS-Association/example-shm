@@ -2,7 +2,10 @@ from typing import Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 
-def plot_virtual_sensing(data: np.ndarray[float], DOFs: list[int], fig_ax: Tuple = None, title: (str) = None) -> None: 
+# pylint: disable=C0103
+
+def plot_virtual_sensing(data: np.ndarray[float], DOFs: list[int],
+                         fig_ax: Tuple = None, title: (str) = None) -> None:
     """
     Plot virtual sensing results
     Args:
@@ -25,9 +28,9 @@ def plot_virtual_sensing(data: np.ndarray[float], DOFs: list[int], fig_ax: Tuple
     if N < dof:
         data = data.T
 
-    for ii, dof in enumerate(DOFs):
-        ax1.plot(data[dof,:], label=("DOF" + str(dof)))
-    
+    for dof in DOFs:
+        ax1.plot(data[dof,:], label="DOF" + str(dof))
+
     ax1.legend()
     if title is not None:
         ax1.set_ylabel(title)

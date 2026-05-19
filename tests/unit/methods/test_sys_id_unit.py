@@ -47,7 +47,7 @@ def test_get_oma_results_success(mocker):
     mock_aligner = MagicMock()
     mock_aligner.extract.return_value = (mock_data, datetime.now())
 
-    result, ts = get_sysid_output(600, mock_aligner, fs)
+    result, ts = get_sysid_output(600, mock_aligner)
 
     assert result is not None
     assert "Fn_poles" in result
@@ -57,7 +57,7 @@ def test_get_oma_results_no_data(mocker):
     mock_aligner = MagicMock()
     mock_aligner.extract.return_value = (np.empty((0, 3)), datetime.now())
 
-    result, ts = get_sysid_output(6000, mock_aligner, fs)
+    result, ts = get_sysid_output(6000, mock_aligner)
 
     assert result is None
     assert ts is None
@@ -69,7 +69,7 @@ def test_get_oma_results_not_enough_samples(mocker):
     data = np.random.randn(100, 3)
     mock_aligner.extract.return_value = (data, datetime.now())
 
-    result, ts = get_sysid_output(1000, mock_aligner, fs)  # ask for too many samples
+    result, ts = get_sysid_output(1000, mock_aligner)  # ask for too many samples
 
     assert result is None
     assert ts is None
@@ -82,7 +82,7 @@ def test_get_oma_results_sysid_failure(mocker):
 
     mocker.patch("methods.sysid.sysid", side_effect=Exception("fail"))
 
-    result, ts = get_sysid_output(1, mock_aligner, fs)
+    result, ts = get_sysid_output(1, mock_aligner)
 
     assert result is None
     assert ts is None

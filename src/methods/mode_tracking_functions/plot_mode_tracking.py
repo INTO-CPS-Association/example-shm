@@ -42,7 +42,8 @@ def plot_tracked_modes(
                 x.append(cluster['id'])
             sc = ax1.scatter(x, m_f, marker="o", s=50)
             col2 = sc.get_facecolors().tolist()
-            ax1.plot(x, m_f, color=col2[0],label="Tracked cluster "+key+", f="+str(f"{np.mean(m_f):.2f}")+" [Hz]")
+            ax1.plot(x, m_f, color=col2[0],
+                     label="Tracked cluster "+key+",f="+str(f"{np.mean(m_f):.2f}")+" [Hz]")
             max_x.append(max(x))
             ii += 1
 

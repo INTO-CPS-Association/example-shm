@@ -83,7 +83,7 @@ def plot_clusters(clusters: Dict[str,dict],
 
     ax2 = add_plot_annotation(ax2,x,y,y_model_order)
     ax2 = add_plot_standard_flair(ax2,sysid_params)
-    
+
     ax2.set_title("Clustered damping ratios")
     if y[~np.isnan(y)].shape[0] > 1:
         ax2.set_ylim(0, max(max(y[~np.isnan(y)])+0.005,0.1))

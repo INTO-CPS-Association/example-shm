@@ -3,10 +3,11 @@ from collections.abc import Callable
 import numpy as np
 from scipy.optimize import minimize
 from methods.model_update_functions.mode_pairing import pair_modes
-# pylint: disable=C0103
+# pylint: disable=C0103, R0913, R0914, R0917
 
-def update_model(cluster_dict: Dict[str,Any], model_func: Callable[[Dict[str,Any]],Any], model_pars: Dict[str,Any],
-                 pars_to_update: List[str], params: Dict[str,Any]) -> Optional[Any]:
+def update_model(cluster_dict: Dict[str,Any], model_func: Callable[[Dict[str,Any]],Any],
+                 model_pars: Dict[str,Any], pars_to_update: List[str],
+                 params: Dict[str,Any]) -> Optional[Any]:
     """
     Estimate updated model parameters
 

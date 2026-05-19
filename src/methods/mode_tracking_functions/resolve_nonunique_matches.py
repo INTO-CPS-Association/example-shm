@@ -1,7 +1,7 @@
 from typing import Any, Dict, Tuple
 import numpy as np
 from functions.calculate_mac import calculate_mac
-# pylint: disable=C0103
+# pylint: disable=C0103, R0914
 
 def resolve_nonunique_matches(possible_match_id: int, itemindex: np.ndarray[int],
                               result: Dict[str,Any],cluster_dict: Dict[str,Any],

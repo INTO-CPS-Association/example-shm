@@ -22,7 +22,8 @@ LOOPS = 1 # Number of times to loop over the recording
 
 #Non important parameters
 BUSY_WAIT_THRESHOLD = 10/1000  # Threshold in seconds for busy waiting (10 ms)
-KEEP_UP_TIME = -1 # If delay time (remaining) is lower than this time, warn the user that the replay speed is two fast.
+KEEP_UP_TIME = -1 # If delay time (remaining) is lower than this time,
+                    # warn the user that the replay speed is two fast.
 PRINT_INTERVAL = 5
 BATCH_SIZE = 16
 SINCE_START_COUNTER = {}
@@ -30,35 +31,36 @@ SINCE_START_COUNTER = {}
 
 
 def override_counter_in_payload(topic_key,payload_bytes) -> None:
-        """
-        Overrides the recorded 'samples_from_daq_start' counter with a replay counter.
-        This is important when the recording is looped.
-        Args:
-            topic_key (str): Topic string used as a dict key
-            paylpad_bytes (bytes): Payload in bytes 
-        Returns: 
-            payload_bytes (bytes): Payload in bytes
-        """
-        # Find and remove the descriptor from the payload
-        descriptor_length = struct.unpack("<H", payload_bytes[:DESCRIPTOR_LENGTH_BYTES])[0]
-        (descriptor_length, _, __, ___,
-            samples_from_daq_start,) = struct.unpack("<HHQQQ", payload_bytes[:descriptor_length])
-        
-        # Find the raw data
-        payload = payload_bytes[descriptor_length:]
-        
-        accel_values = struct.unpack(f"<{BATCH_SIZE}f", payload)
-        # Recreate the data payload to bytes
-        data_payload = struct.pack(f"<{len(accel_values)}f", *accel_values)
+    """
+    Overrides the recorded 'samples_from_daq_start' counter with a replay counter.
+    This is important when the recording is looped.
+    Args:
+        topic_key (str): Topic string used as a dict key
+        paylpad_bytes (bytes): Payload in bytes 
+    Returns: 
+        payload_bytes (bytes): Payload in bytes
+    """
+    # Find and remove the descriptor from the payload
+    descriptor_length = struct.unpack("<H", payload_bytes[:DESCRIPTOR_LENGTH_BYTES])[0]
+    (descriptor_length, _, __, ___,
+        _____,) = struct.unpack("<HHQQQ", payload_bytes[:descriptor_length])
 
-        # Recreate the descriptor with the updated counter
-        SINCE_START_COUNTER[topic_key] = SINCE_START_COUNTER.get(topic_key, 0) + BATCH_SIZE
-        descriptor = struct.pack("<HHQQQ", 28, 2, 0, 0, SINCE_START_COUNTER[topic_key])
-        #Add payload back together
-        payload_bytes = descriptor + data_payload
-        return payload_bytes
+    # Find the raw data
+    payload = payload_bytes[descriptor_length:]
 
-def publish_massage(publish_client: MQTTClient, PublishTopics: Dict[str,str], qos: int, topic_key: str, payload_bytes: bytes) -> None:
+    accel_values = struct.unpack(f"<{BATCH_SIZE}f", payload)
+    # Recreate the data payload to bytes
+    data_payload = struct.pack(f"<{len(accel_values)}f", *accel_values)
+
+    # Recreate the descriptor with the updated counter
+    SINCE_START_COUNTER[topic_key] = SINCE_START_COUNTER.get(topic_key, 0) + BATCH_SIZE
+    descriptor = struct.pack("<HHQQQ", 28, 2, 0, 0, SINCE_START_COUNTER[topic_key])
+    #Add payload back together
+    payload_bytes = descriptor + data_payload
+    return payload_bytes
+
+def publish_massage(publish_client: MQTTClient, PublishTopics: Dict[str,str], qos: int,
+                    topic_key: str, payload_bytes: bytes) -> None:
     """
     Publish message
     Args:
@@ -70,12 +72,12 @@ def publish_massage(publish_client: MQTTClient, PublishTopics: Dict[str,str], qo
     Return:
         None
     """
-    
+
     try:
         topic = PublishTopics[topic_key]
         publish_client.publish(topic, payload=payload_bytes, qos=qos)
-    except KeyboardInterrupt:
-        raise RuntimeError("Replay interrupted by user.")
+    except KeyboardInterrupt as exc:
+        raise KeyboardInterrupt("Replay interrupted by user.") from exc
 
 def replay_mqtt_messages(config_path: str, loop: int = 1) -> None:
     """
@@ -89,7 +91,7 @@ def replay_mqtt_messages(config_path: str, loop: int = 1) -> None:
     """
     config = load_config(config_path)
     MQTT_config = config["MQTT"]
-    publish_client = setup_publish_client(MQTT_config)
+    publish_client, publish_topics = setup_publish_client(MQTT_config, verbose = False)
     origin_list = []
     try:
         path = RECORDINGS_DIR / FILE_NAME
@@ -99,7 +101,6 @@ def replay_mqtt_messages(config_path: str, loop: int = 1) -> None:
         with open(path, "r", encoding="utf-8") as replay_file:
             total_lines = len(replay_file.readlines())
             replay_file.close()
-        publish_client.loop_start()
         for ii in range(loop):
             print(f"Replay function iteration {ii+1}/{loop}.")
             accumulated_delay = 0.0
@@ -114,8 +115,8 @@ def replay_mqtt_messages(config_path: str, loop: int = 1) -> None:
                     origin = record.get("origin")
                     if origin not in origin_list:
                         print(f"Topic: {topic_key}, with origin topic:",origin)
-                        if topic_key in MQTT_config["TopicsToPublish"]:
-                            print("Publish topic:",MQTT_config["TopicsToPublish"][topic_key])
+                        if topic_key in publish_topics:
+                            print("Publish topic:",publish_topics[topic_key])
                         origin_list.append(origin)
                     qos = record.get("qos", 0)
 
@@ -128,7 +129,7 @@ def replay_mqtt_messages(config_path: str, loop: int = 1) -> None:
 
                     if "metadata" not in topic_key:
                         payload_bytes = override_counter_in_payload(topic_key,payload_bytes)
-                    
+
                     timestamp = datetime.fromisoformat(record["timestamp"])
                     if prev_timestamp is None:
                         delay = 0.0  # Send the first message immediately
@@ -154,10 +155,11 @@ def replay_mqtt_messages(config_path: str, loop: int = 1) -> None:
                     while time.perf_counter() < target_time:
                         time.sleep(0)  # Yield CPU while busy-waiting for sub-10ms precision
 
-                    publish_massage(publish_client,MQTT_config["TopicsToPublish"],qos,topic_key,payload_bytes)
+                    publish_massage(publish_client,MQTT_config["TopicsToPublish"],qos,
+                                    topic_key, payload_bytes)
                     prev_timestamp = timestamp
                 replay_file.close()
-                print(f"[REPLAYED {counter+1}/{total_lines}]")
+                print(f"[REPLAYED {total_lines}/{total_lines}]")
             t_end = time.perf_counter()
             print(f"\nTime it took to publish: {(t_end-t_start):.3f}s")
             print("Published messages per second:",total_lines/(t_end-t_start))

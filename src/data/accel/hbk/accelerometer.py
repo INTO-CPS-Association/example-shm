@@ -101,7 +101,8 @@ class Accelerometer(IAccelerometer):
             x = iter(self.data_map)
             first_key = next(x)
             try:
-                second_key = next(x) #If second key exist then return the batchsize of this, since first_key may not be a full batch after extraction.
+                second_key = next(x) #If second key exist then return the batchsize of this,
+                                # since first_key may not be a full batch after extraction.
                 return len(self.data_map[second_key])
             except StopIteration:
                 return len(self.data_map[first_key])

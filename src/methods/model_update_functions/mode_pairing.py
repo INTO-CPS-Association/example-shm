@@ -1,7 +1,7 @@
 from typing import Dict, Any, Tuple
 import numpy as np
 from functions.calculate_mac import calculate_mac
-# pylint: disable=C0103
+# pylint: disable=C0103, C0301, R0912, R0914, R0915, R1702
 
 def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[float],
                cluster_dict: Dict[str,Any], params) -> Tuple[np.ndarray,
@@ -138,7 +138,7 @@ def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[floa
                         paried_model_mode_shapes = model_mode_shapes[:,id_model].reshape(sensors,1)
                     else:
                         paried_model_mode_shapes = np.append(paried_model_mode_shapes,
-                                                             model_mode_shapes[:,id_model].reshape(sensors,1),axis=1)
+                                    model_mode_shapes[:,id_model].reshape(sensors,1),axis=1)
 
                     MAC_max = -1 #Insert the MAC value into the paring information
                     for idx, ms in enumerate(cluster['mode_shapes']):
@@ -154,8 +154,8 @@ def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[floa
                         paired_c_mode_shapes = cluster['mode_shapes'][MAC_max_id,:].reshape(sensors,1)
                     else:
                         paired_c_mode_shapes = np.append(paired_c_mode_shapes,
-                                                         cluster['mode_shapes'][MAC_max_id,:].reshape(sensors,1),
-                                                         axis=1)
+                                    cluster['mode_shapes'][MAC_max_id,:].reshape(sensors,1),
+                                    axis=1)
 
             else:
                 print("Cluster",key,cluster['median_f']

@@ -15,15 +15,15 @@ def run_mode_tracking_with_local_sysid(config_path):
     tracked_clusters = {}
     tracked_clusters = MT.track_clusters(clusters,tracked_clusters,PARAMS)
 
-    _ = MT.tracked_cluster_plots([0,1], tracked_clusters, clusters, sysid_ouput,
+    _ = MT.tracked_cluster_plots((0,1), tracked_clusters, clusters, sysid_ouput,
                               PARAMS, fig_axes = [None,None], hold = True, x_length = None)
 
 def run_mode_tracking_with_remote_sysid(config_path):
     config = load_config(config_path)
     sysid_ouput, clusters, tracked_clusters = MT.subscribe_and_track_clusters(config,{},PARAMS)
-    _ = MT.tracked_cluster_plots([0,1], tracked_clusters, clusters, sysid_ouput,
+    _ = MT.tracked_cluster_plots((0,1), tracked_clusters, clusters, sysid_ouput,
                               PARAMS, fig_axes = [None,None], hold = True, x_length = None)
 
 def run_live_mode_tracking_with_remote_sysid(config_path):
     config = load_config(config_path)
-    MT.live_mode_tracking(config,PARAMS,plot=[1,1])
+    MT.live_mode_tracking(config,PARAMS,plot=(1,1))

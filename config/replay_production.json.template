@@ -60,6 +60,46 @@
       "QoS": 2,
       "TopicsToSubscribe": ["cpsens/recorded/mode_cluster/data"],
       "TopicsToPublish": ["cpsens/recorded/model_update/data"]
+    },
+
+    "virtual_sensing": {
+      "host": "",
+      "port": 0,
+      "userId": "",
+      "password": "",
+      "ClientID": "NOT_NEEDED",
+      "QoS": 2,
+      "SamplesToCollect": 2560,
+      "MetadataToSubscribe": ["cpsens/recorded/1/metadata"],
+      "TopicsToSubscribe": [
+            "cpsens/recorded/1/data",
+            "cpsens/recorded/2/data",
+            "cpsens/recorded/3/data",
+            "cpsens/recorded/4/data"
+        ],
+      "TopicsToPublish": ["cpsens/recorded/virtual_sensing/data"]
+    },
+
+    "stress": {
+      "host": "",
+      "port": 0,
+      "userId": "",
+      "password": "",
+      "ClientID": "NOT_NEEDED",
+      "QoS": 2,
+      "TopicsToSubscribe": ["cpsens/recorded/virtual_sensing/data"],
+      "TopicsToPublish": ["cpsens/recorded/stress/data"]
+    },
+
+    "fatigue": {
+      "host": "",
+      "port": 0,
+      "userId": "",
+      "password": "",
+      "ClientID": "NOT_NEEDED",
+      "QoS": 2,
+      "TopicsToSubscribe": ["cpsens/recorded/stress/data"],
+      "TopicsToPublish": []
     }
 }
 

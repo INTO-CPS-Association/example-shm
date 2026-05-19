@@ -26,14 +26,20 @@ from examples.run_model_update import (
 )
 from examples.run_record_replay import replay_mqtt, record_mqtt
 
-from examples.run_virtual_sensing import (run_virtual_sensing, 
+from examples.run_virtual_sensing import (run_virtual_sensing,
                                           run_live_virtual_sensing,
+                                          run_live_virtual_sensing_and_publish,
                                           run_plot_virtual_sensing)
 
 from examples.run_stress_estimation import (run_stress_and_strain_estimation_beam,
                                             run_live_stress_and_strain_estimation_beam,
+                                            run_live_stress_estimation_subscribe_and_publish,
                                             run_stress_estimation_and_plot)
 
+from examples.run_fatigue import (run_fatigue_with_local_stress_estimation,
+                                  run_live_fatigue_with_local_stress_estimation,
+                                  run_live_fatigue_with_remote_stress_estimation,
+                                  run_plot_rainflow_counting)
 
 @click.group()
 @click.option('--config', default="config/production.json", help="Path to config file")
@@ -145,13 +151,17 @@ def virtual_sensing(ctx):
 @cli.command()
 @click.pass_context
 def virtual_sensing_and_plot(ctx):
-    run_plot_virtual_sensing(ctx.obj["CONFIG"]) 
-    
+    run_plot_virtual_sensing(ctx.obj["CONFIG"])
 
 @cli.command()
 @click.pass_context
 def live_virtual_sensing(ctx):
     run_live_virtual_sensing(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def live_virtual_sensing_and_publish(ctx):
+    run_live_virtual_sensing_and_publish(ctx.obj["CONFIG"])
 
 @cli.command()
 @click.pass_context
@@ -165,8 +175,33 @@ def live_stress_strain_estimation(ctx):
 
 @cli.command()
 @click.pass_context
+def live_stress_estimation_subscribe_and_publish(ctx):
+    run_live_stress_estimation_subscribe_and_publish(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
 def stress_strain_estimation_and_plot(ctx):
     run_stress_estimation_and_plot(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def fatigue_with_local_stress_estimation(ctx):
+    run_fatigue_with_local_stress_estimation(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def live_fatigue_with_local_stress_estimation(ctx):
+    run_live_fatigue_with_local_stress_estimation(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def live_fatigue_with_remote_stress_estimation(ctx):
+    run_live_fatigue_with_remote_stress_estimation(ctx.obj["CONFIG"])
+
+@cli.command()
+@click.pass_context
+def plot_rainflow(ctx):
+    run_plot_rainflow_counting(ctx.obj["CONFIG"])
 
 
 if __name__ == "__main__":
