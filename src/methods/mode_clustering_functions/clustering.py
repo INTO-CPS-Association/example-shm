@@ -3,7 +3,7 @@ import numpy as np
 from functions.clean_sysid_output import (remove_highly_uncertain_points,transform_sysid_features)
 from methods.mode_clustering_functions.create_cluster import cluster_creation
 from methods.mode_clustering_functions.expand_cluster import cluster_expansion
-from methods.mode_clustering_functions.initialize_ip import cluster_initial
+from methods.mode_clustering_functions.initialize_Ip import cluster_initial
 from methods.mode_clustering_functions.align_clusters import alignment
 # pylint: disable=C0103, R0912, R0914, R0915, R1702
 
