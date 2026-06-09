@@ -45,10 +45,13 @@ def plot_parameters(model_parameters: Dict[str, Any],
             xdata = [1]
 
         ydata.append(model_parameters[pars_to_update[ii]])
-        ax.plot(xdata,ydata,'*-',color="k")
+        running_mean = 5
+        ax.plot(xdata,ydata,'*-',color="k",label=f"Running mean: {np.mean(ydata[-running_mean:])}")
         ax.set_title(f'Model parameter: {pars_to_update[ii]}')
         ax.set_ylabel(pars_to_update[ii])
         ax.set_xlabel('Dataset [-]')
+        ax.legend()
+        ax.grid()
 
     fig.canvas.draw()
     fig.canvas.flush_events()

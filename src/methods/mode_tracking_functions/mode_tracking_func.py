@@ -24,6 +24,9 @@ def cluster_tracking(cluster_dict: Dict[str,Any],tracked_clusters: Dict[str,Any]
     if params is None:
         params = {'phi_cri':0.8,
                   'freq_cri':0.2}
+    else:
+        params['phi_cri'] = params.get('phi_cri',0.8)
+        params['freq_cri'] = params.get('freq_cri',0.2)
 
     m_f = []
     for key in cluster_dict.keys():

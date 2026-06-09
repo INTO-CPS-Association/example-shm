@@ -4,6 +4,7 @@ from datetime import datetime
 from unittest.mock import MagicMock
 
 from methods import sysid
+from methods.setup_data import get_data
 
 
 
@@ -24,9 +25,9 @@ def test_sysid():
     
     # Extract results using dictionary keys
     frequencies = sysid_output['Fn_poles']
-    cov_freq = sysid_output['Fn_poles_cov']
+    std_freq = sysid_output['Fn_poles_std']
     damping_ratios = sysid_output['Xi_poles']
-    cov_damping = sysid_output['Xi_poles_cov']
+    std_damping = sysid_output['Xi_poles_std']
     mode_shapes = sysid_output['Phi_poles']
 
 
@@ -34,16 +35,16 @@ def test_sysid():
     # Load stored reference results
     stored_data = np.load('tests/integration/input_data/expected_sysid_output.npz')
     stored_frequencies = stored_data['frequencies']
-    stored_cov_freq = stored_data['cov_freq']
+    stored_cov_freq = stored_data['std_freq']
     stored_damping_ratios = stored_data['damping_ratios']
-    stored_cov_damping = stored_data['cov_damping']
+    stored_cov_damping = stored_data['std_damping']
     stored_mode_shapes = stored_data['mode_shapes']
     
     tolerance = 0.4
     assert np.allclose(frequencies, stored_frequencies, atol=tolerance, equal_nan=True), "Frequencies do not match!"
-    # assert np.allclose(cov_freq, stored_cov_freq, atol=tolerance, equal_nan=True), "Covariance frequencies do not match!"
+    # assert np.allclose(std_freq, stored_std_freq, atol=tolerance, equal_nan=True), "Covariance frequencies do not match!"
     assert np.allclose(damping_ratios, stored_damping_ratios, atol=tolerance, equal_nan=True), "Damping ratios do not match!"
-    # assert np.allclose(cov_damping, stored_cov_damping, atol=tolerance*2, equal_nan=True), "Covariance damping ratios do not match!"
+    # assert np.allclose(std_damping, stored_std_damping, atol=tolerance*2, equal_nan=True), "Covariance damping ratios do not match!"
     assert np.allclose(mode_shapes, stored_mode_shapes, atol=tolerance, equal_nan=True), "Mode shapes do not match!"
 
 def test_oma_full_flow_success():
@@ -88,7 +89,7 @@ def test_get_oma_results_integration(mocker):
 
     mock_aligner.extract.return_value = (mock_data, mock_timestamp)
 
-    sysid_output, timestamp = sysid.get_sysid_output(samples, mock_aligner)
+    sysid_output, timestamp = sysid.wait_for_sysid_output(samples, mock_aligner,fs)
 
     assert isinstance(sysid_output, dict)
     assert "Fn_poles" in sysid_output

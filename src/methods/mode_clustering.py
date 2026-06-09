@@ -8,8 +8,8 @@ from data.comm.mqtt import (start_mqtt, setup_publish_client, publish_to_mqtt, s
 from methods import sysid as sysID
 from methods.mode_clustering_functions.clustering import cluster_func
 from functions.util import (convert_numpy_to_list, _convert_list_to_dict_or_array)
-from functions.plot_sysid import plot_stabilization_diagram, plot_pre_stabilization_diagram
-from functions.plot_clusters import plot_clusters
+from src.methods.sysid_functions.plot_sysid import plot_stabilization_diagram, plot_pre_stabilization_diagram
+from src.methods.mode_clustering_functions.plot_clusters import plot_clusters
 # pylint: disable=C0103, W0603, R0913, R0917
 
 # Global threading event to wait for sysid data

@@ -1,10 +1,11 @@
 from typing import Any, Dict, Tuple
 import numpy as np
-from functions.clean_sysid_output import (remove_highly_uncertain_points,transform_sysid_features)
+from src.methods.sysid_functions.clean_sysid_output import clean_and_transform
 from methods.mode_clustering_functions.create_cluster import cluster_creation
 from methods.mode_clustering_functions.expand_cluster import cluster_expansion
-from methods.mode_clustering_functions.initialize_ip import cluster_initial
+from methods.mode_clustering_functions.initialize_Ip import cluster_initial
 from methods.mode_clustering_functions.align_clusters import alignment
+from methods.mode_clustering_functions.global_uncertainty import global_uncertainty
 # pylint: disable=C0103, R0912, R0914, R0915, R1702
 
 # Following the algorithm proposed here: https://doi.org/10.1007/978-3-031-61421-7_56
@@ -26,13 +27,8 @@ def cluster_func(sysid_output: Dict[str,Any],
 
     """
 
-    #Preeliminary cleaning
-    (frequencies, cov_freq, damping_ratios, cov_damping, mode_shapes
-     ) = remove_highly_uncertain_points(sysid_output,params)
-
-    (frequencies, cov_freq, damping_ratios, cov_damping,mode_shapes2, model_orders
-     ) = transform_sysid_features(frequencies, cov_freq, damping_ratios,
-                                  cov_damping, mode_shapes)
+    (frequencies, std_freq, damping_ratios, std_damping, mode_shapes2, _, Ufx_list, model_orders
+     ) = clean_and_transform(sysid_output, params)
 
     row, col = np.indices(model_orders.shape)
     row = row.flatten(order="C")
@@ -41,8 +37,8 @@ def cluster_func(sysid_output: Dict[str,Any],
     #Initiate data
     data1 = {'frequencies':frequencies,
             'damping_ratios':damping_ratios,
-            'cov_f':cov_freq,
-            'cov_d':cov_damping,
+            'std_f':std_freq,
+            'std_d':std_damping,
             'mode_shapes':mode_shapes2,
             'row':row,
             'col':col}
@@ -52,13 +48,13 @@ def cluster_func(sysid_output: Dict[str,Any],
         #Extract data
         frequencies = data1['frequencies']
         damping_ratios = data1['damping_ratios']
-        cov_freq = data1['cov_f']
-        cov_damping = data1['cov_d']
+        std_freq = data1['std_f']
+        std_damping = data1['std_d']
 
         #Inital point
         r = row[count]
         c = col[count]
-        ip = [frequencies[r,c],cov_freq[r,c],damping_ratios[r,c],cov_damping[r,c]]
+        ip = [frequencies[r,c],std_freq[r,c],damping_ratios[r,c],std_damping[r,c]]
 
         if np.isnan(ip[0]) == True: #Pass if the pole does not exist.
             pass
@@ -104,34 +100,45 @@ def cluster_func(sysid_output: Dict[str,Any],
     #Allignment or merging of stacked clusters
     cluster_dict_aligned = alignment(cluster_dict.copy(),params)
 
+    #Add median and confidence intervals (one sided) to cluster data
+    for key in cluster_dict_aligned:
+        cluster = cluster_dict_aligned[key]
+        cluster['median_f'] = np.median(cluster['f'])
+        cluster['median_d'] = np.median(cluster['d'])
+        cluster['mean_f'] = np.mean(cluster['f'])
+        cluster['mean_d'] = np.mean(cluster['d'])
+        cluster['ci_f'] = cluster['std_f']*params['bound_multiplier']
+        cluster['ci_d'] = cluster['std_d']*params['bound_multiplier']
+
     #Custom cardinality check
     cluster_dict_cardinality = {}
     cluster_counter = 0
+    short_clusters = ""
+    saved_clusters = ""
     for ii, key in enumerate(cluster_dict_aligned.keys()):
         cluster = cluster_dict_aligned[key]
         if 'f' in cluster:
             if isinstance(cluster['f'],np.ndarray):
                 if cluster['f'].shape[0] < params['mstab']:
-                    print("Cluster", np.median(cluster['f']),
-                        "too short:",cluster['f'].shape[0],
-                        "Must be: >",params['mstab'])
+                    short_clusters = short_clusters+"("+str(int(key)+1)+","+f"{cluster['median_f']:.3f}"+")"+","
+                    # print("Cluster", np.median(cluster['f']),
+                    #     "too short:",cluster['f'].shape[0],
+                    #     "Must be: >",params['mstab'])
                 else:
-                    print("Cluster saved:", np.median(cluster['f']))
+                    saved_clusters = saved_clusters +"("+str(int(key)+1)+","+f"{cluster['median_f']:.3f}"+")"+","
+                    # print("Cluster saved:", np.median(cluster['f']))
                     cluster_dict_cardinality[str(ii)] = cluster
                     cluster_counter += 1
                     data1 = remove_data_from_S(data2,cluster) #Remove clustered poles from data
             else:
-                print("cluster too short:",1,"But must be:",params['mstab'])
+                # print("cluster too short:",1,"But must be:",params['mstab'])
+                short_clusters = short_clusters+"("+str(int(key)+1)+","+f"{cluster['median_f']:.3f}"+")"+","
+                short_clusters.append(int(key)+1)
                 cluster_dict_aligned.pop(key)
-
-    #Add median and confidence intervals (one sided) to cluster data
-    for key in cluster_dict_cardinality:
-        cluster = cluster_dict_cardinality[key]
-        cluster['median_f'] = np.median(cluster['f'])
-        ci_f = np.sqrt(cluster['cov_f']) * params['bound_multiplier']
-        ci_d = np.sqrt(cluster['cov_d']) * params['bound_multiplier']
-        cluster['ci_f'] = ci_f
-        cluster['ci_d'] = ci_d
+    if saved_clusters != "":
+        print(f"Saved clusters: [",saved_clusters,"]")
+    # if short_clusters != "":
+    #     print(f"Short clusters: [",short_clusters,"]")
 
     #Sort the clusters into accending order of median frequency
     median_frequencies = np.zeros(len(cluster_dict_cardinality))
@@ -145,7 +152,16 @@ def cluster_func(sysid_output: Dict[str,Any],
     for ii, key in enumerate(np.array(list(cluster_dict_cardinality.keys()))[indices]):
         cluster_dict_renamed[ii] = cluster_dict_cardinality[key] #Insert a cluster into a key
 
-    return cluster_dict_renamed
+    for ii, key in enumerate(cluster_dict_renamed.keys()):
+        Ufx = []
+        cluster = cluster_dict_renamed[key]
+        for ii, r in enumerate(cluster['row']):
+            Ufx.append(Ufx_list[r,cluster['col'][ii],:,:])
+        cluster_dict_renamed[key]['Ufx'] = np.array(Ufx)
+
+    cluster_with_global_unc = global_uncertainty(cluster_dict_renamed,bound=params['bound_multiplier'])
+
+    return cluster_with_global_unc
 
 def remove_data_from_S(data: Dict[str,Any],cluster: Dict[str,Any]) -> Dict[str,Any]:
     """
@@ -161,16 +177,16 @@ def remove_data_from_S(data: Dict[str,Any],cluster: Dict[str,Any]) -> Dict[str,A
     #Copy data
     frequencies = data['frequencies'].copy()
     damping_ratios = data['damping_ratios'].copy()
-    cov_freq = data['cov_f'].copy()
-    cov_damping = data['cov_d'].copy()
+    std_freq = data['std_f'].copy()
+    std_damping = data['std_d'].copy()
     mode_shapes = data['mode_shapes'].copy()
     row = data['row'].copy()
     col = data['col'].copy()
     #Make new data dictionary
     data2 = {'frequencies':frequencies,
             'damping_ratios':damping_ratios,
-            'cov_f':cov_freq,
-            'cov_d':cov_damping,
+            'std_f':std_freq,
+            'std_d':std_damping,
             'mode_shapes':mode_shapes,
             'row':row,
             'col':col}
@@ -181,8 +197,8 @@ def remove_data_from_S(data: Dict[str,Any],cluster: Dict[str,Any]) -> Dict[str,A
         c = col[ii]
         data2['frequencies'][r,c] = np.nan
         data2['damping_ratios'][r,c] = np.nan
-        data2['cov_f'][r,c] = np.nan
-        data2['cov_d'][r,c] = np.nan
+        data2['std_f'][r,c] = np.nan
+        data2['std_d'][r,c] = np.nan
         data2['mode_shapes'][r,c,:] = np.nan
 
     return data2
@@ -200,9 +216,9 @@ def sort_cluster(cluster: Dict[str,Any]) -> Dict[str,Any]:
     sort_id = np.argsort(cluster['row'])
 
     cluster['f'] = cluster['f'][sort_id]
-    cluster['cov_f'] = cluster['cov_f'][sort_id]
+    cluster['std_f'] = cluster['std_f'][sort_id]
     cluster['d'] = cluster['d'][sort_id]
-    cluster['cov_d'] = cluster['cov_d'][sort_id]
+    cluster['std_d'] = cluster['std_d'][sort_id]
     cluster['mode_shapes'] = cluster['mode_shapes'][sort_id,:]
     cluster['MAC'] = cluster['MAC'][sort_id]
     cluster['model_order'] = cluster['model_order'][sort_id]

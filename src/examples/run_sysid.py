@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from functions.plot_sysid import (plot_stabilization_diagram, plot_pre_stabilization_diagram)
+from src.methods.sysid_functions.plot_sysid import (plot_stabilization_diagram, plot_pre_stabilization_diagram)
 from methods import sysid as sysID
 from methods.constants import PARAMS
 from data.comm.mqtt import shutdown
@@ -17,9 +17,9 @@ def run_sysid_and_print(config_path):
     mqtt_client, sysid_output, _ = sysID.local_sysid(config_path)
 
     print(f"\n System Frequencies \n {sysid_output['Fn_poles']}")
-    print(f"\n Cov \n{sysid_output['Fn_poles_cov']}")
+    print(f"\n Std_frequencies \n{sysid_output['Fn_poles_std']}")
     print(f"\n damping_ratios  \n{sysid_output['Xi_poles']}")
-    print(f"\n cov_damping \n{sysid_output['Xi_poles_cov']}")
+    print(f"\n std_damping \n{sysid_output['Xi_poles_std']}")
 
     shutdown(mqtt_client,"sysid client")
 

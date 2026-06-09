@@ -7,9 +7,9 @@ from pyoma2.setup.single import SingleSetup
 from data.comm.mqtt import (shutdown,publish_to_mqtt)
 from data.accel.hbk.aligner import Aligner
 from functions.util import convert_numpy_to_list
-from methods.packages.pyoma.ssiWrapper import SSIcov
+from src.methods.packages.pyoma.algorithms.ssiWrapper import SSI
 from methods.constants import PARAMS
-from examples.aligning_readings import get_data, setup_aligner
+from methods.setup_data import get_data, setup_aligner
 
 def sysid(data: np.ndarray[float], params: Dict[str,Any]) -> Dict[str, Any]:
     """
@@ -33,26 +33,33 @@ def sysid(data: np.ndarray[float], params: Dict[str,Any]) -> Dict[str, Any]:
     print(f"Data dimensions: {data.shape}")
     print(f"sysid parameters: Sample frequency [Hz]: {params['Fs']}, Model order: {params['model_order']}, Block shift: {params['block_shift']}")
 
+    HC = {"xi_max":10**5,
+          "mpc_lim":None,
+          "mpd_lim":None,
+          "CoV_max":None}
+
     my_setup = SingleSetup(data, fs=params['Fs'])
-    ssi_mode_track = SSIcov(
+    ssi_mode_track = SSI(
         name="SSIcovmm_mt",
-        method='cov_mm',
+        method='cov',
         br=params['block_shift'],
         ordmin=params['model_order_min'],
         ordmax=params['model_order'],
-        calc_unc=True
+        calc_unc=True,
+        hc = HC
     )
 
     my_setup.add_algorithms(ssi_mode_track)
     my_setup.run_by_name("SSIcovmm_mt")
-
     output = ssi_mode_track.result.model_dump()
     return {
         'Fn_poles': output['Fn_poles'],
-        'Fn_poles_cov': output['Fn_poles_cov'],
+        'Fn_poles_std': output['Fn_poles_std'],
         'Xi_poles': output['Xi_poles'],
-        'Xi_poles_cov': output['Xi_poles_cov'],
+        'Xi_poles_std': output['Xi_poles_std'],
         'Phi_poles': output['Phi_poles'],
+        'Phi_poles_std': output['Phi_poles_std'],
+        'Ufx_list': output['Ufx_list']
     }
 
 def wait_for_sysid_output(samples: int, aligner: Aligner,
@@ -120,7 +127,6 @@ def local_sysid(config_path: str, topic_indexes: List[int] = None):
                                                           data_topic_indexes=topic_indexes)
 
     sysid_output, aligner_time = wait_for_sysid_output(mqtt_config['SamplesToCollect'], aligner, fs)
-    print("Aligned data received at:",aligner_time)
 
     return mqtt_client, sysid_output, aligner_time
 

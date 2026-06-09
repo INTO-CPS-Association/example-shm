@@ -16,9 +16,9 @@ def cluster_creation(IP: Dict[str,Any],params: Dict[str,Any]) -> Dict[str,Any]: 
     """ #Algorithm 2
     #Extract data:
     frequencies = IP['f']
-    cov_f = IP['cov_f']
+    std_f = IP['std_f']
     damping_ratios = IP['d']
-    cov_d = IP['cov_d']
+    std_d = IP['std_d']
     mode_shapes = IP['ms']
     row = IP['row']
     col = IP['col']
@@ -32,17 +32,17 @@ def cluster_creation(IP: Dict[str,Any],params: Dict[str,Any]) -> Dict[str,Any]: 
             if len(pos) == 1: #If only 1 pole exist at the model order
                 if len(IPu) == 0: #First pole
                     IPu['f'] = frequencies[ii]
-                    IPu['cov_f'] = cov_f[ii]
+                    IPu['std_f'] = std_f[ii]
                     IPu['d'] = damping_ratios[ii]
-                    IPu['cov_d'] = cov_d[ii]
+                    IPu['std_d'] = std_d[ii]
                     IPu['ms'] = np.array((mode_shapes[ii,:]))
                     IPu['row'] = row[ii]
                     IPu['col'] = col[ii]
                 else:
                     IPu['f'] = np.append(IPu['f'],frequencies[ii])
-                    IPu['cov_f'] = np.append(IPu['cov_f'],cov_f[ii])
+                    IPu['std_f'] = np.append(IPu['std_f'],std_f[ii])
                     IPu['d'] = np.append(IPu['d'],damping_ratios[ii])
-                    IPu['cov_d'] = np.append(IPu['cov_d'],cov_d[ii])
+                    IPu['std_d'] = np.append(IPu['std_d'],std_d[ii])
                     IPu['ms'] = np.vstack((IPu['ms'],mode_shapes[ii,:]))
                     IPu['row'] = np.append(IPu['row'],row[ii])
                     IPu['col'] = np.append(IPu['col'],col[ii])
@@ -51,9 +51,9 @@ def cluster_creation(IP: Dict[str,Any],params: Dict[str,Any]) -> Dict[str,Any]: 
         if len(IPu) > 0: #If there exist model orders with unique poles
             if isinstance(IPu['f'],float):
                 cluster = {'f':np.array([IPu['f']]),
-                    'cov_f':np.array([IPu['cov_f']]),
+                    'std_f':np.array([IPu['std_f']]),
                     'd':np.array([IPu['d']]),
-                    'cov_d':np.array([IPu['cov_d']]),
+                    'std_d':np.array([IPu['std_d']]),
                     'mode_shapes':np.array([IPu['ms']]),
                     'model_order':np.array([params['model_order']-IPu['row']]),
                     'row':np.array([IPu['row']]),
@@ -62,9 +62,9 @@ def cluster_creation(IP: Dict[str,Any],params: Dict[str,Any]) -> Dict[str,Any]: 
 
             else: #If more unique poles exist
                 cluster = {'f':np.array([IPu['f'][0]]),
-                        'cov_f':np.array([IPu['cov_f'][0]]),
+                        'std_f':np.array([IPu['std_f'][0]]),
                         'd':np.array([IPu['d'][0]]),
-                        'cov_d':np.array([IPu['cov_d'][0]]),
+                        'std_d':np.array([IPu['std_d'][0]]),
                         'mode_shapes':np.array([IPu['ms'][0,:]]),
                         'model_order':np.array([params['model_order']-IPu['row'][0]]),
                         'row':np.array([IPu['row'][0]]),
@@ -77,9 +77,9 @@ def cluster_creation(IP: Dict[str,Any],params: Dict[str,Any]) -> Dict[str,Any]: 
         else: #if no unique poles exist then go forth with the initial point, ip.
             #Only the initial point is clustered
             cluster = {'f':np.array([frequencies[0]]),
-                'cov_f':np.array([cov_f[0]]),
+                'std_f':np.array([std_f[0]]),
                 'd':np.array([damping_ratios[0]]),
-                'cov_d':np.array([cov_d[0]]),
+                'std_d':np.array([std_d[0]]),
                 'mode_shapes':np.array([mode_shapes[0,:]]),
                 'model_order':np.array([params['model_order']-row[0]]),
                 'row':np.array([row[0]]),
@@ -92,9 +92,9 @@ def cluster_creation(IP: Dict[str,Any],params: Dict[str,Any]) -> Dict[str,Any]: 
                 for ii in np.flip(ip_ids[:,0]):
                     try:
                         frequencies = np.delete(frequencies,ii)
-                        cov_f = np.delete(cov_f,ii)
+                        std_f = np.delete(std_f,ii)
                         damping_ratios = np.delete(damping_ratios,ii)
-                        cov_d = np.delete(cov_d,ii)
+                        std_d = np.delete(std_d,ii)
                         mode_shapes = np.delete(mode_shapes,ii,axis=0)
                         row = np.delete(row,ii)
                         col = np.delete(col,ii)
@@ -108,17 +108,17 @@ def cluster_creation(IP: Dict[str,Any],params: Dict[str,Any]) -> Dict[str,Any]: 
                 if len(pos) > 1: #If more than one pole exist for the model order
                     if len(IPm) == 0: #First pole
                         IPm['f'] = frequencies[ii]
-                        IPm['cov_f'] = cov_f[ii]
+                        IPm['std_f'] = std_f[ii]
                         IPm['d'] = damping_ratios[ii]
-                        IPm['cov_d'] = cov_d[ii]
+                        IPm['std_d'] = std_d[ii]
                         IPm['ms'] = np.array((mode_shapes[ii,:]))
                         IPm['row'] = row[ii]
                         IPm['col'] = col[ii]
                     else:
                         IPm['f'] = np.append(IPm['f'],frequencies[ii])
-                        IPm['cov_f'] = np.append(IPm['cov_f'],cov_f[ii])
+                        IPm['std_f'] = np.append(IPm['std_f'],std_f[ii])
                         IPm['d'] = np.append(IPm['d'],damping_ratios[ii])
-                        IPm['cov_d'] = np.append(IPm['cov_d'],cov_d[ii])
+                        IPm['std_d'] = np.append(IPm['std_d'],std_d[ii])
                         IPm['ms'] = np.vstack((IPm['ms'],np.array(mode_shapes[ii,:])))
                         IPm['row'] = np.append(IPm['row'],row[ii])
                         IPm['col'] = np.append(IPm['col'],col[ii])
@@ -140,9 +140,9 @@ def cluster_creation(IP: Dict[str,Any],params: Dict[str,Any]) -> Dict[str,Any]: 
 
     else: #line 1 in algorithm: only unique poles
         cluster = {'f':np.array([frequencies[0]]),
-                'cov_f':np.array([cov_f[0]]),
+                'std_f':np.array([std_f[0]]),
                 'd':np.array([damping_ratios[0]]),
-                'cov_d':np.array([cov_d[0]]),
+                'std_d':np.array([std_d[0]]),
                 'mode_shapes':np.array([mode_shapes[0,:]]),
                 'model_order':np.array([params['model_order']-row[0]]),
                 'row':np.array([row[0]]),
@@ -169,9 +169,9 @@ def cluster_from_mac(cluster: Dict[str,Any], IP: Dict[str,Any],
 
     #Extract data
     frequencies = IP['f']
-    cov_f = IP['cov_f']
+    std_f = IP['std_f']
     damping_ratios = IP['d']
-    cov_d = IP['cov_d']
+    std_d = IP['std_d']
     mode_shapes = IP['ms']
     row = IP['row']
     col = IP['col']
@@ -186,9 +186,9 @@ def cluster_from_mac(cluster: Dict[str,Any], IP: Dict[str,Any],
         if MAC > params['tMAC']: #line 2 in algorithm
             #Add to cluster
             cluster['f'] = np.append(cluster['f'],frequencies[idx])
-            cluster['cov_f'] = np.append(cluster['cov_f'],cov_f[idx])
+            cluster['std_f'] = np.append(cluster['std_f'],std_f[idx])
             cluster['d'] = np.append(cluster['d'],damping_ratios[idx])
-            cluster['cov_d'] = np.append(cluster['cov_d'],cov_d[idx])
+            cluster['std_d'] = np.append(cluster['std_d'],std_d[idx])
             cluster['mode_shapes'] = np.vstack((cluster['mode_shapes'],
                                                 np.array(mode_shapes[idx,:])))
             cluster['MAC'] = np.append(cluster['MAC'],MAC)
@@ -221,9 +221,9 @@ def cluster_from_mac(cluster: Dict[str,Any], IP: Dict[str,Any],
                         MAC = calculate_mac(ip_ms,ms)
                         #Add to cluster
                         cluster['f'] = np.append(cluster['f'],frequencies[idx])
-                        cluster['cov_f'] = np.append(cluster['cov_f'],cov_f[idx])
+                        cluster['std_f'] = np.append(cluster['std_f'],std_f[idx])
                         cluster['d'] = np.append(cluster['d'],damping_ratios[idx])
-                        cluster['cov_d'] = np.append(cluster['cov_d'],cov_d[idx])
+                        cluster['std_d'] = np.append(cluster['std_d'],std_d[idx])
                         cluster['mode_shapes'] = np.vstack((cluster['mode_shapes'],
                                                             np.array(mode_shapes[idx,:])))
                         cluster['MAC'] = np.append(cluster['MAC'],MAC)
@@ -255,9 +255,9 @@ def cluster_from_mac(cluster: Dict[str,Any], IP: Dict[str,Any],
 
     unclustered_IPu = {}
     unclustered_IPu['f'] = IP['f'][unclustered_id]
-    unclustered_IPu['cov_f'] = IP['cov_f'][unclustered_id]
+    unclustered_IPu['std_f'] = IP['std_f'][unclustered_id]
     unclustered_IPu['d'] = IP['d'][unclustered_id]
-    unclustered_IPu['cov_d'] = IP['cov_d'][unclustered_id]
+    unclustered_IPu['std_d'] = IP['std_d'][unclustered_id]
     unclustered_IPu['ms'] = IP['ms'][unclustered_id]
     unclustered_IPu['row'] = IP['row'][unclustered_id]
     unclustered_IPu['col'] = IP['col'][unclustered_id]
@@ -280,9 +280,9 @@ def cluster_from_mac_IPm(cluster: Dict[str,Any], IPm: Dict[str,Any],
     #Cluster based on MAC if multiple poles exist for the model order
     #Extract data
     frequencies = IPm['f']
-    cov_f = IPm['cov_f']
+    std_f = IPm['std_f']
     damping_ratios = IPm['d']
-    cov_d = IPm['cov_d']
+    std_d = IPm['std_d']
     mode_shapes = IPm['ms']
     row = IPm['row']
     col = IPm['col']
@@ -350,9 +350,9 @@ def cluster_from_mac_IPm(cluster: Dict[str,Any], IPm: Dict[str,Any],
 
                 #Add this pole to the cluster
                 cluster['f'] = np.append(cluster['f'],frequencies[ll])
-                cluster['cov_f'] = np.append(cluster['cov_f'],cov_f[ll])
+                cluster['std_f'] = np.append(cluster['std_f'],std_f[ll])
                 cluster['d'] = np.append(cluster['d'],damping_ratios[ll])
-                cluster['cov_d'] = np.append(cluster['cov_d'],cov_d[ll])
+                cluster['std_d'] = np.append(cluster['std_d'],std_d[ll])
                 cluster['mode_shapes'] = np.vstack((cluster['mode_shapes'],
                                                     np.array(mode_shapes[ll,:])))
                 cluster['MAC'] = np.append(cluster['MAC'],MAC[pos_MAC[idx]])
@@ -368,9 +368,9 @@ def cluster_from_mac_IPm(cluster: Dict[str,Any], IPm: Dict[str,Any],
 
                 #Add this pole to the cluster
                 cluster['f'] = np.append(cluster['f'],frequencies[ll])
-                cluster['cov_f'] = np.append(cluster['cov_f'],cov_f[ll])
+                cluster['std_f'] = np.append(cluster['std_f'],std_f[ll])
                 cluster['d'] = np.append(cluster['d'],damping_ratios[ll])
-                cluster['cov_d'] = np.append(cluster['cov_d'],cov_d[ll])
+                cluster['std_d'] = np.append(cluster['std_d'],std_d[ll])
                 cluster['mode_shapes'] = np.vstack((cluster['mode_shapes'],
                                                     np.array(mode_shapes[ll,:])))
                 cluster['MAC'] = np.append(cluster['MAC'],MAC[pos_MAC[0]])
@@ -398,9 +398,9 @@ def cluster_from_mac_IPm(cluster: Dict[str,Any], IPm: Dict[str,Any],
 
     unclustered_IPm = {}
     unclustered_IPm['f'] = IPm['f'][unclustered_id]
-    unclustered_IPm['cov_f'] = IPm['cov_f'][unclustered_id]
+    unclustered_IPm['std_f'] = IPm['std_f'][unclustered_id]
     unclustered_IPm['d'] = IPm['d'][unclustered_id]
-    unclustered_IPm['cov_d'] = IPm['cov_d'][unclustered_id]
+    unclustered_IPm['std_d'] = IPm['std_d'][unclustered_id]
     unclustered_IPm['ms'] = IPm['ms'][unclustered_id]
     unclustered_IPm['row'] = IPm['row'][unclustered_id]
     unclustered_IPm['col'] = IPm['col'][unclustered_id]

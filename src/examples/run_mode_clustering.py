@@ -9,7 +9,7 @@ def run_mode_clustering_with_local_sysid(config_path):
     # Print frequencies
     print("\nMedian frequencies:", median_frequencies)
 
-    _ = MC.cluster_plots((0,0,1), clusters, sysid_output, PARAMS,
+    _ = MC.cluster_plots((1,1,1), clusters, sysid_output, PARAMS,
                          fig_axes = [None,None,None], hold = True)
 
 def run_mode_clustering_with_remote_sysid(config_path):
@@ -21,7 +21,7 @@ def run_mode_clustering_with_remote_sysid(config_path):
 
 def run_live_mode_clustering_with_remote_sysid(config_path):
     config = load_config(config_path)
-    MC.live_mode_clustering(config, PARAMS, publish=False, plot=(1,0,1))
+    MC.live_mode_clustering(config, PARAMS, publish=False, plot=(0,0,1))
 
 def run_live_mode_clustering_with_remote_sysid_and_publish(config_path):
     config = load_config(config_path)
