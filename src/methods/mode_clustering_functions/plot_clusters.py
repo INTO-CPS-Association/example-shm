@@ -114,11 +114,9 @@ def plot_clusters(clusters: Dict[str,dict],
         ax2 = add_global_mode(ax2, cluster, colors2[i], type="damp")
         if max(cluster['d']+cluster['std_d']) > damp_max_view:
             damp_max_view = max(cluster['d']+cluster['std_d'])
-        try:
+        if 'global_ci' in cluster:
             if cluster['median_d']+cluster['global_ci'][1,1] > damp_max_view:
                 damp_max_view = cluster['median_d']+cluster['global_ci'][1,1]
-        except:
-            pass
 
     ax2 = add_plot_annotation(ax2,x,y,y_model_order)
     ax2 = add_plot_standard_flair(ax2,sysid_params)

@@ -1393,7 +1393,7 @@ class SSI_MS(SSI[SSIRunParams, SSIMPEParams, SSIResult, typing.Iterable[dict]]):
         hc_xi_max = hc["xi_max"]
 
         # Compute poles across multi-setup data
-        Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std = ssi.SSI_poles(
+        Fns, Xis, Phis, Lambds, Fn_std, Xi_std, Phi_std, Ufx_list = ssi.SSI_poles(
             Obs,
             A,
             C,

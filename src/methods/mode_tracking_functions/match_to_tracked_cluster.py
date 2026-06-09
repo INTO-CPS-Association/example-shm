@@ -43,7 +43,6 @@ def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_cluste
         skip_tracked_cluster = []
 
     l = params.get('l_lastest_clusters',1) #Number of tracked clusters to compare with
-
     #Calculate parameters for tracked clusters that are universal for all comparisons.
     greatest_interval_f = []
     greatest_interval_d = []
@@ -85,9 +84,6 @@ def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_cluste
                     damp_intervals = intervals_d
                 else:
                     damp_intervals = np.vstack((damp_intervals,intervals_d))
-                
-                #phi of last cluster in tracked cluster group
-                phi_t_all = tracked_cluster['mode_shapes']
 
                 omega_t_list.append(tracked_cluster['median_f'])
                 omega_mean_t_list.append(np.mean(tracked_cluster['f']))
@@ -97,7 +93,6 @@ def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_cluste
                 zeta_var_list.append(tracked_cluster['global_std'][1,1]**2)
                 
 
-            omega_t = np.mean(omega_t_list)
             zeta_t = np.mean(zeta_t_list)
             zeta_w_var = 1/np.sum(zeta_inv_var_list)
             zeta_w = np.sum(np.matmul(zeta_list,zeta_inv_var_list))/np.sum(zeta_inv_var_list)
@@ -225,8 +220,8 @@ def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_cluste
         mac_match_mask = np.array(MAC_max_list) > params['phi_cri']
         match_mask = np.logical_and(ci_f_match_mask,mac_match_mask)
         # match_mask = np.logical_and(np.logical_and(ci_f_match_mask,ci_d_match_mask),mac_match_mask)
-        # match_mask = np.logical_and(match_mask,np.logical_or(delta_zeta_mask,ci_d_match_mask))
-        match_mask = np.logical_and(match_mask,ci_d_match_mask)
+        match_mask = np.logical_and(match_mask,np.logical_or(delta_zeta_mask,ci_d_match_mask))
+        #match_mask = np.logical_and(match_mask,ci_d_match_mask)
         # match_mask = np.logical_and(t_test_list,mac_match_mask)
         match_indicies = np.argwhere(match_mask==True).reshape(-1)
 

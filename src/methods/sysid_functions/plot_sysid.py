@@ -32,7 +32,7 @@ def plot_pre_stabilization_diagram(
         ax2.clear()
 
     (frequencies, std_freq, damping_ratios,
-     std_damping, _, __, ___) = extract_from_sysid(sysid_results,sysid_params)
+     std_damping, _, __, ___) = extract_from_sysid(sysid_results)
 
     x = frequencies.flatten(order="f")
     y_model_order = np.array([i // len(frequencies) for i in range(len(x))]) * 1
