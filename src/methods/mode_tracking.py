@@ -97,37 +97,18 @@ def live_mode_tracking(config: Dict[str,Any],
     tracked_clusters = {}
     fig_axes = [None,None]
     counter=0
-    # try:
-    while True:
-        sysid_output, clusters, tracked_clusters = subscribe_and_track_clusters(config,
-                                                            tracked_clusters, params)
-        if clusters is not None:
-            fig_axes = tracked_cluster_plots(plot,tracked_clusters,
-                                                clusters,sysid_output,params,fig_axes)
+    try:
+        while True:
+            sysid_output, clusters, tracked_clusters = subscribe_and_track_clusters(config,
+                                                                tracked_clusters, params)
+            if clusters is not None:
+                fig_axes = tracked_cluster_plots(plot,tracked_clusters,
+                                                    clusters,sysid_output,params,fig_axes)
+            counter+=1
 
-        if counter > 87:
-            import matplotlib.pyplot as plt
-            
-            tracked_clusters
-            # for key_t in tracked_clusters:
-            #     freqs = None
-            #     if key_t != "iteration":
-            #         tracked_cluster = tracked_clusters[key_t]
-            #         for cluster in tracked_cluster:
-            #             if freqs is None:
-            #                 freqs = cluster['f']
-            #             else:
-            #                 freqs = np.hstack((freqs,cluster['f']))
-            #         fig, (ax1) = plt.subplots(1,1,figsize=(6, 6), tight_layout=True)
-            #         ax1.hist(freqs,bins=20)
-            #         plt.show(block=False)
-            breakpoint()
-        counter+=1
-            
-
-    # except KeyboardInterrupt:
-    #     print("Keyboard interrupt of live mode tracking\n")
-    #     import matplotlib.pyplot as plt
-    #     plt.show(block=True)
-    # except Exception as e:
-    #     print(f"Unexpected error at: {e}")
+    except KeyboardInterrupt:
+        print("Keyboard interrupt of live mode tracking\n")
+        import matplotlib.pyplot as plt
+        plt.show(block=True)
+    except Exception as e:
+        print(f"Unexpected error at: {e}")
