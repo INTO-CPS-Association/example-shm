@@ -23,8 +23,8 @@ python = ">=3.12, <3.13"
 paho-mqtt = "^2.1.0"
 numpy = "^2.2.5"
 click ="^8.1.8"
-pyOMA-2 = "1.0.0"
-yafem = "1.0.0"
+pyOMA-2 = "1.2.4"
+yafem = "1.1.2"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "^3.3.6"

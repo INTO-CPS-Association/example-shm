@@ -14,8 +14,8 @@ MIN_SAMPLES_NEEDED = 540  # Minimum samples for running sysid
 PARAMS = {}
 
 #Pre-clean
-PARAMS['freq_variance_treshold'] = 0.1
-PARAMS['damp_variance_treshold'] = 10**6
+PARAMS['freq_variance_treshold'] = 0.1 #0.1
+PARAMS['damp_variance_treshold'] = 10   #10
 
 PARAMS['Fs'] = 256                             # Sample frequency
 PARAMS['model_order_min'] = 2                   # Set the min model order
@@ -29,9 +29,6 @@ PARAMS['bound_multiplier']  = 2                 # Standard deviation multiplier
 PARAMS['allignment_factor'] = [0.05,0.01]       # Factors for allignment
 
 # Params for mode tracking
-PARAMS['phi_cri'] = 0.8 #0.98                   # MAC criteria [%]
-PARAMS['freq_cri'] = 0.2 #0.2                   # Frequency difference criteria [%]
-PARAMS['obj_cri'] = 0.1
 PARAMS['phi_cri'] = 0.8                 # MAC criteria [%]
 PARAMS['freq_cri'] = 0.2                  # Frequency difference criteria [%]
 PARAMS['obj_cri'] = 0.1                   # criteria for closely related clusters

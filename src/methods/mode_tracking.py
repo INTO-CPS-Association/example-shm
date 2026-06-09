@@ -1,9 +1,10 @@
 from typing import Any, List, Dict, Tuple, Optional
+import numpy as np
 import matplotlib.pyplot as plt
 import methods.mode_clustering as MC
 from methods.mode_tracking_functions.mode_tracking_func import cluster_tracking
 from methods.mode_tracking_functions.plot_mode_tracking import plot_tracked_modes
-from functions.plot_clusters import plot_clusters
+from src.methods.mode_clustering_functions.plot_clusters import plot_clusters
 # pylint: disable=C0103, W0603, R0913, R0917
 
 def track_clusters(cluster_dict: Dict[str,Any], tracked_clusters: Dict[str,Any],
@@ -95,15 +96,38 @@ def live_mode_tracking(config: Dict[str,Any],
     """
     tracked_clusters = {}
     fig_axes = [None,None]
-    try:
-        while True:
-            sysid_output, clusters, tracked_clusters = subscribe_and_track_clusters(config,
-                                                                tracked_clusters, params)
-            if clusters is not None:
-                fig_axes = tracked_cluster_plots(plot,tracked_clusters,
-                                                    clusters,sysid_output,params,fig_axes)
+    counter=0
+    # try:
+    while True:
+        sysid_output, clusters, tracked_clusters = subscribe_and_track_clusters(config,
+                                                            tracked_clusters, params)
+        if clusters is not None:
+            fig_axes = tracked_cluster_plots(plot,tracked_clusters,
+                                                clusters,sysid_output,params,fig_axes)
 
-    except KeyboardInterrupt:
-        print("Keyboard interrupt of live mode tracking\n")
-    except Exception as e:
-        print(f"Unexpected error at: {e}")
+        if counter > 87:
+            import matplotlib.pyplot as plt
+            
+            tracked_clusters
+            # for key_t in tracked_clusters:
+            #     freqs = None
+            #     if key_t != "iteration":
+            #         tracked_cluster = tracked_clusters[key_t]
+            #         for cluster in tracked_cluster:
+            #             if freqs is None:
+            #                 freqs = cluster['f']
+            #             else:
+            #                 freqs = np.hstack((freqs,cluster['f']))
+            #         fig, (ax1) = plt.subplots(1,1,figsize=(6, 6), tight_layout=True)
+            #         ax1.hist(freqs,bins=20)
+            #         plt.show(block=False)
+            breakpoint()
+        counter+=1
+            
+
+    # except KeyboardInterrupt:
+    #     print("Keyboard interrupt of live mode tracking\n")
+    #     import matplotlib.pyplot as plt
+    #     plt.show(block=True)
+    # except Exception as e:
+    #     print(f"Unexpected error at: {e}")

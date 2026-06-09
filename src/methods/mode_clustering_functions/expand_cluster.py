@@ -22,21 +22,19 @@ def cluster_expansion(cluster: Dict[str,Any], data: Dict[str,Any],
     unClustered_frequencies = data['frequencies']
     unClustered_damping = data['damping_ratios']
     freq_c = cluster['f']
-    cov_f = cluster['cov_f']
+    std_f = cluster['std_f']
     damp_c = cluster['d']
-    cov_d = cluster['cov_d']
-
-    bound_multiplier = params['bound_multiplier']
+    std_d = cluster['std_d']
 
     #Find min-max bounds of cluster
     # Minimum of all points for frequencies
-    f_lower_bound = np.min(freq_c - bound_multiplier * np.sqrt(cov_f))
+    f_lower_bound = np.min(freq_c - std_f)
     # Maximum of all points for frequencies
-    f_upper_bound = np.max(freq_c + bound_multiplier * np.sqrt(cov_f))
+    f_upper_bound = np.max(freq_c + std_f)
     # Minimum of all points for damping
-    d_lower_bound = np.min(damp_c - bound_multiplier * np.sqrt(cov_d))
+    d_lower_bound = np.min(damp_c - std_d)
     # Maximum of all points for damping
-    d_upper_bound = np.max(damp_c + bound_multiplier * np.sqrt(cov_d))
+    d_upper_bound = np.max(damp_c + std_d)
 
     #Mask of possible expanded poles
     condition_mask = ((unClustered_frequencies >= f_lower_bound)
@@ -49,9 +47,9 @@ def cluster_expansion(cluster: Dict[str,Any], data: Dict[str,Any],
     #Initiate cluster_points for cluster creation
     cluster_points = {}
     cluster_points['f'] = data['frequencies'][condition_mask]
-    cluster_points['cov_f'] = data['cov_f'][condition_mask]
+    cluster_points['std_f'] = data['std_f'][condition_mask]
     cluster_points['d'] = data['damping_ratios'][condition_mask]
-    cluster_points['cov_d'] = data['cov_d'][condition_mask]
+    cluster_points['std_d'] = data['std_d'][condition_mask]
     cluster_points['ms'] = data['mode_shapes'][condition_mask,:]
     cluster_points['row'] = expanded_indices[:,0]
     cluster_points['col'] = expanded_indices[:,1]
@@ -75,9 +73,9 @@ def cluster_expansion(cluster: Dict[str,Any], data: Dict[str,Any],
     indecies = np.array(indecies)
 
     cluster_points['f'] = cluster_points['f'][indecies]
-    cluster_points['cov_f'] = cluster_points['cov_f'][indecies]
+    cluster_points['std_f'] = cluster_points['std_f'][indecies]
     cluster_points['d'] = cluster_points['d'][indecies]
-    cluster_points['cov_d'] = cluster_points['cov_d'][indecies]
+    cluster_points['std_d'] = cluster_points['std_d'][indecies]
     cluster_points['ms'] = cluster_points['ms'][indecies,:]
     cluster_points['row'] = cluster_points['row'][indecies]
     cluster_points['col'] = cluster_points['col'][indecies]

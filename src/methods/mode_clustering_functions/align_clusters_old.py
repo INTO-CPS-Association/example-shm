@@ -15,14 +15,9 @@ def alignment(cluster_dict: Dict[str,dict], params: Dict[str,Any]) -> Dict[str,d
 
     """
     median_f = []
-    upper_bound = []
-    lower_bound = []
     for key in cluster_dict.keys(): #Find the median of each cluster
         cluster = cluster_dict[key]
-        m_f = np.median(cluster['f'])
-        median_f.append(m_f)
-        upper_bound.append(np.max(cluster['f']+cluster['std_f']*params['bound_multiplier']))
-        lower_bound.append(np.max(cluster['f']-cluster['std_f']*params['bound_multiplier']))
+        median_f.append(np.median(cluster['f']))
     median_f = np.array(median_f)
 
     deleted_cluster_id = []
@@ -30,13 +25,20 @@ def alignment(cluster_dict: Dict[str,dict], params: Dict[str,Any]) -> Dict[str,d
         if ii in deleted_cluster_id: #If cluster is deleted pass on
             continue
         # Calculate absolute difference of selected median and all medians
-        upper_mask = m_f-upper_bound < 0
-        lower_mask = m_f-lower_bound > 0
-        common_mask = np.logical_and(upper_mask,lower_mask)
-        indices = np.argwhere(common_mask == True).reshape(-1)
+        diff = abs(median_f-m_f)
+        # If this difference is above 0 (not itself) and inside the bounds:
+        # Bounds are the minimum of either median_f * allignment_factor_0
+        # or Sampling frequency / 2 * allignment_factor_1
+        # For lower median frequencies the bound is determined by the size of median frequency.
+        # For higher median frequencies the bound is determined by the sampling frequency
+
+        mask = (diff > 0) & (diff < min(m_f*params['allignment_factor'][0],
+                                        params['Fs']/2*params['allignment_factor'][1]))
+        #Indicies of clusters that are closely located in frequency
+        indices = np.argwhere(mask == True)
 
         if indices.shape[0] > 0:# If one or more clusters are found
-            ids = indices
+            ids = indices[:,0]
             for idx in ids: #Go through all clusters that is closely located
                 if idx in deleted_cluster_id:
                     continue
@@ -75,8 +77,6 @@ def alignment(cluster_dict: Dict[str,dict], params: Dict[str,Any]) -> Dict[str,d
                             deleted_cluster_id.append(int(idx)) #The delete cluster idx
                         else:
                             cluster_dict[str(idx)] = cluster_remaining #Save the remaining cluster
-                    # else:
-                    #     print(f"MAC criteria is not met. {MAC.max()} between: {np.median(main_cluster['f']),np.median(co_located_cluster['f'])}")
 
     cluster_dict_alligned = cluster_dict
     return cluster_dict_alligned
