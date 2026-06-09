@@ -9,7 +9,7 @@ from data.accel.hbk.aligner import Aligner
 from functions.util import convert_numpy_to_list
 from src.methods.packages.pyoma.algorithms.ssiWrapper import SSI
 from methods.constants import PARAMS
-from examples.aligning_readings import get_data, setup_aligner
+from methods.setup_data import get_data, setup_aligner
 
 def sysid(data: np.ndarray[float], params: Dict[str,Any]) -> Dict[str, Any]:
     """
