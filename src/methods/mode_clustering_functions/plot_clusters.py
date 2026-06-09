@@ -174,7 +174,7 @@ def add_global_mode(ax: matplotlib.axes.Axes, cluster: Dict[Any,str], col, model
     Return:
         ax (matplotlib.axes.Axes): ax from matplotlib
     """
-    try:
+    if 'global_ci' in cluster:
         if type == "freq":
             ax.scatter(cluster['median_f'], model_order, marker="*", color=col, s=100)
             xerr_cluster = cluster['global_ci'][0,0]
@@ -199,10 +199,7 @@ def add_global_mode(ax: matplotlib.axes.Axes, cluster: Dict[Any,str], col, model
             )
         else:
             print("Uncertainty type is wrong. type = 'freq' or 'damp'")
-    except:
-        pass
 
-    
     return ax
 
 def add_global_marker_to_legend(legend):
