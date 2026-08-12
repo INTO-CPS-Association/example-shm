@@ -43,7 +43,7 @@ def override_counter_in_payload(topic_key,payload_bytes) -> None:
     # Find and remove the descriptor from the payload
     descriptor_length = struct.unpack("<H", payload_bytes[:DESCRIPTOR_LENGTH_BYTES])[0]
     (descriptor_length, _, __, ___,
-        _____,) = struct.unpack("<HHQQQ", payload_bytes[:descriptor_length])
+        _____,) = struct.unpack("<HHQQQ", payload_bytes[:descriptor_length]) # H = Unsigned short (2 bytes), Q = Unsigned long long (8 bytes)
 
     # Find the raw data
     payload = payload_bytes[descriptor_length:]

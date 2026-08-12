@@ -178,3 +178,7 @@ config/*.json
 !config/test.json
 !config/*.json.template
 models/*/*.jsonl
+
+# test data
+record/play_back
+record/mqtt_recordings/*.npy

@@ -37,4 +37,4 @@ pytest -m integration  # run integration tests
 pytest                 # run all the tests
 ```
 
-Please see [examples](src/examples/README.md) for typical usage of the package.
+Please see USERGUIDE.md for more guidance.
