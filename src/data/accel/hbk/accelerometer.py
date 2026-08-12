@@ -64,7 +64,7 @@ class Accelerometer(IAccelerometer):
             descriptor_length = struct.unpack("<H", raw_payload[:DESCRIPTOR_LENGTH_BYTES])[0]
             (descriptor_length, _, __, ___,
              samples_from_daq_start,) = struct.unpack("<HHQQQ", raw_payload[:descriptor_length]) # H = Unsigned short (2 bytes), Q = Unsigned long long (8 bytes)
-            print(DESCRIPTOR_LENGTH_BYTES,descriptor_length,samples_from_daq_start)
+
             # Extract sensor data
             data_payload = raw_payload[descriptor_length:]
             num_samples = len(data_payload) // 4
