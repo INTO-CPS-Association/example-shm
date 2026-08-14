@@ -2,7 +2,7 @@ from typing import Any, Dict, Optional, Tuple, List
 import time
 from paho.mqtt.client import Client as MQTTClient
 from data.comm.mqtt import setup_mqtt_client, load_config  # type: ignore
-from data.accel.metadata import extract_fs_from_metadata
+from data.accel.metadata import extract_metadata
 from data.accel.hbk.aligner import Aligner
 from methods.constants import DEFAULT_FS
 # pylint: disable=C0103
@@ -19,7 +19,8 @@ def setup_client(mqtt_config: Dict[str, Any]) -> Tuple[MQTTClient, float]:
         (Tuple[MQTTClient, float]): A tuple of the connected MQTTClient instance and the extracted sampling frequency.
     """
     try:
-        fs = extract_fs_from_metadata(mqtt_config)
+        metadata = extract_metadata(mqtt_config)
+        fs = metadata["Analysis chain"][0]["Sampling"]
     except Exception:
         print("Failed to extract FS from metadata. Using DEFAULT_FS = ",DEFAULT_FS)
         fs = DEFAULT_FS
@@ -27,7 +28,7 @@ def setup_client(mqtt_config: Dict[str, Any]) -> Tuple[MQTTClient, float]:
     data_client = setup_mqtt_client(mqtt_config, mqtt_config["TopicsToSubscribe"][0])
     data_client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     data_client.loop_start()
-    return data_client, fs
+    return data_client, fs, metadata
 
 
 def setup_aligner(config_path, config_name: str = "sysid",
@@ -51,13 +52,13 @@ def setup_aligner(config_path, config_name: str = "sysid",
     mqtt_config = config[config_name]
 
     # Setting up the client and extracting Fs
-    data_client, fs = setup_client(mqtt_config)
+    data_client, fs, metadata = setup_client(mqtt_config)
 
     # Setting up the aligner
     if data_topic_indexes is None:
         data_topic_indexes = list(range(len(mqtt_config["TopicsToSubscribe"])))
     selected_topics = [mqtt_config["TopicsToSubscribe"][i] for i in data_topic_indexes]
-    aligner = Aligner(data_client, topics=selected_topics)
+    aligner = Aligner(data_client, topics=selected_topics, metadata=metadata)
     return aligner, data_client, mqtt_config, fs
 
 def get_data(

@@ -101,7 +101,7 @@ def test_publish_oma_results_retries_and_publishes_once(mocker):
     mocker.patch("methods.sysid.time.sleep", return_value=None)
 
     mocker.patch(
-        "methods.setup.get_data",
+        "methods.setup_data.get_data",
         side_effect=[
             (None, None),
             (dummy_result, datetime(2024, 1, 1))
@@ -139,9 +139,9 @@ def test_setup_client_with_multiple_topics(mocker):
     extract_mock = mocker.patch("data.accel.metadata.extract_fs_from_metadata", return_value=123.0)
 
     mock_mqtt_client = MagicMock()
-    mocker.patch("methods.setup.setup_client", return_value=(mock_mqtt_client))
+    mocker.patch("methods.setup_data.setup_client", return_value=(mock_mqtt_client))
 
-    client, fs = setup_client(mqtt_config)
+    client, fs, metadata = setup_client(mqtt_config)
 
     extract_mock.assert_called_once_with(mqtt_config)
     client.connect.assert_called_once_with("localhost", 1883, 60)

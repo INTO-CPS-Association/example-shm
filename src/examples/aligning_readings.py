@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from data.comm.mqtt import setup_mqtt_client, load_config, shutdown  # type: ignore
 from data.accel.hbk.aligner import Aligner
+from data.accel.metadata import extract_metadata
 from methods.setup_data import setup_aligner, wait_for_data
 from functions.plot_aligned_readings import plot_timeseries
 # pylint: disable=C0103
@@ -12,12 +13,12 @@ def align_acceleration_readings(config_path):
     sysid_config = config["sysid"]
 
     all_topics = sysid_config["TopicsToSubscribe"]
-
+    metadata = extract_metadata(sysid_config)
     mqtt_client = setup_mqtt_client(sysid_config, sysid_config["TopicsToSubscribe"][0])
     mqtt_client.connect(sysid_config["host"], sysid_config["port"], 60)
     mqtt_client.loop_start()
 
-    aligner = Aligner(mqtt_client, topics=all_topics)
+    aligner = Aligner(mqtt_client, topics=all_topics, metadata=metadata)
 
     while True:
         time.sleep(1)

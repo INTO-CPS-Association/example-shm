@@ -1,5 +1,6 @@
 import time
 from data.accel.hbk.accelerometer import Accelerometer
+from data.accel.metadata import extract_metadata
 from data.comm.mqtt import setup_mqtt_client, load_config, shutdown  # type: ignore
 
 def read_accelerometers(config_path):
@@ -9,10 +10,13 @@ def read_accelerometers(config_path):
     mqtt_client.connect(sysid_config["host"], sysid_config["port"], 60)
     mqtt_client.loop_start()
 
+    metadata_dict = extract_metadata(sysid_config)
+
     accelerometer = Accelerometer(
         mqtt_client,
         topic=sysid_config['TopicsToSubscribe'][0],
-        map_size=1920
+        metadata=metadata_dict,
+        map_size=1920, 
     )
 
     with accelerometer.acquire_lock():

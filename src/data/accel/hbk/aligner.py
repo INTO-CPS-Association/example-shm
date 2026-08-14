@@ -11,7 +11,7 @@ from data.accel.constants import MAX_MAP_SIZE
 
 
 class Aligner(IAligner):
-    def __init__(self, mqtt_client, topics: list, map_size=MAX_MAP_SIZE, missing_value=np.nan):
+    def __init__(self, mqtt_client, topics: list, metadata: dict = None, map_size=MAX_MAP_SIZE, missing_value=np.nan):
         """
         Initializes the Aligner to receive and align data from multiple MQTT topics.
 
@@ -33,7 +33,7 @@ class Aligner(IAligner):
         unique_topics = [topic for topic in topics if not (topic in seen or seen.add(topic))]
         for topic in unique_topics:
             seen.add(topic)
-            acc = Accelerometer(mqtt_client, topic=topic, map_size=map_size)
+            acc = Accelerometer(mqtt_client, topic=topic, metadata=metadata, map_size=map_size)
             self.channels.append(acc)
             mqtt_client.subscribe(topic, qos=1)
             mqtt_client.message_callback_add(topic, lambda _,

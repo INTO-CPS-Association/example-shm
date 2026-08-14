@@ -14,6 +14,7 @@ class Accelerometer(IAccelerometer):
         self,
         mqtt_client: MQTTClient,
         topic: str,
+        metadata: dict = None,
         map_size: int = MAX_MAP_SIZE ):
         """
         Initializes the Accelerometer instance with a pre-configured MQTT client.
@@ -28,6 +29,18 @@ class Accelerometer(IAccelerometer):
         self.topic = topic
         self._map_size = map_size
         self.data_map = {}
+        if metadata is None:
+            self._metadata = {"Descriptor": {
+                            "Descriptor length": 28,
+                            "Metadata version": 2,
+                            "Seconds since epoch": 0,
+                            "Nanoseconds": 0,
+                            "Samples from DAQ start": 0
+                            },
+                            "Data":{"Samples":-1,
+                            "Type":"float"}}
+        else:
+            self._metadata = metadata
         self._lock = threading.Lock()
 
         # Setting up MQTT callback
@@ -61,32 +74,61 @@ class Accelerometer(IAccelerometer):
         try:
             raw_payload = msg.payload
 
-            descriptor_length = struct.unpack("<H", raw_payload[:DESCRIPTOR_LENGTH_BYTES])[0]
-            (descriptor_length, _, __, ___,
-             samples_from_daq_start,) = struct.unpack("<HHQQQ", raw_payload[:descriptor_length]) # H = Unsigned short (2 bytes), Q = Unsigned long long (8 bytes)
+            # Trying to load in big-endian and little-endian ways
+            char_LE, char_BE = '<','>'
+            _, metadataVer_LE = struct.unpack_from(char_LE+'HH', raw_payload) # assumes little endian here
+            _, metadataVer_BE = struct.unpack_from(char_BE+'HH', raw_payload) # assumes big endian here
+            # print(metadataVer_LE,metadataVer_BE)
+            char_Endian = char_LE if metadataVer_LE < metadataVer_BE else char_BE
 
-            # Extract sensor data
-            data_payload = raw_payload[descriptor_length:]
-            num_samples = len(data_payload) // 4
-            accel_values = struct.unpack(f"<{num_samples}f", data_payload)
+            descriptor_length, metadata_version = struct.unpack_from(char_Endian+"HH", raw_payload)
+            if metadata_version < 2:
+                raise Exception("Version too old.")
+            else:
+                (descriptor_length, _, __, ___,
+                samples_from_daq_start) = struct.unpack(char_Endian+"HHQQQ", raw_payload[:descriptor_length])
+                md_samples = self._metadata["Data"]["Samples"]
+                # Extract sensor data
 
-            # Store each data batch (e.g 32 samples in one message)
-            # in the map samples_from_daq_start is used as the key for each batch
-            with self._lock:
-                if samples_from_daq_start not in self.data_map:
-                    self.data_map[samples_from_daq_start] = deque(accel_values)
+                data_types = {"_Bool":"?",
+                            "short": "h",
+                            "unsigned short": "H",
+                            "int": "i",
+                            "unsigned int":"I",
+                            "long": "l",
+                            "unsigned long": "L",
+                            "long long": "q",
+                            "unsigned long long": "Q",
+                            "float": "f",
+                            "double": "d"}
 
-                total_samples = sum(len(dq) for dq in self.data_map.values())
-                # Check if the total samples in the map exceeds the max,
-                # then remove the oldest data batch
-                while total_samples > self._map_size:
-                    print("\n Max map size is reached. Removing data")
-                    oldest_key = min(self.data_map.keys())  # Find the oldest batch
-                    oldest_deque = self.data_map[oldest_key]
-                    oldest_deque.popleft() # Delete samples from the oldest deque
-                    if not oldest_deque:  # Remove the key/deque from the map if it's empty
-                        del self.data_map[oldest_key]
+                if md_samples <= 0: #Variable or unknown
+                    payload_len = len(raw_payload)
+                    data_type = self._metadata["Data"]["Type"]
+                    num_samples = round((payload_len-descriptor_length)/struct.calcsize(data_types[data_type]))
+                else:
+                    num_samples = md_samples
+                
+                data_payload = raw_payload[descriptor_length:]
+                accel_values = struct.unpack(f"<{num_samples}f", data_payload)
+
+                # Store each data batch (e.g 32 samples in one message)
+                # in the map samples_from_daq_start is used as the key for each batch
+                with self._lock:
+                    if samples_from_daq_start not in self.data_map:
+                        self.data_map[samples_from_daq_start] = deque(accel_values)
+
                     total_samples = sum(len(dq) for dq in self.data_map.values())
+                    # Check if the total samples in the map exceeds the max,
+                    # then remove the oldest data batch
+                    while total_samples > self._map_size:
+                        print("\n Max map size is reached. Removing data")
+                        oldest_key = min(self.data_map.keys())  # Find the oldest batch
+                        oldest_deque = self.data_map[oldest_key]
+                        oldest_deque.popleft() # Delete samples from the oldest deque
+                        if not oldest_deque:  # Remove the key/deque from the map if it's empty
+                            del self.data_map[oldest_key]
+                        total_samples = sum(len(dq) for dq in self.data_map.values())
         except Exception as e:
             print(f"Error processing message: {e}")
 
