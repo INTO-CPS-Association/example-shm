@@ -116,8 +116,8 @@ def estimate_updated_model(clusters: Dict[str,Any], model_parameters: Dict[str,A
     """
     try:
         (X, omega_model,
-         updated_model_parameters) = model_update_func.update_model(clusters, MODEL_FUNC,
-                                                                         model_parameters,
+            updated_model_parameters) = model_update_func.update_model(clusters, MODEL_FUNC,
+                                                                            model_parameters,
                                                                     params['pars_to_update'],
                                                                     params)
         if omega_model is not None:

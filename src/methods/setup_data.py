@@ -5,6 +5,7 @@ from data.comm.mqtt import setup_mqtt_client, load_config  # type: ignore
 from data.accel.metadata import extract_metadata
 from data.accel.hbk.aligner import Aligner
 from methods.constants import DEFAULT_FS
+from data.accel.metadata_constants import DEFAULT_METADATA
 # pylint: disable=C0103
 
 def setup_client(mqtt_config: Dict[str, Any]) -> Tuple[MQTTClient, float]:
@@ -18,8 +19,13 @@ def setup_client(mqtt_config: Dict[str, Any]) -> Tuple[MQTTClient, float]:
     Returns:
         (Tuple[MQTTClient, float]): A tuple of the connected MQTTClient instance and the extracted sampling frequency.
     """
-    try:
+    try:  
         metadata = extract_metadata(mqtt_config)
+    except Exception:
+        print("Failed to extract metadata. Using DEFAULT_METADATA = ", DEFAULT_METADATA)
+        fs = DEFAULT_FS
+
+    try:  
         fs = metadata["Analysis chain"][0]["Sampling"]
     except Exception:
         print("Failed to extract FS from metadata. Using DEFAULT_FS = ",DEFAULT_FS)

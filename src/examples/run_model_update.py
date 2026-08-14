@@ -9,9 +9,10 @@ def run_model_update_local_sysid(config_path):
 
     # Run model update
     _, omega_model, model_parameters = MU.estimate_updated_model(clusters,MODEL_PARAMETERS,PARAMS)
-    _ = MU.model_update_plots([1,1], model_parameters, PARAMS['pars_to_update'],
-                              omega_model,
-                              fig_axes=[None,None], hold=True)
+    if omega_model is not None:
+        _ = MU.model_update_plots([1,1], model_parameters, PARAMS['pars_to_update'],
+                                omega_model,
+                                fig_axes=[None,None], hold=True)
 
 def run_model_update_remote_sysid(config_path):
     config = load_config(config_path)

@@ -28,9 +28,9 @@ def update_model(cluster_dict: Dict[str,Any], model_func: Callable[[Dict[str,Any
     pars_to_update = params['pars_to_update']
     try:
         res = minimize(lambda x: estimate_parameters(x, cluster_dict, model_func, model_pars,
-                                                     pars_to_update, params),
-                       params['MU_start_values'], bounds=params['MU_bounds'],
-                       options={'maxiter': 1000})
+                                                        pars_to_update, params),
+                        params['MU_start_values'], bounds=params['MU_bounds'],
+                        options={'maxiter': 1000})
         # Get the optimized parameter values
         X = res.x
 

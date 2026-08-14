@@ -2,7 +2,7 @@ import json
 import time
 from typing import Any, Dict
 from paho.mqtt.client import Client as MQTTClient
-from data.accel.constants import WAIT_METADATA
+from data.accel.metadata_constants import WAIT_METADATA
 from data.comm.mqtt import setup_mqtt_client
 
 def extract_fs_from_metadata(mqtt_config: Dict[str, Any]) -> int:
@@ -36,7 +36,6 @@ def extract_fs_from_metadata(mqtt_config: Dict[str, Any]) -> int:
     return fs_result["fs"]
 
 def extract_metadata(mqtt_config: Dict[str, Any]) -> int:
-    fs_result = {"fs": None}
     metadata = {"metadata":None}
 
     def _on_metadata(client: MQTTClient, userdata, message) -> None:
@@ -49,17 +48,17 @@ def extract_metadata(mqtt_config: Dict[str, Any]) -> int:
                 print(f"Extracted metadata.")
                 client.unsubscribe(userdata["metadata_topic"])
         except Exception as e:
-            print(f"Failed to extract Fs: {e}")
+            print(f"Failed to extract metadata: {e}")
 
     metadata_topic = mqtt_config["MetadataToSubscribe"][0]
+    print("Waiting for metadata. topic:",metadata_topic)
     client = setup_mqtt_client(mqtt_config, metadata_topic)
     client.user_data_set({"metadata_topic": metadata_topic})
     client.message_callback_add(metadata_topic, _on_metadata)
     client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     client.subscribe(metadata_topic)
     client.loop_start()
-    print("Waiting for metadata. topic:",metadata_topic)
-
+    
     start_time = time.time()
     while metadata["metadata"] is None and (time.time() - start_time) < WAIT_METADATA:
         time.sleep(0.1)
