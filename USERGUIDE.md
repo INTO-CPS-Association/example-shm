@@ -286,7 +286,7 @@ poetry build
 ```
 
 This will create a `.whl` file in the `dist/` directory,
-e.g., `dist/cp_sens-0.6.3-py3-none-any.whl`.
+e.g., `dist/cp_sens-0.6.4-py3-none-any.whl`.
 
 ### Step 2.2: Create and Activate a Virtual Environment
 
@@ -303,7 +303,7 @@ pip install example_shm-<version>-py3-none-any.whl
 ```
 
 Replace `<version>` with the version number found in the `.whl`
-filename. (e.g `0.6.3`).
+filename. (e.g `0.6.4`).
 
 ## Step 2.5: Use
 
