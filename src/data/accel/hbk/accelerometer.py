@@ -88,6 +88,7 @@ class Accelerometer(IAccelerometer):
                 (descriptor_length, _, __, ___,
                 samples_from_daq_start) = struct.unpack(char_Endian+"HHQQQ", raw_payload[:descriptor_length])
                 md_samples = self._metadata["Data"]["Samples"]
+                data_type = self._metadata["Data"]["Type"]
                 # Extract sensor data
 
                 data_types = {"_Bool":"?",
@@ -102,15 +103,18 @@ class Accelerometer(IAccelerometer):
                             "float": "f",
                             "double": "d"}
 
+                try:
+                    byte_type = data_types[data_type]
+                except:
+                    raise ValueError(f"Byte type [{data_type}] not possible. These data types are available: ",data_types.keys())
                 if md_samples <= 0: #Variable or unknown
                     payload_len = len(raw_payload)
-                    data_type = self._metadata["Data"]["Type"]
-                    num_samples = round((payload_len-descriptor_length)/struct.calcsize(data_types[data_type]))
+                    num_samples = round((payload_len-descriptor_length)/struct.calcsize(byte_type))
                 else:
                     num_samples = md_samples
                 
                 data_payload = raw_payload[descriptor_length:]
-                accel_values = struct.unpack(f"<{num_samples}f", data_payload)
+                accel_values = struct.unpack(char_Endian+str(num_samples)+byte_type, data_payload)
 
                 # Store each data batch (e.g 32 samples in one message)
                 # in the map samples_from_daq_start is used as the key for each batch
