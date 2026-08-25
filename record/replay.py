@@ -8,20 +8,18 @@ from paho.mqtt.client import Client as MQTTClient
 from data.comm.mqtt import (shutdown, load_config, setup_publish_client)
 
 from data.accel.metadata_constants import DESCRIPTOR_LENGTH_BYTES
-
 # MQTT Configuration
 CONFIG_PATH = "config/replay.json"
-
 RECORDINGS_DIR = Path(__file__).parent / "mqtt_recordings"
 FILE_NAME = "recording_beam_reduced.jsonl"
 
 REPLAY_SPEED = 1  # Multiplier for replay speed
 LOOPS = 1 # Number of times to loop over the recording
 
-
-
 #Non important parameters
-BUSY_WAIT_THRESHOLD = 10/1000  # Threshold in seconds for busy waiting (10 ms)
+BUSY_WAIT_THRESHOLD = 10/1000  # Threshold in seconds for how small a delay can be.
+                                # If the delay is too small, then the script will wait for 10 ms.
+                                # Otherwise the MQTT might not keep up.
 KEEP_UP_TIME = -1 # If delay time (remaining) is lower than this time,
                     # warn the user that the replay speed is two fast.
 PRINT_INTERVAL = 5
@@ -204,6 +202,8 @@ def replay_mqtt_messages(config_path: str, loop: int = 1) -> None:
                         delay = (timestamp - prev_timestamp).total_seconds()
                         if delay < 0:
                             delay = 0.0  # Prevent negative delay
+                    if delay > 60:
+                        print(f"Large time difference in data. Results in dlay of: {delay:.3f} seconds")
 
                     accumulated_delay += delay
                     target_time = t_start + accumulated_delay / REPLAY_SPEED

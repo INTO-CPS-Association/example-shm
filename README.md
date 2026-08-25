@@ -21,10 +21,10 @@ poetry install                   # installs all required python packages
 pylint src tests --rcfile=.pylintrc    # runs linting checks
 
 poetry build                     # builds cp-sens package that can be published on pip
-poetry run python .\src\examples\example.py align-readings  # run an experiment with real data (Needs "production.json" Config)
+poetry example-shm align-readings  # run an experiment with real data (Needs "production.json" Config)
 ```
 
-The `poetry build` will create a `.whl` file in the `dist/` directory, e.g., `dist/cp_sens-0.1.0-py3-none-any.whl`.
+The `poetry build` will create a `.whl` file in the `dist/` directory, e.g., `dist/cp_sens-0.6.3-py3-none-any.whl`.
 
 ## Testing
 
