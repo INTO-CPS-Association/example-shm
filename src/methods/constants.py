@@ -4,7 +4,6 @@ from methods.fatigue_functions.IIW import iiw_sn
 # pylint: disable=C0103, C0301
 
 # Constants for sysID
-DEFAULT_FS = 256 # In case the Fs from metadata doesn't arrive
 
 # Parameters
 PARAMS = {}
@@ -13,7 +12,7 @@ PARAMS = {}
 PARAMS['freq_variance_treshold'] = 0.1 #0.1
 PARAMS['damp_variance_treshold'] = 10   #10
 
-PARAMS['Fs'] = 256                             # Sample frequency
+PARAMS['Fs'] = 256                              # Sample frequency
 PARAMS['model_order_min'] = 2                   # Set the min model order
 PARAMS['model_order'] = 15                      # Set the max model order for analysis
 PARAMS['block_shift'] = 30                      # Block size in Hankel matrix
@@ -56,7 +55,7 @@ MODEL_PARAMETERS = {'modes': PARAMS['modes_search_paring'],
 # Params for modal expansion:
 PARAMS['expansion_modes'] = PARAMS['MU_modes']
 PARAMS['filter_order'] = 4                                          # Order/strength of butterworth filter
-PARAMS['filter_type'] = 'bandpass'                                   # 'lowpass', 'bandpass', 'highpass' or None
+PARAMS['filter_type'] = 'bandpass'                                   # 'lowpass', 'bandpass', 'highpass' or None for no filtering
 PARAMS['filter_cut-off'] = np.array([0.5,90])                           # Cut of frequency(ies) for the butterworth filter [lower/upper cut-off value] or [>lower cut-off value<,upper cut-off value]
 PARAMS['output_type'] = 2                                           # system output type: 0-displacement; 1-velocities, 2-acceleration
 PARAMS['detrend_integration_order'] = 2                             # Order of detrend applied integrated signal, 0 = mean, 1 = linear, 2 = second order etc.
@@ -64,10 +63,12 @@ PARAMS['beam_elements'] = np.array([3,4,5,6,7,8,9])                 # Order of e
 PARAMS['sensor_loc'] = np.array([[7,1],[6,1],[5,1],[4,1]])          # sensor location
 
 # For estimating stress
-PARAMS['element_type'] = np.array(["beam2d","beam2d","beam2d","beam2d","beam2d","beam2d","beam2d"])
-PARAMS['elements'] = np.array([3,4,5,6,7,8,9])
-PARAMS['y'] = np.array([1e-3/2,1e-3/2,1e-3/2,1e-3/2,1e-3/2,1e-3/2,1e-3/2])
-PARAMS["dofs_extract"] = np.array([[8,3],[8,2],[8,1],[7,3],[7,2],[7,1],[6,3],[6,2],[6,1],[5,3],[5,2],[5,1],[4,3],[4,2],[4,1],[3,3],[2,3],[1,3],[1,2],[1,1]])
+PARAMS['element_type'] = np.array(["beam2d","beam2d","beam2d","beam2d","beam2d","beam2d","beam2d"]) #Element types
+PARAMS['elements'] = np.array([3,4,5,6,7,8,9]) #Elements picked out
+PARAMS['y'] = np.array([1e-3/2,1e-3/2,1e-3/2,1e-3/2,1e-3/2,1e-3/2,1e-3/2]) #Moment of inertia of each element
+PARAMS["dofs_extract"] = np.array([[8,3],[8,2],[8,1],[7,3],[7,2],[7,1],[6,3],[6,2],[6,1],[5,3],[5,2],[5,1],[4,3],[4,2],[4,1],[3,3],[2,3],[1,3],[1,2],[1,1]]) # Degrees of freedom to extract
+PARAMS['ElementsToPlot'] = [0, 1, 2, 3, 4, 5, 6] #Elements to plot stress data from.
+PARAMS['s'] = 1 #Stress to use, s = 3 in the case of a 2D beam: axial, curvature/bending at 1. node (bottom), curvature/bending at 2. node (top)
 
 t = 2
 k_thick = 1 #(25/t)**(0.1) #Base material. k_thick = 1 for t under 25mm

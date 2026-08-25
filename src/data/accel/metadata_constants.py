@@ -10,5 +10,10 @@ DEFAULT_METADATA = {"Descriptor": {
                             "Nanoseconds": 0,
                             "Samples from DAQ start": 0
                             },
-                            "Data":{"Samples":-1,
-                            "Type":"float"}}
+                            "Data":{
+                                "Samples":-1,
+                                "Type":"float"},
+                            "Analysis chain":[{
+                                "Sampling": 256.0
+                                }]
+                                }

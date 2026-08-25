@@ -7,8 +7,7 @@ from datetime import datetime
 from paho.mqtt.client import Client as MQTTClient
 from data.comm.mqtt import (shutdown, load_config, setup_publish_client)
 
-from data.accel.metadata_constants import DESCRIPTOR_LENGTH_BYTES
-# MQTT Configuration
+# User configurable MQTT Configuration
 CONFIG_PATH = "config/replay.json"
 RECORDINGS_DIR = Path(__file__).parent / "mqtt_recordings"
 FILE_NAME = "recording_beam_reduced.jsonl"

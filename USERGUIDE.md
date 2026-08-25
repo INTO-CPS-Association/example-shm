@@ -34,7 +34,7 @@ source .venv/bin/activate        # On Linux
 pip install poetry               #Specifically install poetry to your system
     # If you have poetry installed globally
     poetry env activate              # shows the command to activate venv
-poetry install                   # installs all required python packages
+poetry install                   # installs all required python packages. If nothing happens when the command is run, go to VNC desktop and cancel the credential pop-up. 
 ```
 ## Step 1.2 Setup configuration file
 config/ consist of a set of standard configuration files.
@@ -150,6 +150,13 @@ The file needs to be saved. The application looks for configuration in
 
 ## Step 1.4 Change settings
 There are some settings that can be changed for the specific use case.
+
+* **Default metadata**
+Default metadata results and default sample frequency is changed in `data/accel/metadata_constants.py`.
+This is for when the aligner does not recieve it from MQTT. For more information read: METADATA.md
+`Samples` is the number of samples expected in each data message.
+`Type` is the data type, e.g. 'float' or 'double'.
+`Sampling` is the sampling frequency
 
 * **Sample time**
 This is how many samples should be used for sysid. The value uses the time in minutes and the sample frequency, fs,

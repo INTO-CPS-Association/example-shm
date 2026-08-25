@@ -4,7 +4,7 @@ from paho.mqtt.client import Client as MQTTClient
 from data.comm.mqtt import setup_mqtt_client, load_config  # type: ignore
 from data.accel.metadata import extract_metadata
 from data.accel.hbk.aligner import Aligner
-from methods.constants import DEFAULT_FS
+from methods.constants import PARAMS
 from data.accel.metadata_constants import DEFAULT_METADATA
 # pylint: disable=C0103
 
@@ -23,13 +23,10 @@ def setup_client(mqtt_config: Dict[str, Any]) -> Tuple[MQTTClient, float]:
         metadata = extract_metadata(mqtt_config)
     except Exception:
         print("Failed to extract metadata. Using DEFAULT_METADATA = ", DEFAULT_METADATA)
-        fs = DEFAULT_FS
+        metadata = DEFAULT_METADATA
+        print("Sample frequency from DEFAULT_METADATA used.")
 
-    try:  
-        fs = metadata["Analysis chain"][0]["Sampling"]
-    except Exception:
-        print("Failed to extract FS from metadata. Using DEFAULT_FS = ",DEFAULT_FS)
-        fs = DEFAULT_FS
+    fs = metadata["Analysis chain"][0]["Sampling"]
 
     data_client = setup_mqtt_client(mqtt_config, mqtt_config["TopicsToSubscribe"][0])
     data_client.connect(mqtt_config["host"], mqtt_config["port"], 60)
@@ -52,20 +49,20 @@ def setup_aligner(config_path, config_name: str = "sysid",
         Aligner (Aligner): The aligner object for data alignment.
         data_client (MQTTClient): The MQTT client used for data subscription.
         mqtt_config (Dict[str,Any]): Configuration dictionary for the MQTT client.
-        fs (float): Sampling frequency.
+        params (Dict[str,Any]): Parameters with newly set sample frequency
     """
     config = load_config(config_path)
     mqtt_config = config[config_name]
 
     # Setting up the client and extracting Fs
     data_client, fs, metadata = setup_client(mqtt_config)
-
+    PARAMS['Fs'] = fs
     # Setting up the aligner
     if data_topic_indexes is None:
         data_topic_indexes = list(range(len(mqtt_config["TopicsToSubscribe"])))
     selected_topics = [mqtt_config["TopicsToSubscribe"][i] for i in data_topic_indexes]
     aligner = Aligner(data_client, topics=selected_topics, metadata=metadata)
-    return aligner, data_client, mqtt_config, fs
+    return aligner, data_client, mqtt_config, PARAMS
 
 def get_data(
         samples: int, aligner: Aligner

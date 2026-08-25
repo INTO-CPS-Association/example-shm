@@ -7,13 +7,13 @@ This is a demonstration of the workflow for reproducing the beam results from [1
 2. 1. Setup configuration file
 2. 2. Setup replay file
 3. Replay data
-
+4. Run
 
 
 ## 1. Background
 The beam is a cantilever beam (steel ruler) with 4 accelerometers. The experiment consist of two mass perturbations at 10grams and 20grams at the tip.
 
-The beam data is stored in "record/mqtt_recordings/reduced_beam_recording.jsonl". This is a reduced dataset from [1]. Here, the 90 datasets of 2 minutes is reduced to 30 datasets of 2 minutes. 10 datasets from each mass perturbation.
+The beam data is stored in "record/mqtt_recordings/recording_beam_reduced.jsonl". This is a reduced dataset from [1]. Here, the 90 datasets of 2 minutes is reduced to 30 datasets of 2 minutes. 10 datasets from each mass perturbation.
 
 [1] "A digital twin platform for structural health monitoring"
 Prasad Talasila, Dmitri Tcherniak, Anders M.D. Jensen, Swarup Mahato, Jakob V. Medom, Martin D. Ulriksen, Giuseppe Abbiati, A. Schörghofer-Queiroz, Peter G. Larsen, Lars Damkilde
@@ -140,7 +140,7 @@ Inside `record/replay.py`: some parameters must be specified:
 # MQTT Configuration
 CONFIG_PATH = "config/replay.json" # This path is overwritten when "example-shm --config <config path> replay" is used.
 RECORDINGS_DIR = "record/mqtt_recordings"
-FILE_NAME = "reduced_beam_recording.jsonl"
+FILE_NAME = "recording_beam_reduced.jsonl"
 REPLAY_SPEED = 1  # Multiplier for replay speed
 LOOP = 1          # Number of times to loop data
 ```
@@ -164,16 +164,22 @@ Run these functions in parallel:
 Read replayed data and apply system identification. Publish the results.
 ```bash
 example-shm --config <config path> live-sysid-publish
-```
-```bash
+
 example-shm --config <config path> live-mode-tracking-with-remote-sysid
-```
-```bash
+
 example-shm --config <config path> live-model-update-with-remote-sysid
 ```
-```bash
-example-shm --config <config path> live-virtual-sensing-and-publish
-```
+then run this command:
 ```bash
 example-shm --config <config path> live-fatigue-with-local-stress-estimation
 ```
+or all of these three commands:
+```bash
+example-shm --config <config path> live-virtual-sensing-and-publish
+
+example-shm --config <config path> live-stress-estimation-subscribe-and-publish
+
+example-shm --config <config path> live-fatigue-with-remote-stress-estimation
+```
+
+In `record/mqtt_recordings/reference_results_beam_recording` png files for reference results can be found.

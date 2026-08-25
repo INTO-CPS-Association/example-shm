@@ -123,10 +123,10 @@ def local_sysid(config_path: str, topic_indexes: List[int] = None):
         sysid_output (Dict[str, Any]): System identification output data.
         aligner_time (str): Sampling frequency.
     """
-    aligner, mqtt_client, mqtt_config, fs = setup_aligner(config_path, config_name="sysid",
+    aligner, mqtt_client, mqtt_config, params = setup_aligner(config_path, config_name="sysid",
                                                           data_topic_indexes=topic_indexes)
 
-    sysid_output, aligner_time = wait_for_sysid_output(mqtt_config['SamplesToCollect'], aligner, fs)
+    sysid_output, aligner_time = wait_for_sysid_output(mqtt_config['SamplesToCollect'], aligner, params['Fs'])
 
     return mqtt_client, sysid_output, aligner_time
 
@@ -139,14 +139,14 @@ def live_sysid(config_path: str, topic_indexes: List[int] = None, loop: bool = T
         loop (bool): Whether to loop the sysid process continuously.
     Returns:
     """
-    aligner, mqtt_client, mqtt_config, fs = setup_aligner(config_path,
+    aligner, mqtt_client, mqtt_config, params = setup_aligner(config_path,
                                                           data_topic_indexes=topic_indexes)
     samples = mqtt_config['SamplesToCollect']
     try:
         aligner_time_last = datetime.fromisoformat("2025-01-01 01:01:00.00000")
         while True:
             sysid_output, aligner_time = wait_for_sysid_output(samples,
-                                                                      aligner, fs)
+                                                                      aligner, params['Fs'])
             publish_sysid_output(mqtt_client, mqtt_config["TopicsToPublish"],
                                         sysid_output, aligner_time)
 

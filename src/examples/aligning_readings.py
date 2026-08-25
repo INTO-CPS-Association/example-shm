@@ -36,11 +36,11 @@ def live_align_readings_plot(config_path):
     number_of_samples = 2560
 
     fig_ax = None
-    aligner, mqtt_client, _, fs = setup_aligner(config_path)
+    aligner, mqtt_client, _, params = setup_aligner(config_path)
     try:
         while True:
             data, _ = wait_for_data(number_of_samples,
-                                                        aligner, fs)
+                                        aligner, params['Fs'])
             if data is not None:
                 if fig_ax is None:
                     N = 20000

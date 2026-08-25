@@ -125,7 +125,7 @@ def estimate_updated_model(clusters: Dict[str,Any], model_parameters: Dict[str,A
         return (X, omega_model, updated_model_parameters)
     except Exception as e:
         print('Model update is not succesful.', e)
-        return None
+        return None, None, None
 
 def model_update_plots(plot: List[bool], model_parameters: Dict[str,Any],
                        pars_to_update: List[str], omega_updated_model: np.ndarray[float],

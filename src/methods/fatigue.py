@@ -20,10 +20,10 @@ def fatigue_local(config_path: str, SN_curve: Dict[str,Any]) -> FatigueAnalysis 
         fatigue_object (fatigue object):
 
     """
-    aligner, data_client, mqtt_config, fs = setup_aligner(config_path)
+    aligner, data_client, mqtt_config, params = setup_aligner(config_path)
     fatigue_object = FatigueAnalysis(SN_curve)
     try:
-        displacement, _, model_parameters, __ = virtual_sensing(mqtt_config['SamplesToCollect'], aligner, data_client, fs)
+        displacement, _, model_parameters, __ = virtual_sensing(mqtt_config['SamplesToCollect'], aligner, data_client, params['Fs'])
         _, stress, __ = stress_estimation_for_beam(displacement,model_parameters)
         dof_stress = stress[FATIGUE_DOF[0],FATIGUE_DOF[1]]
         print(f"Stress shape:{dof_stress.shape}")
@@ -47,7 +47,7 @@ def live_fatigue_local(config_path: str, SN_curve: Dict[str,Any]) -> FatigueAnal
         fatigue_object (fatigue object):
 
     """
-    aligner, data_client, mqtt_config, fs = setup_aligner(config_path)
+    aligner, data_client, mqtt_config, params = setup_aligner(config_path)
     fatigue_object = FatigueAnalysis(SN_curve)
     fig_ax1 = None
     fig_ax2 = None
@@ -60,7 +60,7 @@ def live_fatigue_local(config_path: str, SN_curve: Dict[str,Any]) -> FatigueAnal
     try:
         while True:
             displacement, _, model_parameters, aligner_time = virtual_sensing(
-                        mqtt_config['SamplesToCollect'], aligner, data_client, fs)
+                        mqtt_config['SamplesToCollect'], aligner, data_client, params['Fs'])
             _, stress, __ = stress_estimation_for_beam(displacement,model_parameters)
             dof_stress = stress[FATIGUE_DOF[0],FATIGUE_DOF[1]]
             print(f"Stress shape:{dof_stress.shape}")
@@ -133,10 +133,10 @@ def plot_rainflow_counting(config_path: str, SN_curve: Dict[str,Any]) -> Fatigue
         fatigue_object (fatigue object):
 
     """
-    aligner, data_client, mqtt_config, fs = setup_aligner(config_path)
+    aligner, data_client, mqtt_config, params = setup_aligner(config_path)
     fatigue_object = FatigueAnalysis(SN_curve)
     try:
-        displacement, _, model_parameters, _ = virtual_sensing(mqtt_config['SamplesToCollect'], aligner, data_client, fs)
+        displacement, _, model_parameters, _ = virtual_sensing(mqtt_config['SamplesToCollect'], aligner, data_client, params['Fs'])
         _, stress, __ = stress_estimation_for_beam(displacement,model_parameters)
         dof_stress = stress[FATIGUE_DOF[0],FATIGUE_DOF[1]]
         print(f"Stress shape:{dof_stress.shape}")

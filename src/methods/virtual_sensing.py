@@ -58,10 +58,10 @@ def live_virtual_sensing(config_path: str) -> None:
         acc (np.ndarray): Filtered acceleration measurements at all DOF
 
     """
-    aligner, data_client, mqtt_config, fs = setup_aligner(config_path, config_name="virtual_sensing")
+    aligner, data_client, mqtt_config, params = setup_aligner(config_path, config_name="virtual_sensing")
     try:
         while True:
-            disp, _, _, _ = virtual_sensing(mqtt_config['SamplesToCollect'], aligner, data_client, fs)
+            disp, _, _, _ = virtual_sensing(mqtt_config['SamplesToCollect'], aligner, data_client, params['Fs'])
             print("Estimated displacements/rotations")
             print("Max and min for every DOF. Max:",np.max(disp,axis=1).tolist(),"Min:",np.min(disp,axis=1).tolist())
     except KeyboardInterrupt as e:
@@ -81,10 +81,10 @@ def live_virtual_sensing_publish(config_path: str) -> None:
         acc (np.ndarray): Filtered acceleration measurements at all DOF
 
     """
-    aligner, data_client, config, fs = setup_aligner(config_path, config_name="virtual_sensing")
+    aligner, data_client, config, params = setup_aligner(config_path, config_name="virtual_sensing")
     try:
         while True:
-            disp, _, model_parameters, timestamp = virtual_sensing(config['SamplesToCollect'], aligner, data_client, fs)
+            disp, _, model_parameters, timestamp = virtual_sensing(config['SamplesToCollect'], aligner, data_client, params['Fs'])
             data = {"data": disp,
                     "model_parameters": model_parameters}
             # data = {"model_parameters": model_parameters}
@@ -108,9 +108,9 @@ def virtual_sensing_and_plot(config_path: str) -> None:
 
     """
 
-    aligner, data_client, mqtt_config, fs = setup_aligner(config_path)
+    aligner, data_client, mqtt_config, params = setup_aligner(config_path)
     number_of_samples = mqtt_config['SamplesToCollect']
-    disp, acc, _, __ = virtual_sensing(number_of_samples, aligner, data_client, fs)
+    disp, acc, _, __ = virtual_sensing(number_of_samples, aligner, data_client, params['Fs'])
 
     DOFs = [0, 5, 8, 11, 14, 17]
     _ = plot_virtual_sensing(disp,DOFs,fig_ax=None,title="Estimated displacements")
