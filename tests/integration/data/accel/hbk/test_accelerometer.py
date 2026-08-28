@@ -6,7 +6,7 @@ import os
 
 import numpy as np
 from data.accel.hbk.accelerometer import Accelerometer
-from constants import DESCRIPTOR_LENGTH, METADATA_VERSION, SECONDS, NANOSECONDS, BATCH_SIZE
+from tests.integration.data.accel.hbk.constants import DESCRIPTOR_LENGTH, METADATA_VERSION, SECONDS, NANOSECONDS, BATCH_SIZE
 from data.comm.mqtt import setup_mqtt_client, load_config
 import uuid
 pytestmark = pytest.mark.integration

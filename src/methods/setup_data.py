@@ -4,8 +4,8 @@ from paho.mqtt.client import Client as MQTTClient
 from data.comm.mqtt import setup_mqtt_client, load_config  # type: ignore
 from data.accel.metadata import extract_metadata
 from data.accel.hbk.aligner import Aligner
-from methods.constants import PARAMS
-from data.accel.metadata_constants import DEFAULT_METADATA
+from settings import PARAMS
+from metadata_settings import DEFAULT_METADATA
 # pylint: disable=C0103
 
 def setup_client(mqtt_config: Dict[str, Any]) -> Tuple[MQTTClient, float]:

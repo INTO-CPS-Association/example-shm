@@ -4,7 +4,6 @@ import pytest
 import numpy as np
 from unittest.mock import MagicMock
 from data.accel.hbk.accelerometer import Accelerometer
-from data.accel.metadata_constants import DESCRIPTOR_LENGTH_BYTES
 
 pytestmark = pytest.mark.unit
 

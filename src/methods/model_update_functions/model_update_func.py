@@ -26,6 +26,7 @@ def update_model(cluster_dict: Dict[str,Any], model_func: Callable[[Dict[str,Any
     """
     X = None
     pars_to_update = params['pars_to_update']
+    params['verbose'] = {}
     try:
         res = minimize(lambda x: estimate_parameters(x, cluster_dict, model_func, model_pars,
                                                         pars_to_update, params),
@@ -41,8 +42,9 @@ def update_model(cluster_dict: Dict[str,Any], model_func: Callable[[Dict[str,Any
                 model_pars[key] = X[idx]
                 idx += 1
         updated_model_parameters = model_pars
-        omegaMU, _, __, ___, ____ = model_func(updated_model_parameters)
+        omegaMU, _, phi_sel, ___, ____ = model_func(updated_model_parameters)
 
+        del params['verbose']
     except ValueError as e:
         print(f"Skipping model updating due to error: {e}")
 
@@ -50,6 +52,19 @@ def update_model(cluster_dict: Dict[str,Any], model_func: Callable[[Dict[str,Any
         print("Updated parameters are:")
         for ii, name in enumerate(params['pars_to_update']):
             print(name+":",X[ii])
+
+        for key in cluster_dict:
+            cluster = cluster_dict[key]
+            ms = cluster['mode_shapes'][0,:]
+            ms_1 = ms[0]
+            ms_n = (np.conjugate(ms_1)/abs(ms_1)**2)*ms.T
+            print("f:",round(cluster['median_f'],3),"Hz","Normalized mode shape",np.real(ms_n))
+
+        for ii, ms in enumerate(phi_sel.T):
+            ms_1 = ms[0]
+            ms_n = (np.conjugate(ms_1)/abs(ms_1)**2)*ms.T
+            print("Model mode:",ii,"f:", round(omegaMU[ii],3),"Hz"," Normalized mode shape",ms_n)
+
         return X, omegaMU, updated_model_parameters
     return None, None, None
 
@@ -84,10 +99,11 @@ def estimate_parameters(theta_star: List[float], cluster_dict: Dict[str,Any],
     # Call FE solver to get model frequencies and mode shapes
     omegaM, _, PhiM, __, ___ = model_func(model_parameters)
 
-    # Mode Pairing Start
+    # Mode Pairing Star
+    
     (paired_frequencies, paired_mode_shapes, omegaM, PhiM
      ) = pair_modes(omegaM, PhiM, cluster_dict, params)
-    omegaM = omegaM.reshape(paired_frequencies.shape)
+    omegaM = omegaM.reshape(paired_frequencies.shape) #??? Does it do anything?
 
     # Error message if the number of updating parameters
     # are more than double of the paired frequencies

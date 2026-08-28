@@ -13,7 +13,7 @@ This is a demonstration of the workflow for reproducing the beam results from [1
 ## 1. Background
 The beam is a cantilever beam (steel ruler) with 4 accelerometers. The experiment consist of two mass perturbations at 10grams and 20grams at the tip.
 
-The beam data is stored in "record/mqtt_recordings/recording_beam_reduced.jsonl". This is a reduced dataset from [1]. Here, the 90 datasets of 2 minutes is reduced to 30 datasets of 2 minutes. 10 datasets from each mass perturbation.
+The beam data is stored in `record/mqtt_recordings/recording_beam_reduced.jsonl`. This is a reduced dataset from [1]. Here, the 90 datasets of 2 minutes is reduced to 30 datasets of 2 minutes. 10 datasets from each mass perturbation.
 
 [1] "A digital twin platform for structural health monitoring"
 Prasad Talasila, Dmitri Tcherniak, Anders M.D. Jensen, Swarup Mahato, Jakob V. Medom, Martin D. Ulriksen, Giuseppe Abbiati, A. Schörghofer-Queiroz, Peter G. Larsen, Lars Damkilde

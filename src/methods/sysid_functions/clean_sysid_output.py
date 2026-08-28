@@ -59,12 +59,12 @@ def remove_highly_uncertain_points(sysid_output: Dict[str, Any], sysid_params: D
      std_mode_shapes, Ufx_list) = extract_from_sysid(sysid_output)
 
     # # #=================== Removing high uncertain poles =======================
-    freq_variance_treshold = sysid_params.get('freq_variance_treshold', 0.1)
-    damp_variance_treshold = sysid_params.get('damp_variance_treshold', 10)
-    frequency_coefficient_variation = sysid_output['Fn_poles_std'].copy()**0.5/frequencies
-    damping_coefficient_variation = sysid_output['Xi_poles_std'].copy()**0.5/damping_ratios
-    indices_frequency = frequency_coefficient_variation > freq_variance_treshold
-    indices_damping   = damping_coefficient_variation > damp_variance_treshold
+    freq_coeff_variance_treshold = sysid_params.get('freq_coeff_variance_treshold', 0.1)
+    damp_coeff_variance_treshold = sysid_params.get('damp_coeff_variance_treshold', 1)
+    frequency_coefficient_variation = sysid_output['Fn_poles_std'].copy()/frequencies
+    damping_coefficient_variation = sysid_output['Xi_poles_std'].copy()/damping_ratios
+    indices_frequency = frequency_coefficient_variation > freq_coeff_variance_treshold
+    indices_damping   = damping_coefficient_variation > damp_coeff_variance_treshold
     above_nyquist = frequencies > sysid_params['Fs']/2
     combined_indices = np.logical_or(np.logical_or(indices_frequency,indices_damping),above_nyquist)
     frequencies[combined_indices] = np.nan

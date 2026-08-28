@@ -6,7 +6,7 @@ from methods.stress_estimation import stress_estimation_for_beam
 from methods.virtual_sensing import virtual_sensing
 from methods.fatigue_functions.fatigue_calculation import FatigueAnalysis
 from methods.fatigue_functions.fatigue_plots import (plot_damage, plot_histogram, plot_sn_curve, plot_eol_rul, plot_cld)
-from methods.constants import FATIGUE_DOF, DAMAGE_SUM
+from settings import FATIGUE_DOF, DAMAGE_SUM
 from methods.stress_estimation import subscribe_data
 # pylint: disable=C0103, C0301, R0914
 

@@ -5,7 +5,7 @@ from methods.stress_estimation import (stress_estimation_for_beam,
                                        live_stress_estimation_for_beam,
                                        live_stress_estimation_subscribe_and_publish,
                                        stress_estimation_and_plot)
-from methods.constants import PARAMS
+from settings import PARAMS
 
 def run_stress_and_strain_estimation_beam(config_path):
     aligner, data_client, sysid_config, params = setup_aligner(config_path)
@@ -21,6 +21,7 @@ def run_live_stress_and_strain_estimation_beam(config_path):
     live_stress_estimation_for_beam(config_path)
 
 def run_live_stress_estimation_subscribe_and_publish(config_path):
+    print("Beware live-stress-estimation-subscribe-and-publish requires live-virtual-sensing-and-publish to run in parallel")
     live_stress_estimation_subscribe_and_publish(config_path)
 
 def run_stress_estimation_and_plot(config_path):

@@ -12,7 +12,7 @@ from methods.model_update_functions.plot_model_update import (plot_parameters,
                                                               plot_model_frequencies)
 from methods.mode_clustering import subscribe_and_cluster
 from methods.model_update_functions import model_update_func
-from methods.constants import (MODEL_DIR, MODEL_PARS_NAME, MODEL_PARAMETERS, MODEL_FUNC)
+from settings import (MODEL_DIR, MODEL_PARS_NAME, MODEL_PARAMETERS, MODEL_FUNC)
 from methods.mode_clustering import _on_connect
 
 # pylint: disable=C0103, C0301, W0603
@@ -201,23 +201,24 @@ def load_model_parameters() -> Optional[Tuple[str, Dict[str,Any]]]:
         path = Path(MODEL_DIR) / MODEL_PARS_NAME
         if not path.exists():
             print(f"File not found: {path}. Proceed with standard parameters from model and constants.py..")
+            breakpoint()
             _, __, ___, ____, _____ = MODEL_FUNC(MODEL_PARAMETERS) #Adds standard model parameters to variable
             model_parameters = MODEL_PARAMETERS
             timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
             return timestamp, model_parameters
-
-        with path.open('r') as json_file:
-            data = json.loads(json_file.readlines()[-1])
-        timestamp = data['timestamp']
-        model_parameters = data['parameters']
-        if model_parameters is None:
-            print("Stored model_parameters are None. Proceed with standard parameters from model and constants.py.")
-            _, __, ___, ____, _____ = MODEL_FUNC(MODEL_PARAMETERS)
-            model_parameters = MODEL_PARAMETERS
         else:
-            print("Model parameters loaded successfully from:", path,"at:", timestamp)
+            with path.open('r') as json_file:
+                data = json.loads(json_file.readlines()[-1])
+            timestamp = data['timestamp']
+            model_parameters = data['parameters']
+            if model_parameters is None:
+                print("Stored model_parameters are None. Proceed with standard parameters from model and constants.py.")
+                _, __, ___, ____, _____ = MODEL_FUNC(MODEL_PARAMETERS)
+                model_parameters = MODEL_PARAMETERS
+            else:
+                print("Model parameters loaded successfully from:", path,"at:", timestamp)
 
-        return timestamp, model_parameters
+            return timestamp, model_parameters
     except Exception as e:
         print('Could not find previous model data.',e)
         return None, None
@@ -244,6 +245,7 @@ def live_model_update_with_remote_sysid(config: Dict[str,Any],
 
                     fig_axes = model_update_plots([1,1], model_parameters,
                                                 params['pars_to_update'], omega_model, fig_axes)
+                print("\n")
     except KeyboardInterrupt:
         print("Keyboard interrupt in live model updating\n")
     except Exception as e:
@@ -272,6 +274,7 @@ def live_model_update_with_remote_clustering(config: Dict[str,Any],
                     fig_axes = model_update_plots([1,1], model_parameters,
                                                   params['pars_to_update'], omega_model,
                                                  fig_axes)
+            print("\n")
     except KeyboardInterrupt:
         print("Keyboard interrupt of live model updating\n")
     except Exception as e:

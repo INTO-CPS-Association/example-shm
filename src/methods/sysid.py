@@ -8,7 +8,7 @@ from data.comm.mqtt import (shutdown,publish_to_mqtt)
 from data.accel.hbk.aligner import Aligner
 from functions.util import convert_numpy_to_list
 from src.methods.packages.pyoma.algorithms.ssiWrapper import SSI
-from methods.constants import PARAMS
+from settings import PARAMS
 from methods.setup_data import get_data, setup_aligner
 
 def sysid(data: np.ndarray[float], params: Dict[str,Any]) -> Dict[str, Any]:
@@ -87,6 +87,7 @@ def wait_for_sysid_output(samples: int, aligner: Aligner,
             print(t_text,end="\r")
             data, aligner_time = get_data(samples, aligner)
         sysid_output = sysid(data, PARAMS)
+        sysid_output['Fs'] = PARAMS['Fs']
         print("Aligned data received at:",aligner_time)
         return sysid_output, aligner_time
     except KeyboardInterrupt as exc:

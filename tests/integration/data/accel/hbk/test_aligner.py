@@ -6,7 +6,7 @@ import struct
 import numpy as np
 
 from data.accel.hbk.aligner import Aligner
-from constants import DESCRIPTOR_LENGTH, METADATA_VERSION, SECONDS, NANOSECONDS, BATCH_SIZE
+from tests.integration.data.accel.hbk.constants import DESCRIPTOR_LENGTH, METADATA_VERSION, SECONDS, NANOSECONDS, BATCH_SIZE
 from data.comm.mqtt import setup_mqtt_client, load_config
 import uuid
 

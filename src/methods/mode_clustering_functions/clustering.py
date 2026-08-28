@@ -96,7 +96,8 @@ def cluster_func(sysid_output: Dict[str,Any],
                 data1 = remove_data_from_S(data2,clusters_expan) #Remove clustered poles from data
             else:
                 print("cluster too short:",1,"But must be:",params['mstab'])
-
+        
+        
     #Allignment or merging of stacked clusters
     cluster_dict_aligned = alignment(cluster_dict.copy(),params)
 

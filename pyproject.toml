@@ -14,7 +14,7 @@ packages = [
     {include = "examples", from="src"},
     {include = "functions", from="src"},
     {include = "methods", from="src"},
-    {include = "beam", from="models"},
+    {include = "models"},
     {include = "record"}
 ]
 

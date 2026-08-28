@@ -2,7 +2,7 @@ import json
 import time
 from typing import Any, Dict
 from paho.mqtt.client import Client as MQTTClient
-from data.accel.metadata_constants import WAIT_METADATA
+from metadata_settings import WAIT_METADATA
 from data.comm.mqtt import setup_mqtt_client
 
 def extract_fs_from_metadata(mqtt_config: Dict[str, Any]) -> int:

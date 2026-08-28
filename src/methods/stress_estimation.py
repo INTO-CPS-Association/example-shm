@@ -9,7 +9,7 @@ from methods.stress_estimation_functions.plot_stress import plot_stress
 from methods.virtual_sensing import virtual_sensing
 from methods.mode_clustering import publish_data
 from methods.model_update import subscribe_data
-from methods.constants import (MODEL_FUNC, PARAMS)
+from settings import (MODEL_FUNC, PARAMS)
 # pylint: disable=C0103, C0301, W0104
 
 result_ready = threading.Event()

@@ -7,7 +7,7 @@ from paho.mqtt.client import Client as MQTTClient, MQTTMessage
 # Project Imports
 from data.accel.accelerometer import IAccelerometer
 from data.accel.constants import MAX_MAP_SIZE
-from data.accel.metadata_constants import DESCRIPTOR_LENGTH_BYTES
+from metadata_settings import DESCRIPTOR_LENGTH_BYTES
 
 class Accelerometer(IAccelerometer):
     def __init__(

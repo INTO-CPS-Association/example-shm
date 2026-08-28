@@ -9,7 +9,7 @@ from methods.model_update import load_model_parameters
 from methods.mode_clustering import publish_data
 from methods.virtual_sensing_functions.virtual_sensing_func import displacement_estimation
 from methods.virtual_sensing_functions.plot_virtual_sensing import plot_virtual_sensing
-from methods.constants import PARAMS
+from settings import PARAMS
 from examples.aligning_readings import wait_for_data
 # pylint: disable=C0103, C0301, W0104
 
