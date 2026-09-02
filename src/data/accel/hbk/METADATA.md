@@ -31,7 +31,7 @@ This represents metadata coming from an accelerometer (`acc`), processed as raw 
 
 #### Example METADATA Topic Payload
 
-```json
+```jsonl
 {
   "Descriptor": {
     "Descriptor length": "uint16",

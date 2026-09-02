@@ -55,10 +55,10 @@ def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[floa
                 max_mac_for_mode = -1  # Track the highest MAC for this mode
                 mac_per_mode = []
                 for k in range(mode_shape.shape[0]):
-                    current_MAC = calculate_mac(mode_shape[k, :].T, model_mode_shapes[:,j])
+                    current_MAC = calculate_mac(mode_shape[k, :], model_mode_shapes[:,j])
                     highest_MAC[i, j] = max(highest_MAC[i, j], current_MAC)
                     mac_per_mode.append(current_MAC)
-                    max_mac_for_mode = max(max_mac_for_mode, current_MAC)
+                    max_mac_for_mode = max(max_mac_for_mode, current_MAC) #Update max_mac_for_mode
 
                 # Track the dictionary with the highest MAC for the current mode
                 if highest_MAC[i, j] == max_mac_for_mode:
@@ -98,7 +98,7 @@ def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[floa
 
                 if id_high_MAC in id_model_list:
                     #If a pairing is already made, then check what is best.
-                    indices = int(np.argwhere(id_model_list == id_high_MAC))
+                    indices = int(np.argwhere(id_model_list == id_high_MAC)[0][0])
 
                     for idx, ms in enumerate(cluster['mode_shapes']): #Iterate over all mode shapes
                         MAC = calculate_mac(ms.T, model_mode_shapes[:,id_model]) #Calculate MAC
@@ -159,17 +159,24 @@ def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[floa
                         paired_c_mode_shapes = np.append(paired_c_mode_shapes,
                                     cluster['mode_shapes'][MAC_max_id,:].reshape(sensors,1),
                                     axis=1)
-                if params['verbose'][key] % 5 == 0:
-                    print("Cluster",key,cluster['median_f']
-                        ,"is matched.")
-                params['verbose'][key] += 1
+                try:
+                    if params['verbose'][key] % 5 == 0:
+                        print("Cluster",key,cluster['median_f']
+                            ,f"is matched. Model freq.:{model_freq[id_model]}, with MAC: {max(MAC_max,MAC_previous)}")
+                    params['verbose'][key] += 1
+                except:
+                    if params['verbose'][key] % 5 == 0:
+                        print("Cluster",key,cluster['median_f']
+                            ,f"is matched. Model freq.:{model_freq[id_model]}, with MAC: {MAC_max}")
+                    params['verbose'][key] += 1
             else:
                 print("Cluster",key,cluster['median_f']
                       ,"is not matched. Reason: similar match idx criteria")
+                print(f"Id of model mope with higest MAC {id_high_MAC}, best average mac {id_avg_MAC}, smallest frequency difference {id_freq}")
         else:
             if params['verbose'][key] % 5 == 0:
                 print("Cluster",key,cluster['median_f']
-                  ,"is not matched. Reason: MAC threshold")
+                  ,f"is not matched. Reason: MAC threshold. Average mac across all model modes: {average_MAC[ii,:]}")
             params['verbose'][key] += 1
 
 

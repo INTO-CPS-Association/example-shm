@@ -27,7 +27,8 @@ def update_model(cluster_dict: Dict[str,Any], model_func: Callable[[Dict[str,Any
     X = None
     pars_to_update = params['pars_to_update']
     params['verbose'] = {}
-    try:
+    # try:
+    if True:
         res = minimize(lambda x: estimate_parameters(x, cluster_dict, model_func, model_pars,
                                                         pars_to_update, params),
                         params['MU_start_values'], bounds=params['MU_bounds'],
@@ -45,8 +46,8 @@ def update_model(cluster_dict: Dict[str,Any], model_func: Callable[[Dict[str,Any
         omegaMU, _, phi_sel, ___, ____ = model_func(updated_model_parameters)
 
         del params['verbose']
-    except ValueError as e:
-        print(f"Skipping model updating due to error: {e}")
+    # except ValueError as e:
+    #     print(f"Skipping model updating due to error: {e}")
 
     if X is not None:
         print("Updated parameters are:")
@@ -63,7 +64,7 @@ def update_model(cluster_dict: Dict[str,Any], model_func: Callable[[Dict[str,Any
         for ii, ms in enumerate(phi_sel.T):
             ms_1 = ms[0]
             ms_n = (np.conjugate(ms_1)/abs(ms_1)**2)*ms.T
-            print("Model mode:",ii,"f:", round(omegaMU[ii],3),"Hz"," Normalized mode shape",ms_n)
+            print("Model mode:",ii+1,"f:", round(omegaMU[ii],3),"Hz"," Normalized mode shape",ms_n)
 
         return X, omegaMU, updated_model_parameters
     return None, None, None
@@ -100,16 +101,17 @@ def estimate_parameters(theta_star: List[float], cluster_dict: Dict[str,Any],
     omegaM, _, PhiM, __, ___ = model_func(model_parameters)
 
     # Mode Pairing Star
-    
+    print("Model frequencies",omegaM)
     (paired_frequencies, paired_mode_shapes, omegaM, PhiM
      ) = pair_modes(omegaM, PhiM, cluster_dict, params)
     omegaM = omegaM.reshape(paired_frequencies.shape) #??? Does it do anything?
 
+    print(f"Paried modes are {len(paired_frequencies)}:",paired_frequencies,"Paired with model modes",omegaM)
     # Error message if the number of updating parameters
     # are more than double of the paired frequencies
     if len(theta_star) > 2 * len(paired_frequencies):
         raise ValueError("The problem becomes undetermined." \
-        " The number of updated parameters should not be more than the number of features")
+        f"The number of updated parameters [{len(theta_star)}] should not be more than the number of features/paired modes [{len(paired_frequencies)}]")
 
     # Compute MAC
     MACn = np.abs(np.diag(np.conj(paired_mode_shapes).T @ PhiM))**2 #Nominator

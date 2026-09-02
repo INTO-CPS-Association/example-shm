@@ -50,15 +50,15 @@ def extract_metadata(mqtt_config: Dict[str, Any]) -> int:
         except Exception as e:
             print(f"Failed to extract metadata: {e}")
 
-    metadata_topic = mqtt_config["MetadataToSubscribe"][0]
+    metadata_topic = mqtt_config["MetadataToSubscribe"]
     print("Waiting for metadata. topic:",metadata_topic)
     client = setup_mqtt_client(mqtt_config, metadata_topic)
     client.user_data_set({"metadata_topic": metadata_topic})
-    client.message_callback_add(metadata_topic, _on_metadata)
+    client.message_callback_add(metadata_topic[0], _on_metadata)
     client.connect(mqtt_config["host"], mqtt_config["port"], 60)
-    client.subscribe(metadata_topic)
+    client.subscribe(metadata_topic[0])
     client.loop_start()
-    
+
     start_time = time.time()
     while metadata["metadata"] is None and (time.time() - start_time) < WAIT_METADATA:
         time.sleep(0.1)

@@ -19,7 +19,7 @@ def setup_client(mqtt_config: Dict[str, Any]) -> Tuple[MQTTClient, float]:
     Returns:
         (Tuple[MQTTClient, float]): A tuple of the connected MQTTClient instance and the extracted sampling frequency.
     """
-    try:  
+    try:
         metadata = extract_metadata(mqtt_config)
     except Exception:
         print("Failed to extract metadata. Using DEFAULT_METADATA = ", DEFAULT_METADATA)
@@ -28,7 +28,7 @@ def setup_client(mqtt_config: Dict[str, Any]) -> Tuple[MQTTClient, float]:
 
     fs = metadata["Analysis chain"][0]["Sampling"]
 
-    data_client = setup_mqtt_client(mqtt_config, mqtt_config["TopicsToSubscribe"][0])
+    data_client = setup_mqtt_client(mqtt_config, mqtt_config["TopicsToSubscribe"])
     data_client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     data_client.loop_start()
     return data_client, fs, metadata
@@ -62,6 +62,7 @@ def setup_aligner(config_path, config_name: str = "sysid",
         data_topic_indexes = list(range(len(mqtt_config["TopicsToSubscribe"])))
     selected_topics = [mqtt_config["TopicsToSubscribe"][i] for i in data_topic_indexes]
     aligner = Aligner(data_client, topics=selected_topics, metadata=metadata)
+    print("Aligner setup with the following topics:", selected_topics)
     return aligner, data_client, mqtt_config, PARAMS
 
 def get_data(

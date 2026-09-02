@@ -4,12 +4,21 @@ import numpy as np
 # Parameters
 PARAMS = {}
 
+##################################
+### Settings for signal filter ###
+##################################
+
+PARAMS['expansion_modes'] = [1,2,3]                    # What modes to use for expansion
+PARAMS['filter_order'] = 4                             # Order/strength of butterworth filter
+PARAMS['filter_type'] = 'bandpass'                     # 'lowpass', 'bandpass', 'highpass' or None for no filtering
+PARAMS['filter_cut-off'] = np.array([0.5,90])          # Cut of frequency(ies) for the butterworth filter [lower/upper cut-off value] or [>lower cut-off value<,upper cut-off value]
+
 ###########################
-### Constants for sysID ###
+### Settings for sysID ###
 ###########################
 
 #Pre-clean coefficient of variance trhesholds
-PARAMS['freq_coeff_variance_treshold'] = 0.2   #Should be 1 or less.
+PARAMS['freq_coeff_variance_treshold'] = 0.5   #Should be 1 or less.
 PARAMS['damp_coeff_variance_treshold'] = 0.5   #Should be 1 or less.
 
 PARAMS['Fs'] = 256.0                            # Samplefrequency
@@ -36,8 +45,7 @@ PARAMS['obj_cri'] = 0.1                   # criteria for closely related cluster
 # If more clusters match, and it is not clear what cluster is best,
 # then check if the difference of the objective function values are less than the criteria.
 # Then it is probably the one with higest MAC rather than frequency [difference]
-PARAMS['alpha'] = (100-99)/100/2          # Significance level
-PARAMS['l_lastest_clusters'] = 5                # l number of clusters to compare with
+PARAMS['alpha'] = 0.05                    # Significance level
 
 ###################################
 ### Settings for model updating ###
@@ -55,7 +63,8 @@ from models.beam import beam_yafem_model as model #Import model
 MODEL_FUNC = model.eval_yafem_model #Function name of model
 # Default model parameters to use
 MODEL_PARAMETERS = {'modes': PARAMS['modes_search_paring'],     # How many mode of the model to search through when pairing is done.
-            'dofs_sel': np.array([[7,1],[6,1],[5,1],[4,1]]),    # How input data maps to model DOFs
+            # 'dofs_sel': np.array([[7,1],[6,1],[5,1],[4,1]]),    # How input data maps to model DOFs
+            'dofs_sel': np.array([[7,1],[4,1]]),    # How input data maps to model DOFs
             'k_rot': 1,         # Inital values to use, if no previous saved parameters is found
             'l4': 0.1289,       # Inital values to use, if no previous saved parameters is found
             'm': 0,             # Inital values to use, if no previous saved parameters is found
@@ -65,10 +74,6 @@ MODEL_PARAMETERS = {'modes': PARAMS['modes_search_paring'],     # How many mode 
 ### Settings for modal expansion ###
 ####################################
 
-PARAMS['expansion_modes'] = [1,2,3]                                 # What modes to use for expansion
-PARAMS['filter_order'] = 4                                          # Order/strength of butterworth filter
-PARAMS['filter_type'] = 'bandpass'                                  # 'lowpass', 'bandpass', 'highpass' or None for no filtering
-PARAMS['filter_cut-off'] = np.array([0.5,90])                       # Cut of frequency(ies) for the butterworth filter [lower/upper cut-off value] or [>lower cut-off value<,upper cut-off value]
 PARAMS['output_type'] = 2                                           # system output type: 0-displacement; 1-velocities, 2-acceleration
 PARAMS['detrend_integration_order'] = 2                             # Order of detrend applied integrated signal, 0 = mean, 1 = linear, 2 = second order etc.
 PARAMS['beam_elements'] = np.array([3,4,5,6,7,8,9])                 # Order of elements in myModel that is beams

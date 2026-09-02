@@ -87,13 +87,13 @@ def create_on_publish_callback():
     return on_publish
 
 
-def setup_mqtt_client(config: Dict[str,Any], topic_to_subscribe: str):
+def setup_mqtt_client(config: Dict[str,Any], topics_to_subscribe: List[str]):
     """
     Initializes an MQTT client using a specific topic index from the subscription list.
 
     Args:
         config (Dict[str,Any]): MQTT client configuration.
-        topic_to_subscribe (str): Topic to subscribe to.
+        topics_to_subscribe (str): Topic to subscribe to.
 
     Returns:
         tuple: (MQTTClient, selected_topic)
@@ -108,7 +108,7 @@ def setup_mqtt_client(config: Dict[str,Any], topic_to_subscribe: str):
         mqttc.username_pw_set(config["userId"], config["password"])
 
     mqttc.on_connect = create_on_connect_callback(
-        [topic_to_subscribe], config["QoS"])
+        topics_to_subscribe, config["QoS"])
     mqttc.on_subscribe = create_on_subscribe_callback()
     mqttc.on_message = create_on_message_callback()
     mqttc.on_publish = create_on_publish_callback()

@@ -152,7 +152,7 @@ The file needs to be saved. The application looks for configuration in
 There are some settings that can be changed for the specific use case.
 
 * **Default metadata**
-Default metadata results and default sample frequency is changed in `data/accel/metadata_constants.py`.
+Default metadata results and default sample frequency is changed in `src/metadata_settings.py`.
 This is for when the aligner does not recieve it from MQTT. For more information read: METADATA.md
 `Samples` is the number of samples expected in each data message.
 `Type` is the data type, e.g. 'float' or 'double'.
@@ -165,12 +165,12 @@ to calculate the correct ammount of samples.
 Inside a config file, e.c. `<config>.json`, the samples to collect can be changed: `SamplesToCollect`.
 
 * **Parameters**
-Inside  `method/constants.py` the parameters for system identification, mode clustering, mode tracking and model updating
+Inside  `src/settings.py` the parameters for system identification, mode clustering, mode tracking and model updating
 can be changed.
 
 * **Model**
 A digital YAFEM model can be added to `models/<your_model>`.
-Inside  `method/constants.py` the model paramters can be set together with the paths to the model folder and the model function file.
+Inside  `src/settings.py` the model paramters can be set together with the paths to the model folder and the model function file.
 
 
 ## Step 1.5 Run examples

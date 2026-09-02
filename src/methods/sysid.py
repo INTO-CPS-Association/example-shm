@@ -10,6 +10,7 @@ from functions.util import convert_numpy_to_list
 from src.methods.packages.pyoma.algorithms.ssiWrapper import SSI
 from settings import PARAMS
 from methods.setup_data import get_data, setup_aligner
+from functions.data_filtering import signal_filter
 
 def sysid(data: np.ndarray[float], params: Dict[str,Any]) -> Dict[str, Any]:
     """
@@ -32,6 +33,8 @@ def sysid(data: np.ndarray[float], params: Dict[str,Any]) -> Dict[str, Any]:
         data = data.T                           # transpose it if data has more column than rows
     print(f"Data dimensions: {data.shape}")
     print(f"sysid parameters: Sample frequency [Hz]: {params['Fs']}, Model order: {params['model_order']}, Block shift: {params['block_shift']}")
+
+    data = signal_filter(data,params) #Apply filter
 
     HC = {"xi_max":10**5,
           "mpc_lim":None,
@@ -105,7 +108,6 @@ def publish_sysid_output(publish_client: MQTTClient, publish_topics: List[str],
         aligner_time (str): Sampling frequency.
     Returns:
     """
-
     payload = {
         "timestamp": aligner_time,
         "sysid_output": convert_numpy_to_list(sysid_output)
