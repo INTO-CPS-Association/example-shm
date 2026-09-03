@@ -34,7 +34,10 @@ def sysid(data: np.ndarray[float], params: Dict[str,Any]) -> Dict[str, Any]:
     print(f"Data dimensions: {data.shape}")
     print(f"sysid parameters: Sample frequency [Hz]: {params['Fs']}, Model order: {params['model_order']}, Block shift: {params['block_shift']}")
 
-    data = signal_filter(data,params) #Apply filter
+    try:
+        data = signal_filter(data,params) #Apply filter
+    except:
+        pass
 
     HC = {"xi_max":10**5,
           "mpc_lim":None,

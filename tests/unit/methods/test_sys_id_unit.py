@@ -136,7 +136,7 @@ def test_setup_client_with_multiple_topics(mocker):
         "QoS":1,
         "TopicsToSubscribe": ["topic1", "topic2"]
     }
-    extract_mock = mocker.patch("data.accel.metadata.extract_fs_from_metadata", return_value=123.0)
+    extract_mock = mocker.patch("data.accel.metadata.extract_metadataextract_fs_from_metadata", return_value=123.0)
 
     mock_mqtt_client = MagicMock()
     mocker.patch("methods.setup_data.setup_client", return_value=(mock_mqtt_client))
