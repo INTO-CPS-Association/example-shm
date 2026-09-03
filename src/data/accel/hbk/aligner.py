@@ -49,6 +49,9 @@ class Aligner(IAligner):
         """
         # Get common keys across all channels
         key_sets = [set(ch.get_sorted_keys()) for ch in self.channels]
+        for ii, key_set in enumerate(key_sets):
+            if not key_set:
+                print(f"Missing data on channel: {self.channels[ii].topic}")
         if not key_sets or batch_size is None:
             return None
         return sorted(set.intersection(*key_sets))

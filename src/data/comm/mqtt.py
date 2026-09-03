@@ -149,7 +149,7 @@ def start_mqtt(config: Dict[str,Any], _on_connect: Callable, _on_message: Callab
         subcribe_topics (List[str]): Topics to subscribe to
         publish_topics (List[str]): Topics to publish
     """
-    mqtt_client = setup_mqtt_client(config,config["TopicsToSubscribe"][0])
+    mqtt_client = setup_mqtt_client(config,config["TopicsToSubscribe"])
     mqtt_client.connect(config["host"], config["port"], 60)
     mqtt_client.loop_start()
     mqtt_client.user_data_set({"topic": config["TopicsToSubscribe"][0], "qos": 1})

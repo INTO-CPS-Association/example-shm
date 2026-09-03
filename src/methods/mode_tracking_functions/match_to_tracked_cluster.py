@@ -1,12 +1,6 @@
 from typing import Any, Dict, List
 import numpy as np
 from functions.calculate_mac import calculate_mac
-from scipy import stats
-from scipy.stats import ttest_ind, ttest_ind_from_stats
-from scipy.stats import norm, chi2
-import matplotlib.pyplot as plt
-from matplotlib.patches import Ellipse
-from methods.mode_clustering_functions.global_uncertainty import tracked_covariance
 from methods.mode_tracking_functions.mahalanobis import MSD, construct_x
 np.set_printoptions(formatter={'float':"{0:0.5f}".format})
 # pylint:  disable=C0103, R0912, R0913, R0914, R0915, R0917, R1702

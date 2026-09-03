@@ -114,18 +114,18 @@ def estimate_updated_model(clusters: Dict[str,Any], model_parameters: Dict[str,A
         updated_model_parameters (Dict[str,Any]): Model parameters
 
     """
-    # try:
-    (X, omega_model,
-        updated_model_parameters) = model_update_func.update_model(clusters, MODEL_FUNC,
-                                                                        model_parameters,
-                                                                params['pars_to_update'],
-                                                                params)
-    if omega_model is not None:
-        print("Model frequencies:",omega_model,"[Hz]")
-    return (X, omega_model, updated_model_parameters)
-    # except Exception as e:
-    #     print('Model update is not succesful.', e)
-    #     return None, None, None
+    try:
+        (X, omega_model,
+            updated_model_parameters) = model_update_func.update_model(clusters, MODEL_FUNC,
+                                                                            model_parameters,
+                                                                    params['pars_to_update'],
+                                                                    params)
+        if omega_model is not None:
+            print("Model frequencies:",omega_model,"[Hz]")
+        return (X, omega_model, updated_model_parameters)
+    except Exception as e:
+        print('Model update is not succesful.', e)
+        return None, None, None
 
 def model_update_plots(plot: List[bool], model_parameters: Dict[str,Any],
                        pars_to_update: List[str], omega_updated_model: np.ndarray[float],
@@ -217,6 +217,9 @@ def load_model_parameters() -> Optional[Tuple[str, Dict[str,Any]]]:
             else:
                 print("Model parameters loaded successfully from:", path,"at:", timestamp)
 
+            if len(model_parameters['dofs_sel']) != len(MODEL_PARAMETERS['dofs_sel']):
+                raise ValueError(f"ERROR: Selected DOFs are not the same. In settings: {MODEL_PARAMETERS['dofs_sel']}, loaded from file: {model_parameters['dofs_sel']}")
+
             return timestamp, model_parameters
     except Exception as e:
         print('Could not find previous model data.',e)
@@ -226,29 +229,34 @@ def live_model_update_with_remote_sysid(config: Dict[str,Any],
                                         params: Dict[str,Any],
                                         publish: bool = False) -> None:
     fig_axes = [None, None]
-    # try:
-    while True:
-        _, model_parameters = load_model_parameters()
-        _, clusters, __, timestamp = subscribe_and_cluster(config, params)
+    try:
+        while True:
+            _, model_parameters = load_model_parameters()
+            _, clusters, __, timestamp = subscribe_and_cluster(config, params)
 
-        if clusters is not None:
-            (_, omega_model, model_parameters) = estimate_updated_model(clusters,
-                                                                    model_parameters,
-                                                                    params)
+            if clusters is not None:
+                if model_parameters is not None:
+                    (_, omega_model, model_parameters) = estimate_updated_model(clusters,
+                                                                            model_parameters,
+                                                                            params)
 
-            if model_parameters is not None:
-                save_model_parameters(config,timestamp,model_parameters)
-                if publish:
-                    publish_model_parameters(config,
-                                        timestamp,model_parameters)
+                    if model_parameters is not None:
+                        save_model_parameters(config,timestamp,model_parameters)
+                        if publish:
+                            publish_model_parameters(config,
+                                                timestamp,model_parameters)
 
-                fig_axes = model_update_plots([1,1], model_parameters,
-                                            params['pars_to_update'], omega_model, fig_axes)
-            print("\n")
-    # except KeyboardInterrupt:
-    #     print("Keyboard interrupt in live model updating\n")
-    # except Exception as e:
-    #     print(f"Unexpected error: {e}")
+                        fig_axes = model_update_plots([1,1], model_parameters,
+                                                    params['pars_to_update'], omega_model, fig_axes)
+                    print("\n")
+                else:
+                    print("Error with model parameters.")
+            else:
+                print("Error with clustering.")
+    except KeyboardInterrupt:
+        print("Keyboard interrupt in live model updating\n")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
 
 def live_model_update_with_remote_clustering(config: Dict[str,Any],
                                             params: Dict[str,Any],

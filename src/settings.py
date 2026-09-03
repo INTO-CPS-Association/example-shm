@@ -8,9 +8,9 @@ PARAMS = {}
 ### Settings for signal filter ###
 ##################################
 
+PARAMS['filter_type'] = None                             # 'lowpass', 'bandpass', 'highpass' or None for no filtering
 PARAMS['expansion_modes'] = [1,2,3]                    # What modes to use for expansion
 PARAMS['filter_order'] = 4                             # Order/strength of butterworth filter
-PARAMS['filter_type'] = 'bandpass'                     # 'lowpass', 'bandpass', 'highpass' or None for no filtering
 PARAMS['filter_cut-off'] = np.array([0.5,90])          # Cut of frequency(ies) for the butterworth filter [lower/upper cut-off value] or [>lower cut-off value<,upper cut-off value]
 
 ###########################
@@ -51,10 +51,11 @@ PARAMS['alpha'] = 0.05                    # Significance level
 ### Settings for model updating ###
 ###################################
 
-PARAMS['tMAC_MU'] = 0.7                                # MAC Pairing threshold
+PARAMS['verbose_interval'] = 5                         # How often will model update information be printed.
+PARAMS['tMAC_MU'] = 0.7                                # MAC Pairing threshold.
 PARAMS['modes_search_paring'] = 6                      # How many mode of the model to search through when pairing is done. 
 PARAMS['pars_to_update'] = ["k_rot","m"]               # Parameters to update.
-PARAMS['MU_start_values'] = np.array([10, 0.015])      # Initial values for parameters
+PARAMS['MU_start_values'] = np.array([10, 0.015])      # Initial values for parameters.
 PARAMS['MU_bounds'] = [(0.01, 1000), (0, 1000)]        # Lower and upper bounds of paramters [par1(Lower bound, upper bound), par2(Lower bound, upper bound)]
 
 MODEL_DIR = "models/beam" #Path to model

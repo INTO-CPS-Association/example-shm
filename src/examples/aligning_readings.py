@@ -14,7 +14,7 @@ def align_acceleration_readings(config_path):
 
     all_topics = sysid_config["TopicsToSubscribe"]
     metadata = extract_metadata(sysid_config)
-    mqtt_client = setup_mqtt_client(sysid_config, sysid_config["TopicsToSubscribe"][0])
+    mqtt_client = setup_mqtt_client(sysid_config, sysid_config["TopicsToSubscribe"])
     mqtt_client.connect(sysid_config["host"], sysid_config["port"], 60)
     mqtt_client.loop_start()
 
