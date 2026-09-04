@@ -30,8 +30,8 @@ def update_model(cluster_dict: Dict[str,Any], model_func: Callable[[Dict[str,Any
     omegaMU, _, __, ___, ____ = model_func(model_pars)
     print("Initial model frequencies",omegaMU)
     try:
-        if cluster_dict[0]['mode_shapes'].shape[1] != model_pars['dofs_sel'].shape[1]:
-            raise ValueError(f"Different number of selected DOFs in cluster {cluster_dict[0]['mode_shapes'].shape[1]} and model {model_pars['dofs_sel'].shape[1]}")
+        if cluster_dict[0]['mode_shapes'].shape[1] != len(model_pars['dofs_sel']):
+            raise ValueError(f"Different number of selected DOFs in cluster [{cluster_dict[0]['mode_shapes'].shape[1]}] and model [{len(model_pars['dofs_sel'])}]")
         res = minimize(lambda x: estimate_parameters(x, cluster_dict, model_func, model_pars,
                                                         pars_to_update, params),
                         params['MU_start_values'], bounds=params['MU_bounds'],

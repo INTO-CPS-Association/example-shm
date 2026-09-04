@@ -158,18 +158,18 @@ def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[floa
                                     cluster['mode_shapes'][MAC_max_id,:].reshape(sensors,1),
                                     axis=1)
                 try:
-                    text_to_print.append(f"Cluster{key,cluster['median_f']}"
-                            +f"is matched. Model freq.:{model_freq[id_model]}, with MAC: {max(MAC_max,MAC_previous)}")
+                    text_to_print.append(f"Cluster{key, round(cluster['median_f'],5)} "
+                            +f"is matched. Model freq.: {model_freq[id_model]}, with MAC: {max(MAC_max,MAC_previous)}")
                 except:
-                    text_to_print.append(f"Cluster {key,cluster['median_f']}"
-                            +"is matched. Model freq.:{model_freq[id_model]}, with MAC: {MAC_max}")
+                    text_to_print.append(f"Cluster {key,round(cluster['median_f'],5)} "
+                            +f"is matched. Model freq.: {model_freq[id_model]}, with MAC: {MAC_max}")
             else:
-                text_to_print.append(f"Cluster {key,cluster['median_f']}"+
+                text_to_print.append(f"Cluster {key,round(cluster['median_f'],5)} "+
                       "is not matched. Reason: similar match idx criteria"+
-                      "Id of model mope with higest MAC {id_high_MAC}, best average mac {id_avg_MAC}, smallest frequency difference {id_freq}")
+                      f"Id of model mope with higest MAC {id_high_MAC}, best average mac {id_avg_MAC}, smallest frequency difference {id_freq}")
         else:
-            text_to_print.append(f"Cluster {key,cluster['median_f']}"
-                  +f"is not matched. Reason: MAC threshold. Average mac across all model modes: {average_MAC[ii,:]}")
+            text_to_print.append(f"Cluster {key,round(cluster['median_f'],5)} "
+                  +f"is not matched. Reason: MAC threshold. Average mac for all model modes: {average_MAC[ii,:]}")
     if params['verbose'] % params['verbose_interval'] == 0:
         for text in text_to_print:
             print(text)
