@@ -262,10 +262,10 @@ def plot_histogram(result: dict[str, Any], fig_ax = None, hist_data: dict[str,An
         # cax = fig.get_axes()[1]
         # ax_histx = fig.get_axes()[2]
         # ax_histy = fig.get_axes()[3]
-        ax.clear()
         cax.remove()
         ax_histx.remove()
         ax_histy.remove()
+        ax.clear()
 
     static_mean = kwargs.get("static_mean",0)
     #For this plot

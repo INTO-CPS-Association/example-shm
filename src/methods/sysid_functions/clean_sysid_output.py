@@ -59,14 +59,15 @@ def remove_highly_uncertain_points(sysid_output: Dict[str, Any], sysid_params: D
      std_mode_shapes, Ufx_list) = extract_from_sysid(sysid_output)
 
     # # #=================== Removing high uncertain poles =======================
-    freq_variance_treshold = sysid_params.get('freq_variance_treshold', 0.1)
-    damp_variance_treshold = sysid_params.get('damp_variance_treshold', 10)
-    frequency_coefficient_variation = sysid_output['Fn_poles_std'].copy()**0.5/frequencies
-    damping_coefficient_variation = sysid_output['Xi_poles_std'].copy()**0.5/damping_ratios
-    indices_frequency = frequency_coefficient_variation > freq_variance_treshold
-    indices_damping   = damping_coefficient_variation > damp_variance_treshold
+    freq_coeff_variance_treshold = sysid_params.get('freq_coeff_variance_treshold', 0.5)
+    damp_coeff_variance_treshold = sysid_params.get('damp_coeff_variance_treshold', 0.5)
+    frequency_coefficient_variation = std_freq/frequencies
+    damping_coefficient_variation = std_damping/damping_ratios
+    indices_frequency = frequency_coefficient_variation > freq_coeff_variance_treshold
+    indices_damping   = damping_coefficient_variation > damp_coeff_variance_treshold
     above_nyquist = frequencies > sysid_params['Fs']/2
-    combined_indices = np.logical_or(np.logical_or(indices_frequency,indices_damping),above_nyquist)
+    damping_std_0 = std_damping == 0
+    combined_indices = np.logical_or(np.logical_or(indices_frequency,indices_damping),np.logical_or(above_nyquist,damping_std_0))
     frequencies[combined_indices] = np.nan
     damping_ratios[combined_indices] = np.nan
     std_freq[combined_indices] = np.nan
@@ -196,9 +197,9 @@ def clean_and_transform(sysid_output: Dict[str, Any], sysid_params: Dict[str, An
 
     (frequencies_, std_freq_, damping_ratios_, std_damping_, mode_shapes_, 
      std_mode_shapes_, Ufx_list_) = remove_highly_uncertain_points(sysid_output, sysid_params)
-    
+
     (frequencies, std_freq, damping_ratios, std_damping, mode_shapes2, std_mode_shapes2,
      Ufx_list, model_orders) = transform_sysid_features(frequencies_, std_freq_, damping_ratios_, 
                                               std_damping_, mode_shapes_,  std_mode_shapes_, Ufx_list_)
-    
+
     return frequencies, std_freq, damping_ratios, std_damping, mode_shapes2, std_mode_shapes2, Ufx_list, model_orders

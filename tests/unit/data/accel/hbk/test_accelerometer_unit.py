@@ -4,7 +4,6 @@ import pytest
 import numpy as np
 from unittest.mock import MagicMock
 from data.accel.hbk.accelerometer import Accelerometer
-from data.accel.metadata_constants import DESCRIPTOR_LENGTH_BYTES
 
 pytestmark = pytest.mark.unit
 
@@ -15,7 +14,7 @@ def mock_mqtt_client():
 
 @pytest.fixture
 def test_accelerometer(mock_mqtt_client):
-    return Accelerometer(mock_mqtt_client, topic="test/topic", map_size=128)
+    return Accelerometer(mock_mqtt_client, topic="test/topic", metadata=None, map_size=128)
 
 class MockMQTTMessage:
     def __init__(self, topic, payload):
@@ -25,7 +24,7 @@ class MockMQTTMessage:
 
 def make_mock_payload(start_key: int, num_samples: int = 32) -> bytes:
     descriptor_length = 28
-    descriptor = struct.pack("<H H Q Q Q", descriptor_length, 1, 0, 0, start_key)
+    descriptor = struct.pack("<H H Q Q Q", descriptor_length, 2, 0, 0, start_key)
     data = struct.pack(f"<{num_samples}f", *[float(i + start_key) for i in range(num_samples)])
     return descriptor + data
 

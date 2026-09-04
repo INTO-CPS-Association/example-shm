@@ -55,10 +55,10 @@ def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[floa
                 max_mac_for_mode = -1  # Track the highest MAC for this mode
                 mac_per_mode = []
                 for k in range(mode_shape.shape[0]):
-                    current_MAC = calculate_mac(mode_shape[k, :].T, model_mode_shapes[:,j])
+                    current_MAC = calculate_mac(mode_shape[k, :], model_mode_shapes[:,j])
                     highest_MAC[i, j] = max(highest_MAC[i, j], current_MAC)
                     mac_per_mode.append(current_MAC)
-                    max_mac_for_mode = max(max_mac_for_mode, current_MAC)
+                    max_mac_for_mode = max(max_mac_for_mode, current_MAC) #Update max_mac_for_mode
 
                 # Track the dictionary with the highest MAC for the current mode
                 if highest_MAC[i, j] == max_mac_for_mode:
@@ -78,6 +78,7 @@ def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[floa
     MAC_max_list = []
     Dm_f_list = []
     id_model_list = []
+    text_to_print = []
     for ii, key in enumerate(cluster_dict): #Iterate over all clusters
         cluster = cluster_dict[key]
 
@@ -95,7 +96,7 @@ def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[floa
 
                 if id_high_MAC in id_model_list:
                     #If a pairing is already made, then check what is best.
-                    indices = int(np.argwhere(id_model_list == id_high_MAC))
+                    indices = int(np.argwhere(id_model_list == id_high_MAC)[0][0])
 
                     for idx, ms in enumerate(cluster['mode_shapes']): #Iterate over all mode shapes
                         MAC = calculate_mac(ms.T, model_mode_shapes[:,id_model]) #Calculate MAC
@@ -156,15 +157,23 @@ def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[floa
                         paired_c_mode_shapes = np.append(paired_c_mode_shapes,
                                     cluster['mode_shapes'][MAC_max_id,:].reshape(sensors,1),
                                     axis=1)
-
+                try:
+                    text_to_print.append(f"Cluster{key, round(cluster['median_f'],5)} "
+                            +f"is matched. Model freq.: {model_freq[id_model]}, with MAC: {max(MAC_max,MAC_previous)}")
+                except:
+                    text_to_print.append(f"Cluster {key,round(cluster['median_f'],5)} "
+                            +f"is matched. Model freq.: {model_freq[id_model]}, with MAC: {MAC_max}")
             else:
-                print("Cluster",key,cluster['median_f']
-                      ,"is not matched. Reason: similar match idx criteria")
+                text_to_print.append(f"Cluster {key,round(cluster['median_f'],5)} "+
+                      "is not matched. Reason: similar match idx criteria"+
+                      f"Id of model mope with higest MAC {id_high_MAC}, best average mac {id_avg_MAC}, smallest frequency difference {id_freq}")
         else:
-            print("Cluster",key,cluster['median_f']
-                  ,"is not matched. Reason: MAC threshold")
-
-
+            text_to_print.append(f"Cluster {key,round(cluster['median_f'],5)} "
+                  +f"is not matched. Reason: MAC threshold. Average mac for all model modes: {average_MAC[ii,:]}")
+    if params['verbose'] % params['verbose_interval'] == 0:
+        for text in text_to_print:
+            print(text)
+    params['verbose'] += 1
 
     paired_c_freq = np.array(paired_c_freq)
     paired_model_freq = np.array(paired_model_freq)

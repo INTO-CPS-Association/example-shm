@@ -103,7 +103,7 @@ def test_setup_mqtt_client():
         "port": 1883
     }
     # Unpack the returned tuple
-    client = setup_mqtt_client(dummy_config, dummy_config["TopicsToSubscribe"][0])
+    client = setup_mqtt_client(dummy_config, dummy_config["TopicsToSubscribe"])
 
     # Check that the client has the correct client_id.
     client_id = client._client_id.decode() if isinstance(client._client_id, bytes) else client._client_id

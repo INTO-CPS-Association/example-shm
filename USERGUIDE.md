@@ -2,8 +2,25 @@
 
 This guide outlines configuration and execution of the _example-shm_ application. It provides detailed information on the configuration parameters, command-line options, and execution procedures.
 
-There are two ways to run the package, either directly from the repository code as a developer or as a build package. The latter is described further down in this file in section 2.
+There are two ways to run the package, either directly from the repository code as a developer or as a build package. The latter is described further down in this file in section 3.
 
+## List of contents:
+1. Run package with developer setup.
+1. 1. Initiate virtual enviroment with poetry
+1. 2. Setup configuration file
+1. 3. Create Configuration
+1. 4. Change settings
+1. 5. Run examples
+2. Record and replay data
+3. Install the Package from Poetry Build
+3. 1. Build the Package
+3. 2. Create and Activate a Virtual Environment
+3. 3. Install the Built Package
+3. 4. Use
+4. Distributed Setup Overview
+4. 1. Machine 1: Edge Layer – Raspberry Pi with Accelerometers
+4. 2. Machine 2: Fog Layer – Data Alignment and System Identification
+4. 3. Machine 3: Cloud Layer – Mode Tracking and Model Update
 
 ## 1. Run package with developer setup.
 
@@ -17,7 +34,7 @@ source .venv/bin/activate        # On Linux
 pip install poetry               #Specifically install poetry to your system
     # If you have poetry installed globally
     poetry env activate              # shows the command to activate venv
-poetry install                   # installs all required python packages
+poetry install                   # installs all required python packages. If nothing happens when the command is run, go to VNC desktop and cancel the credential pop-up. 
 ```
 ## Step 1.2 Setup configuration file
 config/ consist of a set of standard configuration files.
@@ -122,7 +139,6 @@ The format of configuration file is,
       "TopicsToPublish": []
     }
 }
-}
 ```
 Where the MQTT topic structure follows the pattern:
 `PROJECT/CH_ID/PHYSICS/ANALYSIS/DATA_TYPE`
@@ -135,6 +151,13 @@ The file needs to be saved. The application looks for configuration in
 ## Step 1.4 Change settings
 There are some settings that can be changed for the specific use case.
 
+* **Default metadata**
+Default metadata results and default sample frequency is changed in `src/metadata_settings.py`.
+This is for when the aligner does not recieve it from MQTT. For more information read: METADATA.md
+`Samples` is the number of samples expected in each data message.
+`Type` is the data type, e.g. 'float' or 'double'.
+`Sampling` is the sampling frequency
+
 * **Sample time**
 This is how many samples should be used for sysid. The value uses the time in minutes and the sample frequency, fs,
 to calculate the correct ammount of samples.
@@ -142,16 +165,21 @@ to calculate the correct ammount of samples.
 Inside a config file, e.c. `<config>.json`, the samples to collect can be changed: `SamplesToCollect`.
 
 * **Parameters**
-Inside  `method/constants.py` the parameters for system identification, mode clustering, mode tracking and model updating
+Inside  `src/settings.py` the parameters for system identification, mode clustering, mode tracking and model updating
 can be changed.
 
 * **Model**
 A digital YAFEM model can be added to `models/<your_model>`.
-Inside  `method/constants.py` the model paramters can be set together with the paths to the model folder and the model function file.
+Inside  `src/settings.py` the model paramters can be set together with the paths to the model folder and the model function file.
 
 
 ## Step 1.5 Run examples
 The following experiments can be run using the package.
+
+A full list of possible examples can be viewed by running:
+```bash
+example-shm
+```
 
 * **acceleration_readings** demonstrates the use of `Accelerometer` class to extract
   accelerometer measurements from MQTT data stream.
@@ -215,21 +243,30 @@ The following experiments can be run using the package.
     4. **plot-rainflow**: Plots rainflow counting algorithm
 
 
-
+The following ways can be used
 ```bash
-python .\src\examples\example.py align-readings  # run an experiment with real data (Needs "production.json" Config)
+python .\src\examples\example.py align-readings  # run an experiment with real data (Needs "production.json" Config)¨
+example-shm align-readings
+poetry run python .\src\examples\example.py align-readings
+poetry run example-shm align-readings
 ```
 
 To run the examples with specified config, use
 
 ```bash
-python .\src\examples\example.py --config .path_to\production.json align-readings
+python .\src\examples\example.py --config .path_to\file.json align-readings
+example-shm --config .path_to\file.json align-readings
+poetry run python .\src\examples\example.py --config .path_to\file.json align-readings
+poetry run example-shm --config .path_to\file.json align-readings
 ```
 
 Example,
 
 ```bash
 python .\src\examples\example.py --config .\config\production.json align-readings
+example-shm --config .\config\production.json align-readings
+poetry run python .\src\examples\example.py --config .\config\production.json align-readings
+poetry run example-shm --config .\config\production.json align-readings
 ```
 
 ## 2. Record and replay data
@@ -239,12 +276,8 @@ Inside `record/record.py` some parameters must be specified:
 
 ```py
 config_path = "config/replay.json"
-config = load_config(config_path)
-MQTT_CONFIG = config["MQTT"]
-
 RECORDINGS_DIR = "record/mqtt_recordings"
 FILE_NAME = "recording.jsonl"
-
 DURATION_SECONDS = 20 # This is how many seconds of data that are recorded
 ```
 
@@ -253,26 +286,27 @@ The same goes for `record/replay.py`:
 ```py
 # MQTT Configuration
 CONFIG_PATH = "config/replay.json"
-
 RECORDINGS_DIR = "record/mqtt_recordings"
 FILE_NAME = "recording.jsonl"
-
 REPLAY_SPEED = 1  # Multiplier for replay speed
 LOOP = 1          # Number of times to loop data
 ```
 
 The files can then be run with:
 ```bash
-poetry run example-shm record
-poetry run example-shm replay
+example-shm record
+example-shm replay
 ```
-
+(Here, number of loops can be changed in "src/examples/run_record_replay.py")
 or directly
 ```bash
+python record/record.py
+python record/replay.py
 poetry run python record/record.py
 poetry run python record/replay.py
 ```
 
+For more information read README.md under the "record" folder.
 
 ## 3. Install the Package from Poetry Build
 
@@ -286,7 +320,7 @@ poetry build
 ```
 
 This will create a `.whl` file in the `dist/` directory,
-e.g., `dist/cp_sens-0.6.3-py3-none-any.whl`.
+e.g., `dist/cp_sens-0.6.4-py3-none-any.whl`.
 
 ### Step 2.2: Create and Activate a Virtual Environment
 
@@ -303,9 +337,9 @@ pip install example_shm-<version>-py3-none-any.whl
 ```
 
 Replace `<version>` with the version number found in the `.whl`
-filename. (e.g `0.6.3`).
+filename. (e.g `0.6.4`).
 
-## Step 2.5: Use
+## Step 2.4: Use
 
 Launch the bridge with the default configuration:
 
@@ -379,11 +413,14 @@ $example-shm
 Usage: example-shm  --config <config-file> accelerometers
 ```
 
-## Distributed Setup Overview
+
+
+
+## 4. Distributed Setup Overview
 
 This explains the setup needed to run the distributed version of the example-shm pipeline.
 
-## Machine 1: Edge Layer – Raspberry Pi with Accelerometers
+## 4.1 Machine 1: Edge Layer – Raspberry Pi with Accelerometers
 
 This machine connects to ADXL375 sensors and is responsible for acquiring raw sensor data.
 It performs calibration and continuously publishes sensor data over MQTT.
@@ -400,7 +437,7 @@ poetry run python src/scripts/find_offset.py
 poetry run python src/scripts/publish_samples.py
 ```
 
-## Machine 2: Fog Layer – Data Alignment and System Identification
+## 4.2 Machine 2: Fog Layer – Data Alignment and System Identification
 
 This machine subscribes to MQTT topics from Machine 1. It aligns multi-channel data, runs system identification,
 and publishes the pyOMA output.
@@ -411,7 +448,7 @@ Run the aligner and system identification pipeline
 poetry run python src/examples/example.py sysid-and-publish
 ```
 
-## Machine 3: Cloud Layer – Mode Tracking and Model Update
+## 4.3 Machine 3: Cloud Layer – Mode Tracking and Model Update
 
 This machine subscribes to the pyOMA output, performs mode clustering and updates the structural model.
 

@@ -22,7 +22,7 @@ def alignment(cluster_dict: Dict[str,dict], params: Dict[str,Any]) -> Dict[str,d
         m_f = np.median(cluster['f'])
         median_f.append(m_f)
         upper_bound.append(np.max(cluster['f']+cluster['std_f']*params['bound_multiplier']))
-        lower_bound.append(np.max(cluster['f']-cluster['std_f']*params['bound_multiplier']))
+        lower_bound.append(np.min(cluster['f']-cluster['std_f']*params['bound_multiplier']))
     median_f = np.array(median_f)
 
     deleted_cluster_id = []
@@ -47,11 +47,12 @@ def alignment(cluster_dict: Dict[str,dict], params: Dict[str,Any]) -> Dict[str,d
                 # Check mode shape for the first pole in each cluster
                 MAC = calculate_mac(main_cluster['mode_shapes'][0],
                                     co_located_cluster['mode_shapes'][0])
+                if m_f < 2:
+                    print(m_f,np.median(co_located_cluster['f']),MAC)
                 if MAC >= params['tMAC']: # If MAC complies with the criteria,
                                                     # then add the two clusters
-                    cluster, cluster_remaining = join_clusters(cluster_dict[str(ii)],
-                                                               cluster_dict[str(idx)],
-                                                               params)
+                    cluster, cluster_remaining = join_clusters(main_cluster,
+                                                                   co_located_cluster,params)
                     cluster_dict[str(ii)] = cluster #Save the new larger cluster
                     if len(cluster_remaining) == 0: #If the remaining cluster is emmpty
                         cluster_dict.pop(str(idx), None) #Remove the co-located cluster
@@ -67,10 +68,10 @@ def alignment(cluster_dict: Dict[str,dict], params: Dict[str,Any]) -> Dict[str,d
                         for kk, ms2 in enumerate(co_located_cluster['mode_shapes']):
                             MAC[jj,kk] = calculate_mac(ms1,ms2)
                     if MAC.max() >= params['tMAC']: #If MAC criteria is meet add clusters together
-                        cluster, cluster_remaining = join_clusters(cluster_dict[str(ii)],
-                                                                   cluster_dict[str(idx)],params)
+                        cluster, cluster_remaining = join_clusters(main_cluster,
+                                                                   co_located_cluster,params)
                         cluster_dict[str(ii)] = cluster #Save the new larger cluster
-                        if len(cluster_remaining) == 0: #If the remaining cluster is emmpty
+                        if len(cluster_remaining) == 0: #If the remaining cluster is empty
                             cluster_dict.pop(str(idx), None) #Remove the co-located cluster
                             deleted_cluster_id.append(int(idx)) #The delete cluster idx
                         else:
