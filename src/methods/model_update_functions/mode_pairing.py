@@ -170,7 +170,7 @@ def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[floa
         else:
             text_to_print.append(f"Cluster {key,round(cluster['median_f'],5)} "
                   +f"is not matched. Reason: MAC threshold. Average mac for all model modes: {average_MAC[ii,:]}")
-    if params['verbose'] % params['verbose_interval'] == 0:
+    if params['verbose'] % params.get('verbose_interval',1) == 0:
         for text in text_to_print:
             print(text)
     params['verbose'] += 1

@@ -40,11 +40,6 @@ PARAMS['allignment_factor'] = [0.05,0.01]       # Factors for allignment
 #############################
 
 PARAMS['phi_cri'] = 0.8                   # MAC criteria [%]
-PARAMS['freq_cri'] = 0.2                  # Frequency difference criteria [%]
-PARAMS['obj_cri'] = 0.1                   # criteria for closely related clusters
-# If more clusters match, and it is not clear what cluster is best,
-# then check if the difference of the objective function values are less than the criteria.
-# Then it is probably the one with higest MAC rather than frequency [difference]
 PARAMS['alpha'] = 0.05                    # Significance level
 
 ###################################

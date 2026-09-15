@@ -25,7 +25,6 @@ def MSD(mu,cov_X,x,cov_fd,chi_dof,alpha=0.05):
         d2 = ((x - mu).T @ np.linalg.pinv(cov) @ (x - mu)).reshape(-1)
 
     # Mahalanobis chi2 
-    alpha = 0.05
     t = chi2.ppf(1-alpha,chi_dof)
 
     return d2, t

@@ -262,7 +262,7 @@ def MSD_align_tracked_clusters(tracked_clusters, params):
                             d2_list = []
                             m_f = muX[0]
                             if (abs(np.mean(mf_1)-np.mean(m_f))/np.mean(m_f) < 0.25): #Only search through near clusters
-                                print("length",len(t_cluster),t_cluster[0]['median_f'],"iteration",iteration)
+                                # print("length",len(t_cluster),t_cluster[0]['median_f'],"iteration",iteration)
                                 if len(t_ids_main.intersection(t_ids_second)) == 0: #No clusters must intersect in time
                                     for jj in range(x.shape[1]): #Calculate MSD for each clusters in the possible tracked cluster alignment
                                         y = x[:,jj].reshape(-1,1)
@@ -270,7 +270,7 @@ def MSD_align_tracked_clusters(tracked_clusters, params):
                                         covX = covX_list[ii]
                                         d2, t = MSD(muX,covX,y,t_cluster[jj]["global_std"]**2,chi_dof,alpha=params['alpha'])
                                         d2_list.append(d2)
-                                    print("f",t_cluster[-1]['median_f'],"id",len(t_cluster),"f",prev_tracked_clusters[str(ii)][-1]['median_f'],"id",len(prev_tracked_clusters[str(ii)]),"avg d2",np.mean(d2_list),"max d2",max(d2_list),"min d2",min(d2_list))
+                                    # print("f",t_cluster[-1]['median_f'],"id",len(t_cluster),"f",prev_tracked_clusters[str(ii)][-1]['median_f'],"id",len(prev_tracked_clusters[str(ii)]),"avg d2",np.mean(d2_list),"max d2",max(d2_list),"min d2",min(d2_list))
                                     if np.min(d2_list) < t:
                                         id_to_match = ii
                                         phi_all = t_cluster[-1]['mode_shapes']
@@ -285,7 +285,7 @@ def MSD_align_tracked_clusters(tracked_clusters, params):
                                                 #array to compare the cluster with all tracked clusters
                                                 if MAC > MAC_max:
                                                     MAC_max = MAC
-                                        print('mac',MAC_max)
+                                        # print('mac',MAC_max)
                                         if (MAC_max > params['phi_cri']):
                                             d2_min.append(np.min(d2_list))
                                             id_to_match_list.append(id_to_match)
@@ -293,7 +293,7 @@ def MSD_align_tracked_clusters(tracked_clusters, params):
                                         else:
                                             d2_min.append(10**6)
 
-                    print(d2_min)
+                    # print(d2_min)
                     if len(np.argwhere(np.array(d2_min) < t)) > 0: # Merge the two alligned clusters
                         max_MAC = 0
                         for ii, kk in enumerate(id_to_match_list): #Align only clusters with the best MAC criteria
