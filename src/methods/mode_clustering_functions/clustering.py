@@ -71,7 +71,6 @@ def cluster_func(sysid_output: Dict[str,Any],
             ip2 = [cluster['f'][r_id],cluster['std_f'][r_id],cluster['d'][r_id],cluster['std_d'][r_id]]
             if ip2 == ip:
                 initial_points = cluster_initial(ip,data1,params)
-                print("here2",initial_points['f'])
                 cluster = cluster_creation(initial_points,params)
 
             data2 = data1.copy()

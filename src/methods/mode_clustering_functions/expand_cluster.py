@@ -29,7 +29,6 @@ def cluster_expansion(cluster: Dict[str,Any], data: Dict[str,Any],
     #Find min-max bounds of cluster
     # Minimum of all points for frequencies
     f_lower_bound = np.min(freq_c - std_f)
-    print("ex",freq_c,f_lower_bound)
     # Maximum of all points for frequencies
     f_upper_bound = np.max(freq_c + std_f)
     # Minimum of all points for damping

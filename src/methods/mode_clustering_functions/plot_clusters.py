@@ -53,8 +53,6 @@ def plot_clusters(clusters: Dict[str,dict],
     colors = []
     for i, key in enumerate(clusters.keys()):
         cluster = clusters[key]
-        # print("here")
-        # print(cluster)
         if isinstance(cluster['f'],np.ndarray):
             model_order = cluster['model_order']
             ax1, col = add_scatter_cluster(ax1,cluster['f'],model_order,
