@@ -25,6 +25,8 @@ def plot_parameters(model_parameters: Dict[str, Any],
     if fig_ax is None:
         plt.ion()
         fig, axes = plt.subplots(n_pars,1,figsize=(6, n_pars*2), tight_layout=True)
+        if n_pars == 1:
+            axes = [axes]
     else:
         fig, axes = fig_ax
         for ax in axes:
