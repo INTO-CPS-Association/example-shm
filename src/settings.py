@@ -47,22 +47,17 @@ PARAMS['alpha'] = 0.05                    # Significance level
 ###################################
 
 PARAMS['verbose_interval'] = 5                         # How often will model update information be printed.
-PARAMS['tMAC_MU'] = 0.7                                # MAC Pairing threshold.
-PARAMS['modes_search_paring'] = 6                      # How many mode of the model to search through when pairing is done. 
-PARAMS['pars_to_update'] = ["k_rot","m"]               # Parameters to update.
-PARAMS['MU_start_values'] = np.array([10, 0.015])      # Initial values for parameters.
-PARAMS['MU_bounds'] = [(0.01, 1000), (0, 1000)]        # Lower and upper bounds of paramters [par1(Lower bound, upper bound), par2(Lower bound, upper bound)]
-
+PARAMS['tMAC_MU'] = 0.65                                # MAC Pairing threshold.
+PARAMS['modes_search_paring'] = 5                      # How many mode of the model to search through when pairing is done. 
+PARAMS['pars_to_update'] = {"k_rot": {'MU_start_values': 10, 'MU_bounds': (0.01, 1000)},
+                            "m": {'MU_start_values': 0.015, 'MU_bounds': (0, 1000)}}               # Parameters to update.
 MODEL_DIR = "models/beam" #Path to model
 MODEL_PARS_NAME = "beam_pars.jsonl" #File name for parameters
 from models.beam import beam_yafem_model as model #Import model
 MODEL_FUNC = model.eval_yafem_model #Function name of model
-# Default model parameters to use
+# Default model parameters to override in yafem.py model
 MODEL_PARAMETERS = {'modes': PARAMS['modes_search_paring'],     # How many mode of the model to search through when pairing is done.
             'dofs_sel': np.array([[7,1],[6,1],[5,1],[4,1]]),    # How input data maps to model DOFs
-            'k_rot': 1,         # Inital values to use, if no previous saved parameters is found
-            'l4': 0.1289,       # Inital values to use, if no previous saved parameters is found
-            'm': 0,             # Inital values to use, if no previous saved parameters is found
             }
 
 ####################################

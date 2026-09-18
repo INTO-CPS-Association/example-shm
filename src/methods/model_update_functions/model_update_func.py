@@ -29,13 +29,23 @@ def update_model(cluster_dict: Dict[str,Any], model_func: Callable[[Dict[str,Any
     params['verbose'] = 0
     omegaMU, _, __, ___, ____ = model_func(model_pars)
     print("Initial model frequencies",omegaMU)
-    # try:
-    if True:
+
+    #Index and sort model parameters
+    pars_to_update_list = []
+    pars_start_values = []
+    pars_bounds = []
+    for ii, key in enumerate(model_pars):
+        if key in pars_to_update:
+            pars_to_update_list.append(key)
+            pars_start_values.append(pars_to_update[key]['MU_start_values'])
+            pars_bounds.append(pars_to_update[key]['MU_bounds'])
+
+    try:
         if cluster_dict[0]['mode_shapes'].shape[1] != len(model_pars['dofs_sel']):
             raise ValueError(f"Different number of selected DOFs in cluster [{cluster_dict[0]['mode_shapes'].shape[1]}] and model [{len(model_pars['dofs_sel'])}]")
         res = minimize(lambda x: estimate_parameters(x, cluster_dict, model_func, model_pars,
-                                                        pars_to_update, params),
-                        params['MU_start_values'], bounds=params['MU_bounds'],
+                                                        pars_to_update_list, params),
+                        pars_start_values, bounds=pars_bounds,
                         options={'maxiter': 1000})
         # Get the optimized parameter values
         X = res.x
@@ -50,8 +60,8 @@ def update_model(cluster_dict: Dict[str,Any], model_func: Callable[[Dict[str,Any
         omegaMU, _, phi_sel, ___, ____ = model_func(updated_model_parameters)
 
         del params['verbose']
-    # except ValueError as e:
-    #     print(f"Skipping model updating due to error: {e}")
+    except ValueError as e:
+        print(f"Skipping model updating due to error: {e}")
 
     if X is not None:
         print("Updated parameters are:")
@@ -114,7 +124,6 @@ def estimate_parameters(theta_star: List[float], cluster_dict: Dict[str,Any],
     # Mode Pairing Star
     (paired_frequencies, paired_mode_shapes, omegaM, PhiM
      ) = pair_modes(omegaM, PhiM, cluster_dict, params)
-    # omegaM = omegaM.reshape(paired_frequencies.shape) #??? Does it do anything?
     if params['verbose'] % params['verbose_interval'] == 0:
         print(f"Paried frequencies of the clusters are:",paired_frequencies,"Paired with model frequencies",omegaM)
     # Error message if the number of updating parameters
