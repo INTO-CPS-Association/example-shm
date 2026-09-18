@@ -112,6 +112,7 @@ def setup_mqtt_client(config: Dict[str,Any], topics_to_subscribe: List[str]):
     mqttc.on_subscribe = create_on_subscribe_callback()
     mqttc.on_message = create_on_message_callback()
     mqttc.on_publish = create_on_publish_callback()
+    mqttc.tls_set()
 
     return mqttc
 
@@ -132,6 +133,7 @@ def setup_publish_client(config: Dict[str,Any], verbose: bool = True) -> MQTTCli
         publish_client.username_pw_set(config["userId"], config["password"])
     if verbose:
         publish_client.on_publish = create_on_publish_callback()
+    publish_client.tls_set()
     publish_client.connect(config["host"], config["port"], keepalive=60)
     publish_client.loop_start()
     publish_topics = config["TopicsToPublish"]
@@ -150,8 +152,6 @@ def start_mqtt(config: Dict[str,Any], _on_connect: Callable, _on_message: Callab
         publish_topics (List[str]): Topics to publish
     """
     mqtt_client = setup_mqtt_client(config,config["TopicsToSubscribe"])
-    mqtt_client.connect(config["host"], config["port"], 60)
-    mqtt_client.loop_start()
     mqtt_client.user_data_set({"topic": config["TopicsToSubscribe"][0], "qos": 1})
     mqtt_client.on_connect = _on_connect
     if _on_message is not None:
