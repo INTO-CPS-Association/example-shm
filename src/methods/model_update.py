@@ -12,7 +12,7 @@ from methods.model_update_functions.plot_model_update import (plot_parameters,
                                                               plot_model_frequencies)
 from methods.mode_clustering import subscribe_and_cluster
 from methods.model_update_functions import model_update_func
-from methods.constants import (MODEL_DIR, MODEL_PARS_NAME, MODEL_PARAMETERS, MODEL_FUNC)
+from settings import (MODEL_DIR, MODEL_PARS_NAME, MODEL_PARAMETERS, MODEL_FUNC)
 from methods.mode_clustering import _on_connect
 
 # pylint: disable=C0103, C0301, W0603
@@ -116,8 +116,8 @@ def estimate_updated_model(clusters: Dict[str,Any], model_parameters: Dict[str,A
     """
     try:
         (X, omega_model,
-         updated_model_parameters) = model_update_func.update_model(clusters, MODEL_FUNC,
-                                                                         model_parameters,
+            updated_model_parameters) = model_update_func.update_model(clusters, MODEL_FUNC,
+                                                                            model_parameters,
                                                                     params['pars_to_update'],
                                                                     params)
         if omega_model is not None:
@@ -125,7 +125,7 @@ def estimate_updated_model(clusters: Dict[str,Any], model_parameters: Dict[str,A
         return (X, omega_model, updated_model_parameters)
     except Exception as e:
         print('Model update is not succesful.', e)
-        return None
+        return None, None, None
 
 def model_update_plots(plot: List[bool], model_parameters: Dict[str,Any],
                        pars_to_update: List[str], omega_updated_model: np.ndarray[float],
@@ -200,24 +200,27 @@ def load_model_parameters() -> Optional[Tuple[str, Dict[str,Any]]]:
     try:
         path = Path(MODEL_DIR) / MODEL_PARS_NAME
         if not path.exists():
-            print(f"File not found: {path}. Proceed with standard parameters from model and constants.py..")
+            print(f"File not found: {path}. Proceed with standard parameters from model and settings.py..")
             _, __, ___, ____, _____ = MODEL_FUNC(MODEL_PARAMETERS) #Adds standard model parameters to variable
             model_parameters = MODEL_PARAMETERS
             timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
             return timestamp, model_parameters
-
-        with path.open('r') as json_file:
-            data = json.loads(json_file.readlines()[-1])
-        timestamp = data['timestamp']
-        model_parameters = data['parameters']
-        if model_parameters is None:
-            print("Stored model_parameters are None. Proceed with standard parameters from model and constants.py.")
-            _, __, ___, ____, _____ = MODEL_FUNC(MODEL_PARAMETERS)
-            model_parameters = MODEL_PARAMETERS
         else:
-            print("Model parameters loaded successfully from:", path,"at:", timestamp)
+            with path.open('r') as json_file:
+                data = json.loads(json_file.readlines()[-1])
+            timestamp = data['timestamp']
+            model_parameters = data['parameters']
+            if model_parameters is None:
+                print("Stored model_parameters are None. Proceed with standard parameters from model and settings.py.")
+                _, __, ___, ____, _____ = MODEL_FUNC(MODEL_PARAMETERS)
+                model_parameters = MODEL_PARAMETERS
+            else:
+                print("Model parameters loaded successfully from:", path,"at:", timestamp)
 
-        return timestamp, model_parameters
+            if len(model_parameters['dofs_sel']) != len(MODEL_PARAMETERS['dofs_sel']):
+                raise ValueError(f"ERROR: Selected DOFs are not the same. In settings: {MODEL_PARAMETERS['dofs_sel']}, loaded from file: {model_parameters['dofs_sel']}")
+
+            return timestamp, model_parameters
     except Exception as e:
         print('Could not find previous model data.',e)
         return None, None
@@ -232,18 +235,24 @@ def live_model_update_with_remote_sysid(config: Dict[str,Any],
             _, clusters, __, timestamp = subscribe_and_cluster(config, params)
 
             if clusters is not None:
-                (_, omega_model, model_parameters) = estimate_updated_model(clusters,
-                                                                        model_parameters,
-                                                                        params)
-
                 if model_parameters is not None:
-                    save_model_parameters(config,timestamp,model_parameters)
-                    if publish:
-                        publish_model_parameters(config,
-                                            timestamp,model_parameters)
+                    (_, omega_model, model_parameters) = estimate_updated_model(clusters,
+                                                                            model_parameters,
+                                                                            params)
 
-                    fig_axes = model_update_plots([1,1], model_parameters,
-                                                params['pars_to_update'], omega_model, fig_axes)
+                    if model_parameters is not None:
+                        save_model_parameters(config,timestamp,model_parameters)
+                        if publish:
+                            publish_model_parameters(config,
+                                                timestamp,model_parameters)
+
+                        fig_axes = model_update_plots([1,1], model_parameters,
+                                                    params['pars_to_update'], omega_model, fig_axes)
+                    print("\n")
+                else:
+                    print("Error with model parameters.")
+            else:
+                print("Error with clustering.")
     except KeyboardInterrupt:
         print("Keyboard interrupt in live model updating\n")
     except Exception as e:
@@ -272,6 +281,7 @@ def live_model_update_with_remote_clustering(config: Dict[str,Any],
                     fig_axes = model_update_plots([1,1], model_parameters,
                                                   params['pars_to_update'], omega_model,
                                                  fig_axes)
+            print("\n")
     except KeyboardInterrupt:
         print("Keyboard interrupt of live model updating\n")
     except Exception as e:

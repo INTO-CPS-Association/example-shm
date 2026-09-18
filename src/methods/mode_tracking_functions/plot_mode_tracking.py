@@ -91,7 +91,8 @@ def plot_tracked_modes(
                 g_freq_err_lower,
                 g_freq_err_upper,
                 color=colors2[ii],
-                alpha=0.2
+                alpha=0.2,
+                zorder=100
             )
 
             sc = ax2.scatter(x, damping_ratio, marker="o", s=50, color=colors2[ii])
@@ -101,7 +102,8 @@ def plot_tracked_modes(
                 g_damp_err_lower,
                 g_damp_err_upper,
                 color=colors2[ii],
-                alpha=0.2
+                alpha=0.2,
+                zorder=100
             )
 
             ii += 1

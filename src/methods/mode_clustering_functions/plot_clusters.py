@@ -50,18 +50,18 @@ def plot_clusters(clusters: Dict[str,dict],
     x = frequencies.flatten(order="f")
     y_model_order = np.array([i // len(frequencies) for i in range(len(x))]) * 1
 
-    ax1 = add_scatter_data(ax1,x,y_model_order,None,error_dir="h",mark="^",
-                           lab='Non clustered',size=20)
-    
-
     colors = []
     for i, key in enumerate(clusters.keys()):
         cluster = clusters[key]
-        model_order = cluster['model_order']
-        ax1, col = add_scatter_cluster(ax1,cluster['f'],model_order,
-                                    cluster['std_f'],i+1,error_dir="h")
+        if isinstance(cluster['f'],np.ndarray):
+            model_order = cluster['model_order']
+            ax1, col = add_scatter_cluster(ax1,cluster['f'],model_order,
+                                        cluster['std_f'],i+1,error_dir="h")
         colors.append(col[0])
     ax1.clear()
+
+    ax1 = add_scatter_data(ax1,x,y_model_order,None,error_dir="h",mark="^",
+                           lab='Non clustered',size=20)
     
     np.random.seed(1)
     colors2 = []
@@ -75,12 +75,11 @@ def plot_clusters(clusters: Dict[str,dict],
 
 
     # # # FREQUENCY ............................................................................
-    std_bound = sysid_params['bound_multiplier']
     for i, key in enumerate(clusters.keys()):
         cluster = clusters[key]
         model_order = cluster['model_order']
         ax1, _ = add_scatter_cluster(ax1,cluster['f'],model_order,
-                                       cluster['std_f'],i+1,error_dir="h",color=colors2[i])
+                                       cluster['ci_f'],i+1,error_dir="h",color=colors2[i])
         ax1.vlines(np.median(cluster['f']),min(model_order),
                    max(model_order),color=colors2[i])
         ax1 = add_global_mode(ax1, cluster, colors2[i], model_order=max(model_order)+1, type="freq")
@@ -110,7 +109,7 @@ def plot_clusters(clusters: Dict[str,dict],
     for i, key in enumerate(clusters.keys()):
         cluster = clusters[key]
         ax2, _ = add_scatter_cluster(ax2,cluster['f'],cluster['d'],
-                                       cluster['std_d'],i,error_dir="v",color=colors2[i])
+                                       cluster['ci_d'],i,error_dir="v",color=colors2[i])
         ax2 = add_global_mode(ax2, cluster, colors2[i], type="damp")
         if max(cluster['d']+cluster['std_d']) > damp_max_view:
             damp_max_view = max(cluster['d']+cluster['std_d'])
@@ -178,6 +177,7 @@ def add_global_mode(ax: matplotlib.axes.Axes, cluster: Dict[Any,str], col, model
         if type == "freq":
             ax.scatter(cluster['median_f'], model_order, marker="*", color=col, s=100)
             xerr_cluster = cluster['global_ci'][0,0]
+            print(xerr_cluster)
             ax.errorbar(cluster['median_f'], model_order, xerr=xerr_cluster, fmt="None", capsize=5, ecolor="black",zorder=200)
             ax.fill_between(
                 [cluster['median_f']-xerr_cluster,cluster['median_f']+xerr_cluster],
