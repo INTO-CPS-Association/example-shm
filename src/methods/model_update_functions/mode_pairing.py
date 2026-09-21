@@ -36,23 +36,17 @@ def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[floa
 
     pairs = {} #Initilize pairs 
     for ii in range(len(cluster_dict)):
-        pairs[ii] = [no_pairing_counter, 0, 0, 0, 0] # Model mode pair id, model frequency, frequency disrepency, MAC, cluster frequency
+        pairs[ii] = [no_pairing_counter, 0, 0, 0, 0, 0] # Model mode pair id, model frequency, frequency disrepency, MAC, cluster frequency
         no_pairing_counter -= 1
 
     while True:
-        text_to_print = []
         for ii, key in enumerate(cluster_dict):
             MAX_MAC_model = np.zeros((len(cluster_dict[key]['mode_shapes']),mode_count))
             cluster = cluster_dict[key]
             mode_shape = cluster['mode_shapes']  # Mode shapes in current dictionary
             m_f = cluster['median_f']
-            # print('median',m_f)
             f_dis = np.abs(model_freq - m_f) #Frequency discrepency
             id_list = np.argsort(f_dis)
-            # print(f_dis)
-            # print(id_list)
-            # print(skip_c_mode)
-            # print(skip_m_mode)
             for jj, ms in enumerate(mode_shape):
                 if jj not in skip_c_mode:
                     for kk, idx in enumerate(id_list):
@@ -62,16 +56,14 @@ def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[floa
                             if MAC > MAX_MAC_model[jj,idx]:
                                 MAX_MAC_model[jj,idx] = MAC
             avg_mac = np.mean(MAX_MAC_model,axis=0)
-            # print(avg_mac)
+            model_order_best_MAC = np.argmax(MAX_MAC_model,axis=0)
             for ll, mac in enumerate(avg_mac):
                 if mac > params['tMAC_MU']:
                     if pairs[ii][3] < mac: #Is new MAC larger than previous pair?
-                        pairs[ii] = [int(ll),float(model_freq[ll]),float(f_dis[ll]),float(mac),float(m_f)]
+                        pairs[ii] = [int(ll),float(model_freq[ll]),float(f_dis[ll]),float(mac),float(m_f),model_order_best_MAC[ll]-1]
                 else: #Store data for non-match because of low MAC
                     if pairs[ii][3] < mac: #Is new MAC larger than previous pair?
-                        pairs[ii] = [pairs[ii][0],float(model_freq[ll]),float(f_dis[ll]),float(mac),float(m_f)]
-
-        #######
+                        pairs[ii] = [pairs[ii][0],float(model_freq[ll]),float(f_dis[ll]),float(mac),float(m_f),model_order_best_MAC[ll]-1]
 
         pair_id_list = []
         pair_MAC_list = []
@@ -89,13 +81,11 @@ def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[floa
                     pair_macs = np.array(pair_MAC_list)[itemindex]
                     idx = np.argmax(pair_macs)
                     best_pair_id = itemindex[idx]
-                    # print(itemindex,idx)
                     skip_c_mode.append(int(best_pair_id))
                     skip_m_mode.append(possible_pair_id)
-                    # print(possible_pair_id,int(best_pair_id))
                     for kk in itemindex:
                         if kk != best_pair_id:
-                            pairs[kk] = [no_pairing_counter,0,0,0,0]
+                            pairs[kk] = [no_pairing_counter,0,0,0,0,0]
                             no_pairing_counter -= 1
 
     if params['verbose'] % params.get('verbose_interval',1) == 0:
@@ -119,10 +109,10 @@ def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[floa
 
             #If no paried mode shapes have been done before
             if np.sum(paired_c_mode_shapes) == 0:
-                paired_c_mode_shapes = cluster_dict[ii]['mode_shapes'][0,:].reshape(sensors,1)
+                paired_c_mode_shapes = cluster_dict[ii]['mode_shapes'][pairs[mode][5],:].reshape(sensors,1)
             else:
                 paired_c_mode_shapes = np.append(paired_c_mode_shapes,
-                            cluster['mode_shapes'][0,:].reshape(sensors,1),
+                            cluster_dict[ii]['mode_shapes'][pairs[mode][5],:].reshape(sensors,1),
                             axis=1)
 
             paired_model_freq.append(model_freq[pairs[mode][0]])
@@ -135,5 +125,5 @@ def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[floa
 
     paired_c_freq = np.array(paired_c_freq)
     paired_model_freq = np.array(paired_model_freq)
-    
+
     return paired_c_freq, paired_c_mode_shapes, paired_model_freq, paried_model_mode_shapes

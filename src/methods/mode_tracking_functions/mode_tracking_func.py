@@ -52,6 +52,7 @@ def cluster_tracking(cluster_dict: Dict[str,Any],tracked_clusters: Dict[str,Any]
             cluster['id'] = 0
             cluster['MSD_muX'] = np.array((cluster['median_f'],cluster['median_d'])).reshape(-1,1)
             cluster["MSD_cov"] = cluster['global_std']**2
+            cluster['track_MAC'] = 1
 
             tracked_clusters['iteration'] = 0
             tracked_clusters[str(idx)] = [cluster]
@@ -63,9 +64,9 @@ def cluster_tracking(cluster_dict: Dict[str,Any],tracked_clusters: Dict[str,Any]
         result = match_cluster_to_tracked_cluster(cluster_dict,tracked_clusters,params)
 
         result_int = []
-        for val in result.values(): #Get all non-"new" results
-            if isinstance(val,int):
-                result_int.append(val)
+        for key in result: #Get all non-"new" results
+            if isinstance(result[key][0],int):
+                result_int.append(result[key][0])
 
         #If all clusters match with a unique tracked cluster
         if len(result_int) == len(set(result_int)):
@@ -80,21 +81,25 @@ def cluster_tracking(cluster_dict: Dict[str,Any],tracked_clusters: Dict[str,Any]
                     #Debug info:
                     unique_match_debug_info(result,cluster_dict,t_list)
                     raise RuntimeError("Unresolved mode tracking")
-
-                for possible_match_id in set(result.values()): #Go through all unique values
+                print(result)
+                match_id = []
+                for key in result:
+                    match_id.append(result[key][0])
+                print(match_id)
+                for possible_match_id in set(match_id): #Go through all unique values
                     if possible_match_id == "new": #Do nothing if "new"
                         pass
                     else:
                         #Test if "new" is present.
                         # If so, then we must match with str instead of int.
                         test_if_str = np.argwhere(
-                            np.array(list(result.values())) == "new")
+                            np.array(match_id) == "new")
                         if len(test_if_str) > 0: #Find the index of the unique cluster match
                             itemindex = np.argwhere(
-                                np.array(list(result.values())) == str(possible_match_id))
+                                np.array(match_id) == str(possible_match_id))
                         else: #Find the index of the unique cluster match
                             itemindex = np.argwhere(
-                                np.array(list(result.values())) == possible_match_id)
+                                np.array(match_id) == possible_match_id)
 
                         #If multiple clusters match to the same tracked cluster
                         if len(itemindex) > 1:
@@ -104,7 +109,7 @@ def cluster_tracking(cluster_dict: Dict[str,Any],tracked_clusters: Dict[str,Any]
                             #Skip the best tracked cluster which is matced with another cluster.
                             cluster_index = itemindex[:,0] # The indecies of clusters that have
                                                             # the same match (formatted)
-                            skip_tracked_cluster.append(str(result[str(cluster_index[pos])]))
+                            skip_tracked_cluster.append(str(result[str(cluster_index[pos])][0]))
                             #Skip the best tracked cluster which is matced with another cluster.
                             skip_cluster.append(cluster_index[pos])
                 #Match with tracked clusters, but skip the already matched.
@@ -115,9 +120,9 @@ def cluster_tracking(cluster_dict: Dict[str,Any],tracked_clusters: Dict[str,Any]
                                                           result,skip_cluster,
                                                           skip_tracked_cluster)
                 result_int = []
-                for val in result.values():
-                    if isinstance(val,int):
-                        result_int.append(val)
+                for key in result:
+                    if isinstance(result[key][0],int):
+                        result_int.append(result[key][0])
 
             #Add the clusters to tracked clusters
             tracked_clusters = add_clusters_to_tracked_clusters(cluster_dict,tracked_clusters,result,iteration,params)
@@ -159,11 +164,12 @@ def add_clusters_to_tracked_clusters(cluster_dict,tracked_clusters,result,iterat
     """
     for ii, key in enumerate(cluster_dict.keys()):
         cluster = cluster_dict[key]
-        pos = result[str(ii)] #Find pos in result dict
+        pos = result[str(ii)][0] #Find pos in result dict
         cluster['id'] = iteration
         if pos == "new":
             cluster['MSD_muX'] = np.array((cluster['median_f'],cluster['median_d'])).reshape(-1,1)
             cluster["MSD_cov"] = cluster["global_std"]**2
+            cluster["track_MAC"] = 1
             new_key = len(tracked_clusters)-1
             # Why -1? -1 for "iteration" which is not a cluster,
             # + 1 for adding a new cluster and -1 for starting at 0 = -1
@@ -176,6 +182,7 @@ def add_clusters_to_tracked_clusters(cluster_dict,tracked_clusters,result,iterat
             Xx = construct_x(cluster_to_add_to,params)
             cluster["MSD_cov"] = np.cov(np.hstack((Xx,x))) #Apply information regarding the covariance of the full tracked cluster group
             cluster['MSD_muX'] = mu + (1/(len_c+1))*(x-mu) #Update mean vector
+            cluster["track_MAC"] = result[str(ii)][1]
             cluster_to_add_to.append(cluster)
             tracked_clusters[str(pos)] = cluster_to_add_to
     return tracked_clusters

@@ -58,5 +58,5 @@ def resolve_nonunique_matches(possible_match_id: int, itemindex: np.ndarray[int]
         if keys[pos] == key: #Let the best cluster match stay
             pass
         else: #Add the clusters with the worst match as a new cluster
-            result[key] = "new"
+            result[key] = ["new",1]
     return pos, result

@@ -233,8 +233,8 @@ def live_model_update_with_remote_sysid(config: Dict[str,Any],
         while True:
             _, model_parameters = load_model_parameters()
             _, clusters, __, timestamp = subscribe_and_cluster(config, params)
-
-            if clusters is not None:
+            print(len(clusters))
+            if (clusters is not None) or (len(clusters) > 0):
                 if model_parameters is not None:
                     (_, omega_model, model_parameters) = estimate_updated_model(clusters,
                                                                             model_parameters,
@@ -252,7 +252,7 @@ def live_model_update_with_remote_sysid(config: Dict[str,Any],
                 else:
                     print("Error with model parameters.")
             else:
-                print("Error with clustering.")
+                print("No clusters.")
     except KeyboardInterrupt:
         print("Keyboard interrupt in live model updating\n")
     except Exception as e:

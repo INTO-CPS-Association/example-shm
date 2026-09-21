@@ -43,9 +43,6 @@ def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_cluste
         #They are identified with keys which are integers from 0 up to total number of clusters
         if key_t == 'iteration':
             pass
-        # elif key_t in skip_tracked_cluster:
-        #     greatest_interval_f.append([-1,-1])
-        #     greatest_interval_d.append([-1,-1])
         else:
             #Accessing all cluster in a tracked cluster group
             tracked_cluster_list = tracked_clusters[key_t]
@@ -139,7 +136,6 @@ def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_cluste
 
                 d2, t = MSD(muX,covX,x,cluster["global_std"]**2,muX.shape[0],alpha=params['alpha'])
                 msd_list.append(d2)
-                print(muX[0],d2,t)
                 if d2 < t:
                     MSD_mask_list.append(True)
                 else:
@@ -163,40 +159,19 @@ def match_cluster_to_tracked_cluster(cluster_dict: Dict[str,Any], tracked_cluste
         
         # match_indicies = item_indices
         if len(match_indicies) > 1: #If two or more clusters combly with the criteria
-            # X_list = []
-            # R_f_list = []
-            # R_d_list = []
             MAC_list = []
             for pos in match_indicies:
-                
-                # # X = (R_freq[pos]**2+(1-MAC_max_list[pos])**2+R_damp[pos]**2+R_iteration_diff[pos]**2)**0.5 #Objective function
-                # X = (R_freq[pos]**2+(1-MAC_max_list[pos])**2+R_damp[pos]**2)**0.5 #Objective function
-                # print(t_list[pos],"id",id_list[pos],"rel_iteration",R_iteration_diff[pos],"rel_f",R_freq[pos],"rel_d",R_damp[pos],"MAC",MAC_max_list[pos],"score",X,"MSD",msd_list[pos])
-                # X_list.append(X)
-                # R_f_list.append(R_freq[pos])
-                # R_d_list.append(R_damp[pos])
                 MAC_list.append(MAC_max_list[pos])
 
-            # pos1 = X_list.index(min(X_list)) #Find the cluster that is most likely
             pos2 = MAC_list.index(max(MAC_list)) #Find the largest MAC
-            # pos3 = R_f_list.index(min(R_f_list)) #Find the smallest frequency difference
-            # pos4 = R_d_list.index(min(R_d_list))
-            # print(t_list[pos],pos1,pos2,pos3,pos4)
 
             pos = int(match_indicies[pos2]) #Match with best MAC
-            result_pairs[str(idx)] = pos
-            #If one match on all three parameters:
-            # if (pos2 == pos3) and (pos2 == pos4):
-            #     pos = int(match_indicies[pos1])
-            #     result_pairs[str(idx)] = pos #group to a tracked cluster
-            # else:
-            #     pos = int(match_indicies[pos2]) #Match with best MAC
-            #     result_pairs[str(idx)] = pos
+            result_pairs[str(idx)] = [pos,MAC_list[0]]
 
         elif len(match_indicies) == 1: #If one cluster combly with the mode shape criteria
             pos = int(match_indicies[0])
-            result_pairs[str(idx)] = pos #group to a tracked cluster
+            result_pairs[str(idx)] = [pos,MAC_max_list[match_indicies[0]]] #group to a tracked cluster
         else: #Does not comply with mode shape criteria
-            result_pairs[str(idx)] = "new"
+            result_pairs[str(idx)] = ["new",1]
 
     return result_pairs

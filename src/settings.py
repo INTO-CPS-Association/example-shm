@@ -50,7 +50,8 @@ PARAMS['verbose_interval'] = 5                         # How often will model up
 PARAMS['tMAC_MU'] = 0.65                                # MAC Pairing threshold.
 PARAMS['modes_search_paring'] = 5                      # How many mode of the model to search through when pairing is done. 
 PARAMS['pars_to_update'] = {"k_rot": {'MU_start_values': 10, 'MU_bounds': (0.01, 1000)},
-                            "m": {'MU_start_values': 0.015, 'MU_bounds': (0, 1000)}}               # Parameters to update.
+                            "m": {'MU_start_values': 0.03, 'MU_bounds': (0, 1000)}}               # Parameters to update, with start values and bounds.
+PARAMS['step_size'] = 0.01                          #Step size for gradient descent.
 MODEL_DIR = "models/beam" #Path to model
 MODEL_PARS_NAME = "beam_pars.jsonl" #File name for parameters
 from models.beam import beam_yafem_model as model #Import model

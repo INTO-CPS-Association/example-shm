@@ -45,8 +45,8 @@ def update_model(cluster_dict: Dict[str,Any], model_func: Callable[[Dict[str,Any
             raise ValueError(f"Different number of selected DOFs in cluster [{cluster_dict[0]['mode_shapes'].shape[1]}] and model [{len(model_pars['dofs_sel'])}]")
         res = minimize(lambda x: estimate_parameters(x, cluster_dict, model_func, model_pars,
                                                         pars_to_update_list, params),
-                        pars_start_values, bounds=pars_bounds,
-                        options={'maxiter': 1000})
+                        pars_start_values, bounds=pars_bounds, method='SLSQP',
+                        options={'maxiter': 1000,'disp':True, 'eps':params['step_size']})
         # Get the optimized parameter values
         X = res.x
 
@@ -142,5 +142,4 @@ def estimate_parameters(theta_star: List[float], cluster_dict: Dict[str,Any],
     resOM = (omegaM - paired_frequencies)/omegaM #Frequency desqrepancy
     resPhi = MAC
     X = np.dot(resOM.T, resOM) + 1 / np.dot(resPhi.T, resPhi)
-
     return np.real(X)
