@@ -1,6 +1,6 @@
 from data.comm.mqtt import load_config
-from methods import mode_clustering as MC
-from methods import mode_tracking as MT
+from methods.mode_clustering_functions import mode_clustering as MC
+from methods.mode_tracking_functions import mode_tracking as MT
 from settings import PARAMS
 
 # pylint: disable=R0914

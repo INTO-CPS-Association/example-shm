@@ -197,7 +197,7 @@ def publish_to_mqtt(publish_client: MQTTClient, publish_topics: List[str],
 
         message = json.dumps(payload)
 
-        _ = reconnect_client(publish_client)
+        # _ = reconnect_client(publish_client)
 
         for topic in publish_topics:
             result, mid = publish_client.publish(topic, message, qos=1)

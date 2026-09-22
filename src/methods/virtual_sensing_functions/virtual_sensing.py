@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 from paho.mqtt.client import Client as MQTTClient
 from data.accel.hbk.aligner import Aligner
 from data.comm.mqtt import (shutdown)
-from methods.sysid import setup_aligner
-from methods.model_update import load_model_parameters
-from methods.mode_clustering import publish_data
+from methods.sysid_functions.sysid import setup_aligner
+from methods.model_update_functions.model_update import load_model_parameters
+from methods.mode_clustering_functions.mode_clustering import publish_data
 from methods.virtual_sensing_functions.virtual_sensing_func import displacement_estimation
 from methods.virtual_sensing_functions.plot_virtual_sensing import plot_virtual_sensing
 from settings import PARAMS

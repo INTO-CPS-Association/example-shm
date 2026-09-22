@@ -105,14 +105,14 @@ def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[floa
     paried_model_mode_shapes = np.zeros((1,sensors))
     for ii, mode in enumerate(pairs):
         if pairs[mode][0] >= 0:
-            paired_c_freq.append(cluster_dict[ii]['median_f'])
+            paired_c_freq.append(cluster_dict[str(ii)]['median_f'])
 
             #If no paried mode shapes have been done before
             if np.sum(paired_c_mode_shapes) == 0:
-                paired_c_mode_shapes = cluster_dict[ii]['mode_shapes'][pairs[mode][5],:].reshape(sensors,1)
+                paired_c_mode_shapes = cluster_dict[str(ii)]['mode_shapes'][pairs[mode][5],:].reshape(sensors,1)
             else:
                 paired_c_mode_shapes = np.append(paired_c_mode_shapes,
-                            cluster_dict[ii]['mode_shapes'][pairs[mode][5],:].reshape(sensors,1),
+                            cluster_dict[str(ii)]['mode_shapes'][pairs[mode][5],:].reshape(sensors,1),
                             axis=1)
 
             paired_model_freq.append(model_freq[pairs[mode][0]])

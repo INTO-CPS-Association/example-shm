@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from paho.mqtt.client import Client as MQTTClient, MQTTMessage, Properties
 from data.comm.mqtt import (start_mqtt, setup_publish_client, publish_to_mqtt, shutdown)
-from methods import sysid as sysID
+from methods.sysid_functions import sysid as sysID
 from methods.mode_clustering_functions.clustering import cluster_func
 from functions.util import (convert_numpy_to_list, _convert_list_to_dict_or_array)
 from src.methods.sysid_functions.plot_sysid import plot_stabilization_diagram, plot_pre_stabilization_diagram
@@ -55,7 +55,7 @@ def cluster_sysid_output(sysid_output: Any, params: Dict[str,Any]) -> Tuple[Dict
         median_frequencies (np.ndarray[float]), 
     """
     dictionary_clusters = cluster_func(sysid_output, params)
-
+    print(dictionary_clusters.keys())
     median_frequencies = np.array([dictionary_clusters[key]["median_f"]
                                    for key in dictionary_clusters.keys()])
     return dictionary_clusters, median_frequencies

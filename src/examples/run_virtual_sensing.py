@@ -1,6 +1,6 @@
 import numpy as np
-from methods.sysid import setup_aligner
-from methods.virtual_sensing import (virtual_sensing,
+from methods.sysid_functions.sysid import setup_aligner
+from methods.virtual_sensing_functions.virtual_sensing import (virtual_sensing,
                                      live_virtual_sensing,
                                      virtual_sensing_and_plot,
                                      live_virtual_sensing_publish)

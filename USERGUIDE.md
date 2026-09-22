@@ -181,11 +181,11 @@ A full list of possible examples can be viewed by running:
 example-shm
 ```
 
-* **acceleration_readings** demonstrates the use of `Accelerometer` class to extract
+* **accelerometers** demonstrates the use of `Accelerometer` class to extract
   accelerometer measurements from MQTT data stream.
-* **aligning_readings** demonstrates the use of `Aligner` class to collect and
+* **align-readings** demonstrates the use of `Aligner` class to collect and
   align accelerometer measurements from multiple MQTT data streams.
-* **live_align_readings_and_plot** continiuously  collect and
+* **live-align-readings-and-plot** continiuously  collect and
   align accelerometer measurements from multiple MQTT data streams. The data is then plotted.
 
 * **record-and-replay** demonstrates the use of the record and replay function

@@ -1,5 +1,5 @@
 from settings import SN_CURVE
-from methods.fatigue import (fatigue_local,
+from methods.fatigue_functions.fatigue import (fatigue_local,
                              live_fatigue_local,
                              live_fatigue_remote,
                              plot_rainflow_counting)

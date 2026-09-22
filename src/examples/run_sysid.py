@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from src.methods.sysid_functions.plot_sysid import (plot_stabilization_diagram, plot_pre_stabilization_diagram)
-from methods import sysid as sysID
+from methods.sysid_functions import sysid as sysID
 from settings import PARAMS
 from data.comm.mqtt import shutdown
 

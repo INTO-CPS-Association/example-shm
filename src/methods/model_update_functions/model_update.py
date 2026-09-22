@@ -10,10 +10,10 @@ from data.comm.mqtt import (shutdown,start_mqtt, publish_to_mqtt)
 from functions.util import (convert_numpy_to_list, _convert_list_to_dict_or_array)
 from methods.model_update_functions.plot_model_update import (plot_parameters,
                                                               plot_model_frequencies)
-from methods.mode_clustering import subscribe_and_cluster
+from methods.mode_clustering_functions.mode_clustering import subscribe_and_cluster
 from methods.model_update_functions import model_update_func
 from settings import (MODEL_DIR, MODEL_PARS_NAME, MODEL_PARAMETERS, MODEL_FUNC)
-from methods.mode_clustering import _on_connect
+from methods.mode_clustering_functions.mode_clustering import _on_connect
 
 # pylint: disable=C0103, C0301, W0603
 
@@ -114,7 +114,8 @@ def estimate_updated_model(clusters: Dict[str,Any], model_parameters: Dict[str,A
         updated_model_parameters (Dict[str,Any]): Model parameters
 
     """
-    try:
+    # try:
+    if True:
         (X, omega_model,
             updated_model_parameters) = model_update_func.update_model(clusters, MODEL_FUNC,
                                                                             model_parameters,
@@ -123,9 +124,9 @@ def estimate_updated_model(clusters: Dict[str,Any], model_parameters: Dict[str,A
         if omega_model is not None:
             print("Model frequencies:",omega_model,"[Hz]")
         return (X, omega_model, updated_model_parameters)
-    except Exception as e:
-        print('Model update is not succesful.', e)
-        return None, None, None
+    # except Exception as e:
+    #     print('Model update is not succesful.', e)
+    #     return None, None, None
 
 def model_update_plots(plot: List[bool], model_parameters: Dict[str,Any],
                        pars_to_update: List[str], omega_updated_model: np.ndarray[float],
@@ -229,11 +230,12 @@ def live_model_update_with_remote_sysid(config: Dict[str,Any],
                                         params: Dict[str,Any],
                                         publish: bool = False) -> None:
     fig_axes = [None, None]
-    try:
+    # try:
+    if True:
         while True:
             _, model_parameters = load_model_parameters()
             _, clusters, __, timestamp = subscribe_and_cluster(config, params)
-            print(len(clusters))
+
             if (clusters is not None) or (len(clusters) > 0):
                 if model_parameters is not None:
                     (_, omega_model, model_parameters) = estimate_updated_model(clusters,
@@ -253,21 +255,22 @@ def live_model_update_with_remote_sysid(config: Dict[str,Any],
                     print("Error with model parameters.")
             else:
                 print("No clusters.")
-    except KeyboardInterrupt:
-        print("Keyboard interrupt in live model updating\n")
-    except Exception as e:
-        print(f"Unexpected error: {e}")
+    # except KeyboardInterrupt:
+    #     print("Keyboard interrupt in live model updating\n")
+    # except Exception as e:
+    #     print(f"Unexpected error: {e}")
 
 def live_model_update_with_remote_clustering(config: Dict[str,Any],
                                             params: Dict[str,Any],
                                             publish: bool = False) -> None:
     fig_axes = [None, None]
 
-    try:
+    # try:
+    if True:
         while True:
             clusters, timestamp = subscribe_data(config['model_update'])
-
-            if clusters is not None:
+            print(clusters.keys())
+            if (clusters is not None) or (len(clusters) > 0):
                 _, model_parameters = load_model_parameters()
                 (_, omega_model, model_parameters) = estimate_updated_model(clusters,
                                                                 model_parameters, params)
@@ -282,7 +285,7 @@ def live_model_update_with_remote_clustering(config: Dict[str,Any],
                                                   params['pars_to_update'], omega_model,
                                                  fig_axes)
             print("\n")
-    except KeyboardInterrupt:
-        print("Keyboard interrupt of live model updating\n")
-    except Exception as e:
-        print(f"Unexpected error: {e}")
+    # except KeyboardInterrupt:
+    #     print("Keyboard interrupt of live model updating\n")
+    # except Exception as e:
+    #     print(f"Unexpected error: {e}")

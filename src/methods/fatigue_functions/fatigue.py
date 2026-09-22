@@ -1,13 +1,12 @@
 from typing import Dict, Any
 from datetime import datetime
 from data.comm.mqtt import (shutdown, load_config)
-from methods.sysid import setup_aligner
-from methods.stress_estimation import stress_estimation_for_beam
-from methods.virtual_sensing import virtual_sensing
+from methods.sysid_functions.sysid import setup_aligner
+from methods.stress_estimation_functions.stress_estimation import (stress_estimation_for_beam, subscribe_data)
+from methods.virtual_sensing_functions.virtual_sensing import virtual_sensing
 from methods.fatigue_functions.fatigue_calculation import FatigueAnalysis
 from methods.fatigue_functions.fatigue_plots import (plot_damage, plot_histogram, plot_sn_curve, plot_eol_rul, plot_cld)
-from settings import FATIGUE_DOF, DAMAGE_SUM
-from methods.stress_estimation import subscribe_data
+from settings import FATIGUE_DOF, DAMAGE_SUM, BIN_WIDTH, MEAN_STRESS
 # pylint: disable=C0103, C0301, R0914
 
 def fatigue_local(config_path: str, SN_curve: Dict[str,Any]) -> FatigueAnalysis | None:
@@ -64,10 +63,11 @@ def live_fatigue_local(config_path: str, SN_curve: Dict[str,Any]) -> FatigueAnal
             _, stress, __ = stress_estimation_for_beam(displacement,model_parameters)
             dof_stress = stress[FATIGUE_DOF[0],FATIGUE_DOF[1]]
             print(f"Stress shape:{dof_stress.shape}")
+            print("Max and min value of stress",max(dof_stress),min(dof_stress)," MPa")
             fatigue_object.run(dof_stress)
             fig_ax1 = plot_damage(fatigue_object.result,fig_ax=fig_ax1)
-            fig_ax2, hist = plot_histogram(fatigue_object.result,fig_ax=fig_ax2,bin_width=0.25,
-                                           hist_data=hist,static_mean=0)
+            fig_ax2, hist = plot_histogram(fatigue_object.result,fig_ax=fig_ax2,bin_width=BIN_WIDTH,
+                                           hist_data=hist,static_mean=MEAN_STRESS)
             fig_ax3, SN_data = plot_sn_curve(SN_curve, fatigue_object.result, hist_data=SN_data,
                                              fig_ax=fig_ax3, bin_width=0.25, hist_type="stair")
             current_time = datetime.fromisoformat(aligner_time)

@@ -1,7 +1,7 @@
 import numpy as np
-from methods.sysid import setup_aligner
-from methods.virtual_sensing import virtual_sensing
-from methods.stress_estimation import (stress_estimation_for_beam,
+from methods.sysid_functions.sysid import setup_aligner
+from methods.virtual_sensing_functions.virtual_sensing import virtual_sensing
+from methods.stress_estimation_functions.stress_estimation import (stress_estimation_for_beam,
                                        live_stress_estimation_for_beam,
                                        live_stress_estimation_subscribe_and_publish,
                                        stress_estimation_and_plot)

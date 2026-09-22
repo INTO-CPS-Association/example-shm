@@ -41,8 +41,8 @@ def update_model(cluster_dict: Dict[str,Any], model_func: Callable[[Dict[str,Any
             pars_bounds.append(pars_to_update[key]['MU_bounds'])
 
     try:
-        if cluster_dict[0]['mode_shapes'].shape[1] != len(model_pars['dofs_sel']):
-            raise ValueError(f"Different number of selected DOFs in cluster [{cluster_dict[0]['mode_shapes'].shape[1]}] and model [{len(model_pars['dofs_sel'])}]")
+        if cluster_dict['0']['mode_shapes'].shape[1] != len(model_pars['dofs_sel']):
+            raise ValueError(f"Different number of selected DOFs in cluster [{cluster_dict['0']['mode_shapes'].shape[1]}] and model [{len(model_pars['dofs_sel'])}]")
         res = minimize(lambda x: estimate_parameters(x, cluster_dict, model_func, model_pars,
                                                         pars_to_update_list, params),
                         pars_start_values, bounds=pars_bounds, method='SLSQP',

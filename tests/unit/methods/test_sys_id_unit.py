@@ -3,7 +3,7 @@ import numpy as np
 from unittest.mock import MagicMock, patch
 from datetime import datetime
 import json
-from methods.sysid import (
+from methods.sysid_functions.sysid import (
     sysid,
     wait_for_sysid_output,
     publish_sysid_output

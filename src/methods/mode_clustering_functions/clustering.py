@@ -109,13 +109,12 @@ def cluster_func(sysid_output: Dict[str,Any],
 
     # Debug clusters before alignment af cardinality check. Uncomment the line below.
     # cluster_with_global_unc = append_information(cluster_dict,params,Ufx_list,cardinality_check=False)
-        
+    print(cluster_dict.keys())
     #Allignment or merging of stacked clusters
     cluster_dict_aligned = alignment(cluster_dict.copy(),params)
-
+    print(cluster_dict_aligned.keys())
     #Add information
     cluster_with_global_unc = append_information(cluster_dict_aligned,params,Ufx_list,cardinality_check=True)
-
     return cluster_with_global_unc
 
 def remove_data_from_S(data: Dict[str,Any],cluster: Dict[str,Any]) -> Dict[str,Any]:
@@ -218,7 +217,7 @@ def append_information(cluster_dict,params,Ufx_list,cardinality_check=True) -> D
     cluster_dict_renamed = {}
     #Rename all cluster dict from 0 to len(cluster_dict2)
     for ii, key in enumerate(np.array(list(cluster_dict_cardinality.keys()))[indices]):
-        cluster_dict_renamed[ii] = cluster_dict_cardinality[key] #Insert a cluster into a key
+        cluster_dict_renamed[str(ii)] = cluster_dict_cardinality[key] #Insert a cluster into a key
 
     #Add global uncertainty
     for ii, key in enumerate(cluster_dict_renamed.keys()):

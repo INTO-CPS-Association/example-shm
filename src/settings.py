@@ -8,7 +8,7 @@ PARAMS = {}
 ### Settings for signal filter ###
 ##################################
 
-PARAMS['filter_type'] = None                             # 'lowpass', 'bandpass', 'highpass' or None for no filtering
+PARAMS['filter_type'] = 'bandpass'                             # 'lowpass', 'bandpass', 'highpass' or None for no filtering
 PARAMS['expansion_modes'] = [1,2,3]                    # What modes to use for expansion
 PARAMS['filter_order'] = 4                             # Order/strength of butterworth filter
 PARAMS['filter_cut-off'] = np.array([0.5,90])          # Cut of frequency(ies) for the butterworth filter [lower/upper cut-off value] or [>lower cut-off value<,upper cut-off value]
@@ -79,7 +79,7 @@ PARAMS['elements'] = np.array([3,4,5,6,7,8,9])          #Elements picked out
 PARAMS['y'] = np.array([1e-3/2,1e-3/2,1e-3/2,1e-3/2,1e-3/2,1e-3/2,1e-3/2])      #Moment of inertia of each element
 PARAMS["dofs_extract"] = np.array([[8,3],[8,2],[8,1],[7,3],[7,2],[7,1],[6,3],[6,2],[6,1],[5,3],[5,2],[5,1],[4,3],[4,2],[4,1],[3,3],[2,3],[1,3],[1,2],[1,1]]) # Degrees of freedom to extract
 PARAMS['ElementsToPlot'] = [0, 1, 2, 3, 4, 5, 6]        #Elements to plot stress data from.
-PARAMS['s'] = 1         #Stress to use, s = 3 in the case of a 2D beam: axial, curvature/bending at 1. node (bottom), curvature/bending at 2. node (top)
+PARAMS['s'] = 2         #Stress to use, s = 3 in the case of a 2D beam: axial, curvature/bending at 1. node (bottom), curvature/bending at 2. node (top)
 
 #####################################
 ### Settings for fatigue analysis ###
@@ -90,10 +90,11 @@ t = 2
 k_thick = 1         #(25/t)**(0.1) #Base material. k_thick = 1 for t under 25mm
 R = -120/160        # sigma_min / sigma_max
 k_rs = -0.4*R + 1.2         #Low residual stress
-mean_stress = 25        #To be adjusted
+MEAN_STRESS = 25        #To be adjusted
 R_m = 360       #MPa #Ultimate tensile strength Low value for s235
 k_mean = 1      # 1 - mean_stress/R_m #Modified Goodman
 SaftyFactor = 1 * 1/k_thick * 1/k_rs * 1/k_mean
-SN_CURVE = iiw_sn(140,"sigma",SF=SaftyFactor,signal_type="VA") #Fatigue SN curve
+SN_CURVE = iiw_sn(140, "sigma", SF = SaftyFactor, signal_type = "VA") #Fatigue SN curve
 FATIGUE_DOF = [3, 2] #  [node, s] = What node to look at, what stress element to use (Look at description for PARAMS['s']).
 DAMAGE_SUM = 0.5        #Palmgreen-Miner damage limit
+BIN_WIDTH = 0.25           # Bin width for histogram

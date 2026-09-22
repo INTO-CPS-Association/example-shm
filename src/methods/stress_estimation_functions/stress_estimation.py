@@ -2,13 +2,13 @@ from typing import Any, Dict
 import threading
 import numpy as np
 from data.comm.mqtt import (shutdown)
-from methods.sysid import setup_aligner
-from methods.model_update import load_model_parameters
+from methods.sysid_functions.sysid import setup_aligner
+from methods.model_update_functions.model_update import load_model_parameters
 from methods.stress_estimation_functions.stress_estimation_func import estimate_stress_beam
 from methods.stress_estimation_functions.plot_stress import plot_stress
-from methods.virtual_sensing import virtual_sensing
-from methods.mode_clustering import publish_data
-from methods.model_update import subscribe_data
+from methods.virtual_sensing_functions.virtual_sensing import virtual_sensing
+from methods.mode_clustering_functions.mode_clustering import publish_data
+from methods.model_update_functions.model_update import subscribe_data
 from settings import (MODEL_FUNC, PARAMS)
 # pylint: disable=C0103, C0301, W0104
 

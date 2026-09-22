@@ -1,5 +1,5 @@
 from data.comm.mqtt import load_config
-from methods import mode_clustering as MC
+from methods.mode_clustering_functions import mode_clustering as MC
 from settings import PARAMS
 
 # pylint: disable=R0914
