@@ -8,8 +8,9 @@ from data.comm.mqtt import (shutdown,publish_to_mqtt)
 from data.accel.hbk.aligner import Aligner
 from functions.util import convert_numpy_to_list
 from src.methods.packages.pyoma.algorithms.ssiWrapper import SSI
-from methods.constants import PARAMS
+from settings import PARAMS
 from methods.setup_data import get_data, setup_aligner
+from functions.data_filtering import signal_filter
 
 def sysid(data: np.ndarray[float], params: Dict[str,Any]) -> Dict[str, Any]:
     """
@@ -32,6 +33,11 @@ def sysid(data: np.ndarray[float], params: Dict[str,Any]) -> Dict[str, Any]:
         data = data.T                           # transpose it if data has more column than rows
     print(f"Data dimensions: {data.shape}")
     print(f"sysid parameters: Sample frequency [Hz]: {params['Fs']}, Model order: {params['model_order']}, Block shift: {params['block_shift']}")
+
+    try:
+        data = signal_filter(data,params) #Apply filter
+    except:
+        pass
 
     HC = {"xi_max":10**5,
           "mpc_lim":None,
@@ -87,6 +93,7 @@ def wait_for_sysid_output(samples: int, aligner: Aligner,
             print(t_text,end="\r")
             data, aligner_time = get_data(samples, aligner)
         sysid_output = sysid(data, PARAMS)
+        sysid_output['Fs'] = PARAMS['Fs']
         print("Aligned data received at:",aligner_time)
         return sysid_output, aligner_time
     except KeyboardInterrupt as exc:
@@ -104,7 +111,6 @@ def publish_sysid_output(publish_client: MQTTClient, publish_topics: List[str],
         aligner_time (str): Sampling frequency.
     Returns:
     """
-
     payload = {
         "timestamp": aligner_time,
         "sysid_output": convert_numpy_to_list(sysid_output)
@@ -123,10 +129,10 @@ def local_sysid(config_path: str, topic_indexes: List[int] = None):
         sysid_output (Dict[str, Any]): System identification output data.
         aligner_time (str): Sampling frequency.
     """
-    aligner, mqtt_client, mqtt_config, fs = setup_aligner(config_path, config_name="sysid",
+    aligner, mqtt_client, mqtt_config, params = setup_aligner(config_path, config_name="sysid",
                                                           data_topic_indexes=topic_indexes)
 
-    sysid_output, aligner_time = wait_for_sysid_output(mqtt_config['SamplesToCollect'], aligner, fs)
+    sysid_output, aligner_time = wait_for_sysid_output(mqtt_config['SamplesToCollect'], aligner, params['Fs'])
 
     return mqtt_client, sysid_output, aligner_time
 
@@ -139,14 +145,14 @@ def live_sysid(config_path: str, topic_indexes: List[int] = None, loop: bool = T
         loop (bool): Whether to loop the sysid process continuously.
     Returns:
     """
-    aligner, mqtt_client, mqtt_config, fs = setup_aligner(config_path,
+    aligner, mqtt_client, mqtt_config, params = setup_aligner(config_path,
                                                           data_topic_indexes=topic_indexes)
     samples = mqtt_config['SamplesToCollect']
     try:
         aligner_time_last = datetime.fromisoformat("2025-01-01 01:01:00.00000")
         while True:
             sysid_output, aligner_time = wait_for_sysid_output(samples,
-                                                                      aligner, fs)
+                                                                      aligner, params['Fs'])
             publish_sysid_output(mqtt_client, mqtt_config["TopicsToPublish"],
                                         sysid_output, aligner_time)
 

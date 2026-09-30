@@ -12,7 +12,11 @@ def plot_spectral_density(y: np.ndarray[float],fs: float) -> None:
     Returns:
     """
 
-    s, N = y.shape #Reshape y if it is transposed
+    try:
+        s, N = y.shape #Reshape y if it is transposed
+    except:
+        y = y.reshape(-1,1)
+        s, N = y.shape
     if N < s:
         y = y.T
         s, N = y.shape

@@ -22,9 +22,17 @@ def plot_parameters(model_parameters: Dict[str, Any],
     prev_data_x = []
     prev_data_y = []
 
+    #Index and sort model parameters
+    pars_to_update_list = []
+    for ii, key in enumerate(model_parameters):
+        if key in pars_to_update:
+            pars_to_update_list.append(key)
+
     if fig_ax is None:
         plt.ion()
         fig, axes = plt.subplots(n_pars,1,figsize=(6, n_pars*2), tight_layout=True)
+        if n_pars == 1:
+            axes = [axes]
     else:
         fig, axes = fig_ax
         for ax in axes:
@@ -44,11 +52,11 @@ def plot_parameters(model_parameters: Dict[str, Any],
             ydata = []
             xdata = [1]
 
-        ydata.append(model_parameters[pars_to_update[ii]])
+        ydata.append(model_parameters[pars_to_update_list[ii]])
         running_mean = 5
         ax.plot(xdata,ydata,'*-',color="k",label=f"Running mean: {np.mean(ydata[-running_mean:])}")
-        ax.set_title(f'Model parameter: {pars_to_update[ii]}')
-        ax.set_ylabel(pars_to_update[ii])
+        ax.set_title(f'Model parameter: {pars_to_update_list[ii]}')
+        ax.set_ylabel(pars_to_update_list[ii])
         ax.set_xlabel('Dataset [-]')
         ax.legend()
         ax.grid()

@@ -132,6 +132,7 @@ def eval_yafem_model(pars=None):
     mySimulation = simulation(myModel)
 
     # modal analysis
+    dofs_sel = np.array(dofs_sel)
     omega, phi = myModel.compute_modal_ss(modes,dofs_sel)
     idxs_sel = myModel.find_dofs(dofs_sel)
     phi_sel = phi[idxs_sel,:]

@@ -7,14 +7,11 @@ from paho.mqtt.client import Client as MQTTClient, CallbackAPIVersion, MQTTv5
 from data.comm.mqtt import load_config
 # pylint: disable=W0613
 
-# MQTT Configuration
+# User configurable MQTT Configuration
 CONFIG_PATH = "config/replay.json"
 RECORDINGS_DIR = "record/mqtt_recordings"
 FILE_NAME = "recording2.jsonl"
 DURATION_SECONDS = 20  # Recording duration in seconds
-
-# Ensure output directory exists
-os.makedirs(RECORDINGS_DIR, exist_ok=True)
 
 # Thread-safe file locks
 MQTT_CONFIG = None
@@ -46,6 +43,10 @@ def on_message(client, userdata, msg):
 def record_mqtt(config_path: str):
     global MQTT_CONFIG
     global file_locks
+
+    # Ensure output directory exists
+    os.makedirs(RECORDINGS_DIR, exist_ok=True)
+
     config = load_config(config_path)
     mqtt_config = config['MQTT']
     MQTT_CONFIG = mqtt_config

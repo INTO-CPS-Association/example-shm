@@ -7,30 +7,26 @@ from datetime import datetime
 from paho.mqtt.client import Client as MQTTClient
 from data.comm.mqtt import (shutdown, load_config, setup_publish_client)
 
-from data.accel.metadata_constants import DESCRIPTOR_LENGTH_BYTES
-
-# MQTT Configuration
+# User configurable MQTT Configuration
 CONFIG_PATH = "config/replay.json"
-
 RECORDINGS_DIR = Path(__file__).parent / "mqtt_recordings"
 FILE_NAME = "recording_beam_reduced.jsonl"
 
 REPLAY_SPEED = 1  # Multiplier for replay speed
 LOOPS = 1 # Number of times to loop over the recording
 
-
-
 #Non important parameters
-BUSY_WAIT_THRESHOLD = 10/1000  # Threshold in seconds for busy waiting (10 ms)
+BUSY_WAIT_THRESHOLD = 10/1000  # Threshold in seconds for how small a delay can be.
+                                # If the delay is too small, then the script will wait for 10 ms.
+                                # Otherwise the MQTT might not keep up.
 KEEP_UP_TIME = -1 # If delay time (remaining) is lower than this time,
                     # warn the user that the replay speed is two fast.
 PRINT_INTERVAL = 5
-BATCH_SIZE = 16
 SINCE_START_COUNTER = {}
 
 
 
-def override_counter_in_payload(topic_key,payload_bytes) -> None:
+def override_counter_in_payload(topic_key,payload_bytes, metadata) -> None:
     """
     Overrides the recorded 'samples_from_daq_start' counter with a replay counter.
     This is important when the recording is looped.
@@ -41,25 +37,59 @@ def override_counter_in_payload(topic_key,payload_bytes) -> None:
         payload_bytes (bytes): Payload in bytes
     """
     # Find and remove the descriptor from the payload
-    descriptor_length = struct.unpack("<H", payload_bytes[:DESCRIPTOR_LENGTH_BYTES])[0]
-    (descriptor_length, _, __, ___,
-        _____,) = struct.unpack("<HHQQQ", payload_bytes[:descriptor_length])
+    # Trying to load in big-endian and little-endian ways
+    char_LE, char_BE = '<','>'
+    _, metadataVer_LE = struct.unpack_from(char_LE+'HH', payload_bytes) # assumes little endian here
+    _, metadataVer_BE = struct.unpack_from(char_BE+'HH', payload_bytes) # assumes big endian here
+    # print(metadataVer_LE,metadataVer_BE)
+    char_Endian = char_LE if metadataVer_LE < metadataVer_BE else char_BE
+    descriptor_length, metadata_version = struct.unpack_from(char_Endian+"HH", payload_bytes)
+    # (descriptor_length, _, __, ___, _____,) = struct.unpack(char_Endian+"HHQQQ", payload_bytes[:descriptor_length]) # H = Unsigned short (2 bytes), Q = Unsigned long long (8 bytes)
 
+    if metadata_version < 2:
+        raise Exception("Metadata version too old.")
+    else:
+        md_samples = metadata["Data"]["Samples"]
+        data_type = metadata["Data"]["Type"]
+        # Extract sensor data
+
+        data_types = {"_Bool":"?",
+                    "short": "h",
+                    "unsigned short": "H",
+                    "int": "i",
+                    "unsigned int":"I",
+                    "long": "l",
+                    "unsigned long": "L",
+                    "long long": "q",
+                    "unsigned long long": "Q",
+                    "float": "f",
+                    "double": "d"}
+        try:
+            byte_type = data_types[data_type]
+        except:
+            raise ValueError(f"Byte type [{data_type}] not possible. These data types are available: ",data_types.keys())
+
+        if md_samples <= 0: #Variable or unknown
+            payload_len = len(payload_bytes)
+            num_samples = round((payload_len-descriptor_length)/struct.calcsize(byte_type))
+        else:
+            num_samples = md_samples
+    
     # Find the raw data
     payload = payload_bytes[descriptor_length:]
+    accel_values = struct.unpack(char_Endian+str(num_samples)+byte_type, payload)
 
-    accel_values = struct.unpack(f"<{BATCH_SIZE}f", payload)
     # Recreate the data payload to bytes
-    data_payload = struct.pack(f"<{len(accel_values)}f", *accel_values)
+    data_payload = struct.pack(char_Endian+str(num_samples)+byte_type, *accel_values)
 
     # Recreate the descriptor with the updated counter
-    SINCE_START_COUNTER[topic_key] = SINCE_START_COUNTER.get(topic_key, 0) + BATCH_SIZE
-    descriptor = struct.pack("<HHQQQ", 28, 2, 0, 0, SINCE_START_COUNTER[topic_key])
+    SINCE_START_COUNTER[topic_key] = SINCE_START_COUNTER.get(topic_key, 0) + num_samples
+    descriptor = struct.pack(char_Endian+"HHQQQ", 28, 2, 0, 0, SINCE_START_COUNTER[topic_key])
     #Add payload back together
     payload_bytes = descriptor + data_payload
     return payload_bytes
 
-def publish_massage(publish_client: MQTTClient, PublishTopics: Dict[str,str], qos: int,
+def publish_message(publish_client: MQTTClient, PublishTopics: Dict[str,str], qos: int,
                     topic_key: str, payload_bytes: bytes) -> None:
     """
     Publish message
@@ -101,6 +131,40 @@ def replay_mqtt_messages(config_path: str, loop: int = 1) -> None:
         with open(path, "r", encoding="utf-8") as replay_file:
             total_lines = len(replay_file.readlines())
             replay_file.close()
+
+        with open(path, "r") as replay_file:
+            metadata = None
+            for counter, line in enumerate(replay_file):
+                record = json.loads(line.strip())
+                payload = record["payload"]
+                topic_key = record.get("topic")
+
+                if isinstance(payload, list):
+                    payload_bytes = bytes(payload)
+                elif isinstance(payload, str):
+                    payload_bytes = bytes.fromhex(payload)
+                else:
+                    raise ValueError("Invalid payload format")
+
+                if "metadata" in topic_key:
+                    metadata = json.loads(payload_bytes.decode("utf-8"))
+                    print("Metadata found: ",metadata)
+                    break
+
+        if metadata is None:
+            print("Metadata not found. Trying with this default metadata")
+            metadata = {"Descriptor": {
+                            "Descriptor length": 28,
+                            "Metadata version": 2,
+                            "Seconds since epoch": 0,
+                            "Nanoseconds": 0,
+                            "Samples from DAQ start": 0
+                            },
+                            "Data":{"Samples":-1,
+                            "Type":"float"}}
+            print("Default metadata: ",metadata)
+            
+
         for ii in range(loop):
             print(f"Replay function iteration {ii+1}/{loop}.")
             accumulated_delay = 0.0
@@ -128,7 +192,7 @@ def replay_mqtt_messages(config_path: str, loop: int = 1) -> None:
                         raise ValueError("Invalid payload format")
 
                     if "metadata" not in topic_key:
-                        payload_bytes = override_counter_in_payload(topic_key,payload_bytes)
+                        payload_bytes = override_counter_in_payload(topic_key,payload_bytes,metadata)
 
                     timestamp = datetime.fromisoformat(record["timestamp"])
                     if prev_timestamp is None:
@@ -137,6 +201,8 @@ def replay_mqtt_messages(config_path: str, loop: int = 1) -> None:
                         delay = (timestamp - prev_timestamp).total_seconds()
                         if delay < 0:
                             delay = 0.0  # Prevent negative delay
+                    if delay > 60:
+                        print(f"Large time difference in data. Results in dlay of: {delay:.3f} seconds")
 
                     accumulated_delay += delay
                     target_time = t_start + accumulated_delay / REPLAY_SPEED
@@ -155,7 +221,7 @@ def replay_mqtt_messages(config_path: str, loop: int = 1) -> None:
                     while time.perf_counter() < target_time:
                         time.sleep(0)  # Yield CPU while busy-waiting for sub-10ms precision
 
-                    publish_massage(publish_client,MQTT_config["TopicsToPublish"],qos,
+                    publish_message(publish_client,MQTT_config["TopicsToPublish"],qos,
                                     topic_key, payload_bytes)
                     prev_timestamp = timestamp
                 replay_file.close()

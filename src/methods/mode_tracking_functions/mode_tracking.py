@@ -1,7 +1,7 @@
 from typing import Any, List, Dict, Tuple, Optional
 import numpy as np
 import matplotlib.pyplot as plt
-import methods.mode_clustering as MC
+import methods.mode_clustering_functions.mode_clustering as MC
 from methods.mode_tracking_functions.mode_tracking_func import cluster_tracking
 from methods.mode_tracking_functions.plot_mode_tracking import plot_tracked_modes
 from src.methods.mode_clustering_functions.plot_clusters import plot_clusters

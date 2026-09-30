@@ -15,24 +15,38 @@ def alignment(cluster_dict: Dict[str,dict], params: Dict[str,Any]) -> Dict[str,d
 
     """
     median_f = []
-    upper_bound = []
-    lower_bound = []
+    median_d = []
+    upper_bound_f = []
+    lower_bound_f = []
+    upper_bound_d = []
+    lower_bound_d = []
     for key in cluster_dict.keys(): #Find the median of each cluster
         cluster = cluster_dict[key]
         m_f = np.median(cluster['f'])
+        m_d = np.median(cluster['d'])
         median_f.append(m_f)
-        upper_bound.append(np.max(cluster['f']+cluster['std_f']*params['bound_multiplier']))
-        lower_bound.append(np.max(cluster['f']-cluster['std_f']*params['bound_multiplier']))
+        median_d.append(m_d)
+        upper_bound_f.append(np.max(cluster['f']+cluster['std_f']*params['bound_multiplier']))
+        lower_bound_f.append(np.min(cluster['f']-cluster['std_f']*params['bound_multiplier']))
+        upper_bound_d.append(np.max(cluster['d']+cluster['std_d']*params['bound_multiplier']))
+        lower_bound_d.append(np.min(cluster['d']-cluster['std_d']*params['bound_multiplier']))
     median_f = np.array(median_f)
+    median_d = np.array(median_d)
+
+    clusters = cluster_dict.copy()
 
     deleted_cluster_id = []
     for ii, m_f in enumerate(median_f): #Go through all medians
+        cluster = cluster_dict[str(ii)]
         if ii in deleted_cluster_id: #If cluster is deleted pass on
             continue
         # Calculate absolute difference of selected median and all medians
-        upper_mask = m_f-upper_bound < 0
-        lower_mask = m_f-lower_bound > 0
-        common_mask = np.logical_and(upper_mask,lower_mask)
+        m_z = median_d[ii]
+        upper_mask_f = m_f-upper_bound_f < 0
+        lower_mask_f = m_f-lower_bound_f > 0
+        upper_mask_d = m_z-upper_bound_d < 0
+        lower_mask_d = m_z-lower_bound_d > 0
+        common_mask = np.logical_and(np.logical_and(upper_mask_f,lower_mask_f),np.logical_and(upper_mask_d,lower_mask_d))
         indices = np.argwhere(common_mask == True).reshape(-1)
 
         if indices.shape[0] > 0:# If one or more clusters are found
@@ -41,23 +55,22 @@ def alignment(cluster_dict: Dict[str,dict], params: Dict[str,Any]) -> Dict[str,d
                 if idx in deleted_cluster_id:
                     continue
 
-                main_cluster = cluster_dict[str(ii)] #Parent cluster
-                co_located_cluster = cluster_dict[str(idx)] #Co-located cluster
+                main_cluster = clusters[str(ii)] #Parent cluster
+                co_located_cluster = clusters[str(idx)] #Co-located cluster
 
                 # Check mode shape for the first pole in each cluster
                 MAC = calculate_mac(main_cluster['mode_shapes'][0],
                                     co_located_cluster['mode_shapes'][0])
                 if MAC >= params['tMAC']: # If MAC complies with the criteria,
-                                                    # then add the two clusters
-                    cluster, cluster_remaining = join_clusters(cluster_dict[str(ii)],
-                                                               cluster_dict[str(idx)],
-                                                               params)
-                    cluster_dict[str(ii)] = cluster #Save the new larger cluster
+                                                    # then add the two
+                    cluster, cluster_remaining = join_clusters(main_cluster,
+                                                                   co_located_cluster,params)
+                    clusters[str(ii)] = cluster #Save the new larger cluster
                     if len(cluster_remaining) == 0: #If the remaining cluster is emmpty
-                        cluster_dict.pop(str(idx), None) #Remove the co-located cluster
+                        clusters.pop(str(idx), None) #Remove the co-located cluster
                         deleted_cluster_id.append(int(idx)) #The delete cluster idx
                     else:
-                        cluster_dict[str(idx)] = cluster_remaining #Save the remaining cluster
+                        clusters[str(idx)] = cluster_remaining #Save the remaining cluster
 
                 else: # Check if the mode shapes across any of the poles
                                             # complies with the MAC criteria
@@ -67,18 +80,18 @@ def alignment(cluster_dict: Dict[str,dict], params: Dict[str,Any]) -> Dict[str,d
                         for kk, ms2 in enumerate(co_located_cluster['mode_shapes']):
                             MAC[jj,kk] = calculate_mac(ms1,ms2)
                     if MAC.max() >= params['tMAC']: #If MAC criteria is meet add clusters together
-                        cluster, cluster_remaining = join_clusters(cluster_dict[str(ii)],
-                                                                   cluster_dict[str(idx)],params)
-                        cluster_dict[str(ii)] = cluster #Save the new larger cluster
-                        if len(cluster_remaining) == 0: #If the remaining cluster is emmpty
-                            cluster_dict.pop(str(idx), None) #Remove the co-located cluster
+                        cluster, cluster_remaining = join_clusters(main_cluster,
+                                                                   co_located_cluster,params)
+                        clusters[str(ii)] = cluster #Save the new larger cluster
+                        if len(cluster_remaining) == 0: #If the remaining cluster is empty
+                            clusters.pop(str(idx), None) #Remove the co-located cluster
                             deleted_cluster_id.append(int(idx)) #The delete cluster idx
                         else:
-                            cluster_dict[str(idx)] = cluster_remaining #Save the remaining cluster
+                            clusters[str(idx)] = cluster_remaining #Save the remaining cluster
                     # else:
                     #     print(f"MAC criteria is not met. {MAC.max()} between: {np.median(main_cluster['f']),np.median(co_located_cluster['f'])}")
 
-    cluster_dict_alligned = cluster_dict
+    cluster_dict_alligned = clusters
     return cluster_dict_alligned
 
 def join_clusters(cluster_1: Dict[str,Any], cluster_2: Dict[str,Any],

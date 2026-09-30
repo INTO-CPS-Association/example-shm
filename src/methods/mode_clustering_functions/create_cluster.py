@@ -47,7 +47,7 @@ def cluster_creation(IP: Dict[str,Any],params: Dict[str,Any]) -> Dict[str,Any]: 
                     IPu['row'] = np.append(IPu['row'],row[ii])
                     IPu['col'] = np.append(IPu['col'],col[ii])
 
-        non_clustered_IPu = {'row':[]}
+        non_clustered_IPu = {'row':[]} #???
         if len(IPu) > 0: #If there exist model orders with unique poles
             if isinstance(IPu['f'],float):
                 cluster = {'f':np.array([IPu['f']]),
@@ -164,6 +164,7 @@ def cluster_from_mac(cluster: Dict[str,Any], IP: Dict[str,Any],
             params (dict): Dictionary of algorithm parameters
         Returns:
             cluster (dict): Intermediate cluster
+            unclustered_IPu (dict): Dictionary of data on unclustered points
 
     """
 

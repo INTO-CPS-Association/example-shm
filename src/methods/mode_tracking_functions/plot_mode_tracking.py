@@ -25,9 +25,9 @@ def plot_tracked_modes(
 
     if fig_ax is None:
         plt.ion()
-        fig, (ax1, ax2) = plt.subplots(1,2,figsize=(12, 6), tight_layout=True)
+        fig, (ax1, ax2, ax3) = plt.subplots(1,3,figsize=(15, 5), tight_layout=True)
     else:
-        fig, (ax1, ax2) = fig_ax
+        fig, (ax1, ax2, ax3) = fig_ax
         ax1.clear()
         ax2.clear()
 
@@ -38,6 +38,7 @@ def plot_tracked_modes(
             tracked_cluster_list = tracked_clusters[key]
             m_f = []
             x = []
+            MAC = []
             for cluster in tracked_cluster_list:
                 m_f.append(cluster['median_f'])
                 x.append(cluster['id'])
@@ -69,6 +70,7 @@ def plot_tracked_modes(
             damping_ratio = []
             g_damp_err_lower = []
             g_damp_err_upper = []
+            MAC = []
             for cluster in tracked_cluster_list:
                 m_f.append(cluster['median_f'])
                 x.append(cluster['id'])
@@ -79,6 +81,7 @@ def plot_tracked_modes(
                 g_damp_err_upper.append(cluster['median_d']+cluster['global_ci'][1,1])
                 if cluster['median_d']+cluster['global_ci'][1,1] > max_d:
                     max_d = cluster['median_d']+cluster['global_ci'][1,1]
+                MAC.append(cluster['track_MAC'])
 
             ax1.scatter(x, m_f, marker="o", s=50, facecolor=colors2[ii])
             
@@ -91,7 +94,8 @@ def plot_tracked_modes(
                 g_freq_err_lower,
                 g_freq_err_upper,
                 color=colors2[ii],
-                alpha=0.2
+                alpha=0.2,
+                zorder=100
             )
 
             sc = ax2.scatter(x, damping_ratio, marker="o", s=50, color=colors2[ii])
@@ -101,8 +105,16 @@ def plot_tracked_modes(
                 g_damp_err_lower,
                 g_damp_err_upper,
                 color=colors2[ii],
-                alpha=0.2
+                alpha=0.2,
+                zorder=100
             )
+
+
+            # MAC plot
+            ax3.scatter(x, MAC, marker="o", s=50, facecolor=colors2[ii])
+            ax3.plot(x, MAC, color=colors2[ii],
+                                 label="Tracked cluster "+key+",f="+str(f"{np.mean(m_f):.2f}")+" [Hz]")
+
 
             ii += 1
 
@@ -142,10 +154,22 @@ def plot_tracked_modes(
     ax2.grid(which='major', color='gray', linestyle='-', linewidth=0.5)
     ax2.grid(which='minor', color='lightgray', linestyle='--', linewidth=0.3)
 
+    ax3.set_title("Tracked MAC between datasets")
+    ax3.set_ylabel("MAC [-]", fontsize=20, color = 'black')
+    ax3.set_xlabel("Dataset", fontsize=20, color = 'black')
+    ax3.tick_params(axis='both', which='major', labelsize=17)
+    # Add major and minor grid lines
+    ax3.grid(which='major', color='gray', linestyle='-', linewidth=0.5)
+    ax3.grid(which='minor', color='lightgray', linestyle='--', linewidth=0.3)
+    ax3.set_ylim((sysid_params['phi_cri'],1))
+    
+
+
+
 
     # ax1.legend()
     fig.tight_layout()
     fig.canvas.draw()
     fig.canvas.flush_events()
 
-    return fig, (ax1, ax2)
+    return fig, (ax1, ax2, ax3)
