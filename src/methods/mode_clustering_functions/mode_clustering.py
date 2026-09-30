@@ -55,7 +55,6 @@ def cluster_sysid_output(sysid_output: Any, params: Dict[str,Any]) -> Tuple[Dict
         median_frequencies (np.ndarray[float]), 
     """
     dictionary_clusters = cluster_func(sysid_output, params)
-    print(dictionary_clusters.keys())
     median_frequencies = np.array([dictionary_clusters[key]["median_f"]
                                    for key in dictionary_clusters.keys()])
     return dictionary_clusters, median_frequencies

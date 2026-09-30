@@ -34,8 +34,7 @@ def virtual_sensing(number_of_samples: int, aligner: Aligner, data_client: MQTTC
         data, aligner_time = wait_for_data(number_of_samples, aligner, fs)
         try:
             PARAMS['expansion_modes']
-            PARAMS['output_type']
-            PARAMS['beam_elements']
+            PARAMS['sensor_type']
             PARAMS['sensor_loc']
             disp, acc = displacement_estimation(data,PARAMS,model_parameters)
             return disp, acc, model_parameters, aligner_time

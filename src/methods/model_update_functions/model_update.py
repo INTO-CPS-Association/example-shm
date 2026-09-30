@@ -114,8 +114,7 @@ def estimate_updated_model(clusters: Dict[str,Any], model_parameters: Dict[str,A
         updated_model_parameters (Dict[str,Any]): Model parameters
 
     """
-    # try:
-    if True:
+    try:
         (X, omega_model,
             updated_model_parameters) = model_update_func.update_model(clusters, MODEL_FUNC,
                                                                             model_parameters,
@@ -124,9 +123,9 @@ def estimate_updated_model(clusters: Dict[str,Any], model_parameters: Dict[str,A
         if omega_model is not None:
             print("Model frequencies:",omega_model,"[Hz]")
         return (X, omega_model, updated_model_parameters)
-    # except Exception as e:
-    #     print('Model update is not succesful.', e)
-    #     return None, None, None
+    except Exception as e:
+        print('Model update is not succesful.', e)
+        return None, None, None
 
 def model_update_plots(plot: List[bool], model_parameters: Dict[str,Any],
                        pars_to_update: List[str], omega_updated_model: np.ndarray[float],

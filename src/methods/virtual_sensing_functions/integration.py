@@ -10,7 +10,7 @@ def frequency_based_integration(y: np.ndarray[float], params: Dict[str,Any],
 
     Args:
         y (np.ndarray[flaot]): Signal
-        params (Dict[str,Any]): Parameter dictionary containing 'output_type' (int), 'Fs' (float)
+        params (Dict[str,Any]): Parameter dictionary containing 'sensor_type' (int), 'Fs' (float)
         order (int): Order of polynomial fit
 
     Returns:
@@ -21,7 +21,7 @@ def frequency_based_integration(y: np.ndarray[float], params: Dict[str,Any],
 
     _, N = y.shape
     # Displacement estimation with frequency-domain integration
-    if params['output_type'] == 0:
+    if params['sensor_type'] == 0:
         Disp = y
     else: #If the output type is not displacements apply frequency based integration
         y_ = y - np.mean(y, axis=1, keepdims=True)
@@ -32,10 +32,10 @@ def frequency_based_integration(y: np.ndarray[float], params: Dict[str,Any],
         D = np.zeros_like(Y, dtype=complex)
         omj = 1j * 2 * np.pi * cK * params['Fs'] / N
 
-        if params['output_type'] == 1: #Velocity outputs
+        if params['sensor_type'] == 1: #Velocity outputs
             D[:, 1:Nh] = Y[:, 1:Nh] / omj
             D[:, Nh:] = np.conj(np.flip(D[:, 1:Nh], axis=1))
-        elif params['output_type'] == 2: #Acceleration outputs
+        elif params['sensor_type'] == 2: #Acceleration outputs
             D[:, 1:Nh] = Y[:, 1:Nh] / (omj ** 2)
             D[:, Nh:] = np.conj(np.flip(D[:, 1:Nh], axis=1))
         else:

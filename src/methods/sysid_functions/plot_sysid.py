@@ -77,8 +77,7 @@ def plot_stabilization_diagram(
     Args:
         sysid_results (Dict[str, Any]): PyOMA results
         sysid_params (Dict[str, Any]): sysid parameters
-        sysid_results (Dict[str, Any]): PyOMA results
-        sysid_params (Dict[str, Any]): sysid parameters
+        fig_ax (tuple): fig and ax of plot
     Returns:
         fig_ax (tuple): fig and ax of plot
 

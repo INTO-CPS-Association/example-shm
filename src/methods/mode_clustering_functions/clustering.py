@@ -92,7 +92,6 @@ def cluster_func(sysid_output: Dict[str,Any],
                         else:
                             clusters_expan = prev_cluster
                         expansion = False
-                        breakpoint()
                     cluster = clusters_expan
 
             #Sort if more than one pole exist in the cluster

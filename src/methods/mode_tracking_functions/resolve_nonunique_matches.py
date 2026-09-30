@@ -32,7 +32,7 @@ def resolve_nonunique_matches(possible_match_id: int, itemindex: np.ndarray[int]
     #Make keys for dictionary based on indices in itemindex
     keys = [str(y[0]) for y in itemindex.tolist()]
     for nn in itemindex: #Go through possible clusters match index
-        cluster = cluster_dict[int(nn[0])]
+        cluster = cluster_dict[str(nn[0])]
         omega = cluster['median_f']
         phi_all = cluster["mode_shapes"] #Find mode shapes in cluster
         #Accessing all cluster in a tracked cluster group
