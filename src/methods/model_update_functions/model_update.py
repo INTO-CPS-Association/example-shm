@@ -98,7 +98,7 @@ def publish_model_parameters(config: Dict[str,Any],
     publish_to_mqtt(publish_client, publish_topics, payload, "model parameters")
     shutdown(publish_client,"model parameter publish client")
 
-def estimate_updated_model(clusters: Dict[str,Any], model_parameters: Dict[str,Any],
+def find_updated_model(clusters: Dict[str,Any], model_parameters: Dict[str,Any],
                            params: Dict[str,Any]) -> Optional[Tuple[List[float],
                                                                     List[float], Dict[str,Any]]]:
     """
@@ -237,7 +237,7 @@ def live_model_update_with_remote_sysid(config: Dict[str,Any],
 
             if (clusters is not None) or (len(clusters) > 0):
                 if model_parameters is not None:
-                    (_, omega_model, model_parameters) = estimate_updated_model(clusters,
+                    (_, omega_model, model_parameters) = find_updated_model(clusters,
                                                                             model_parameters,
                                                                             params)
 
@@ -264,14 +264,13 @@ def live_model_update_with_remote_clustering(config: Dict[str,Any],
                                             publish: bool = False) -> None:
     fig_axes = [None, None]
 
-    # try:
-    if True:
+    try:
         while True:
             clusters, timestamp = subscribe_data(config['model_update'])
             print(clusters.keys())
             if (clusters is not None) or (len(clusters) > 0):
                 _, model_parameters = load_model_parameters()
-                (_, omega_model, model_parameters) = estimate_updated_model(clusters,
+                (_, omega_model, model_parameters) = find_updated_model(clusters,
                                                                 model_parameters, params)
 
                 if model_parameters is not None:
@@ -284,7 +283,7 @@ def live_model_update_with_remote_clustering(config: Dict[str,Any],
                                                   params['pars_to_update'], omega_model,
                                                  fig_axes)
             print("\n")
-    # except KeyboardInterrupt:
-    #     print("Keyboard interrupt of live model updating\n")
-    # except Exception as e:
-    #     print(f"Unexpected error: {e}")
+    except KeyboardInterrupt:
+        print("Keyboard interrupt of live model updating\n")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
