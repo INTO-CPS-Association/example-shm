@@ -229,8 +229,7 @@ def live_model_update_with_remote_sysid(config: Dict[str,Any],
                                         params: Dict[str,Any],
                                         publish: bool = False) -> None:
     fig_axes = [None, None]
-    # try:
-    if True:
+    try:
         while True:
             _, model_parameters = load_model_parameters()
             _, clusters, __, timestamp = subscribe_and_cluster(config, params)
@@ -254,10 +253,10 @@ def live_model_update_with_remote_sysid(config: Dict[str,Any],
                     print("Error with model parameters.")
             else:
                 print("No clusters.")
-    # except KeyboardInterrupt:
-    #     print("Keyboard interrupt in live model updating\n")
-    # except Exception as e:
-    #     print(f"Unexpected error: {e}")
+    except KeyboardInterrupt:
+        print("Keyboard interrupt in live model updating\n")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
 
 def live_model_update_with_remote_clustering(config: Dict[str,Any],
                                             params: Dict[str,Any],
