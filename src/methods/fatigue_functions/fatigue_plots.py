@@ -262,10 +262,10 @@ def plot_histogram(result: dict[str, Any], fig_ax = None, hist_data: dict[str,An
         # cax = fig.get_axes()[1]
         # ax_histx = fig.get_axes()[2]
         # ax_histy = fig.get_axes()[3]
-        ax.clear()
         cax.remove()
         ax_histx.remove()
         ax_histy.remove()
+        ax.clear()
 
     static_mean = kwargs.get("static_mean",0)
     #For this plot
@@ -314,8 +314,8 @@ def plot_histogram(result: dict[str, Any], fig_ax = None, hist_data: dict[str,An
     #Histogram plots
     char_x = len(str(max(x_edges)))
     char_y = max(len(str(min(y_edges))),len(str(max(y_edges))))
-    ax_histx = divider.append_axes("top", 1.2, pad=0.08*char_x, sharex=ax)
-    ax_histy = divider.append_axes("right", 1.2, pad=0.08*char_y, sharey=ax)
+    ax_histx = divider.append_axes("top", 1.2, pad=0.12*char_x, sharex=ax)
+    ax_histy = divider.append_axes("right", 1.2, pad=0.1*char_y, sharey=ax)
     # make some labels invisible
     ax_histx.xaxis.set_tick_params(labelbottom=False)
     ax_histy.yaxis.set_tick_params(labelleft=False)

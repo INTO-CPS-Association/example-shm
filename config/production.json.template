@@ -1,10 +1,33 @@
 {
-    "sysid": {
+    "MQTT": {
         "host": "",
         "port": 0,
         "userId": "",
         "password": "",
-        "ClientID": "NOT_NEEDED",
+        "ClientID": "ReplayRecord",
+        "QoS": 1,
+        "TopicsToSubscribe": {
+            "cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/ANALYSIS/DATA": acc1,
+            "cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/ANALYSIS/METADATA": metadata1,
+            "cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/ANALYSIS/DATA": acc2,
+            "cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/ANALYSIS/DATA": acc3,
+            "cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/ANALYSIS/DATA": acc4,
+        },
+        "TopicsToPublish": {
+            "acc1": "cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/ANALYSIS/DATA",
+            "metadata1": "cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/ANALYSIS/METADATA",
+            "acc2": "cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/ANALYSIS/DATA",
+            "acc3": "cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/ANALYSIS/DATA",
+            "acc4": "cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/ANALYSIS/DATA"
+        }
+      },
+      
+      "sysid": {
+        "host": "",
+        "port": 0,
+        "userId": "",
+        "password": "",
+        "ClientID": "name",
         "QoS": 1,
         "SamplesToCollect": 2560,
         "MetadataToSubscribe": [
@@ -24,7 +47,7 @@
       "port": 0,
       "userId": "",
         "password": "",
-      "ClientID": "NOT_NEEDED",
+      "ClientID": "name",
       "QoS": 2,
       "TopicsToSubscribe": ["cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/SYSID/DATA"],
       "TopicsToPublish": ["cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/MODE_CLUSTER/DATA"]
@@ -35,7 +58,7 @@
       "port": 0,
       "userId": "",
         "password": "",
-      "ClientID": "NOT_NEEDED",
+      "ClientID": "name",
       "QoS": 2,
       "TopicsToSubscribe": ["cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/MODE_CLUSTER/DATA"],
       "TopicsToPublish": ["cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/MODEL_UPDATE/DATA"]
@@ -46,7 +69,7 @@
       "port": 0,
       "userId": "",
       "password": "",
-      "ClientID": "NOT_NEEDED",
+      "ClientID": "name",
       "QoS": 2,
       "SamplesToCollect": 2560,
       "MetadataToSubscribe": [ "cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/ANALYSIS/METADATA"],
@@ -64,7 +87,7 @@
       "port": 0,
       "userId": "",
       "password": "",
-      "ClientID": "NOT_NEEDED",
+      "ClientID": "name",
       "QoS": 2,
       "TopicsToSubscribe": ["cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/VIRTUAL_SENSING/DATA"],
       "TopicsToPublish": ["cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/STRESS/DATA"]
@@ -75,7 +98,7 @@
       "port": 0,
       "userId": "",
       "password": "",
-      "ClientID": "NOT_NEEDED",
+      "ClientID": "name",
       "QoS": 2,
       "TopicsToSubscribe": ["cpsens/DAQ_ID/MODULE_ID/CH_ID/PHYSICS/STRESS/DATA"],
       "TopicsToPublish": []

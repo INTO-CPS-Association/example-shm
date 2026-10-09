@@ -1,7 +1,7 @@
 from typing import Any, Dict, Tuple
 import numpy as np
 
-from methods.constants import MODEL_FUNC
+from settings import MODEL_FUNC
 from methods.virtual_sensing_functions.integration import frequency_based_integration
 from functions.data_filtering import signal_filter
 # pylint: disable=C0103, R0914
