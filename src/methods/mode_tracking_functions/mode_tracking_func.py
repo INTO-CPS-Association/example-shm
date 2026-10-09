@@ -304,7 +304,7 @@ def MSD_align_tracked_clusters(tracked_clusters, params):
                     if len(np.argwhere(np.array(d2_min) < t)) > 0: # Merge the two alligned clusters
                         max_MAC = 0
                         for ii, kk in enumerate(id_to_match_list): #Align only clusters with the best MAC criteria
-                            t_key_second = str(kk)
+                            # t_key_second = str(kk)
                             # t_cluster_second = prev_tracked_clusters[t_key_second]
                             if max_MAC_list[ii] > max_MAC:
                                 id_to_match = kk

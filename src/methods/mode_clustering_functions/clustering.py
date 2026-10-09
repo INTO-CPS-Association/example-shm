@@ -8,10 +8,7 @@ from methods.mode_clustering_functions.align_clusters import alignment
 from methods.mode_clustering_functions.global_uncertainty import global_uncertainty
 # pylint: disable=C0103, R0912, R0914, R0915, R1702
 
-from methods.mode_clustering_functions.plot_clusters import plot_clusters
-
 # Following the algorithm proposed here: https://doi.org/10.1007/978-3-031-61421-7_56
-# JVM 22/10/2025
 
 def cluster_func(sysid_output: Dict[str,Any],
                  params: Dict[str,Any])-> Tuple[Dict[str,Any],

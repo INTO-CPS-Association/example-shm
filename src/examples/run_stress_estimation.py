@@ -5,7 +5,6 @@ from methods.stress_estimation_functions.stress_estimation import (stress_estima
                                        live_stress_estimation_for_beam,
                                        live_stress_estimation_subscribe_and_publish,
                                        stress_estimation_and_plot)
-from settings import PARAMS
 
 def run_stress_and_strain_estimation_beam(config_path):
     aligner, data_client, sysid_config, params = setup_aligner(config_path)
