@@ -72,13 +72,13 @@ PARAMS['sensor_loc'] = np.array([[7,1],[6,1],[5,1],[4,1]])          # sensor loc
 ### Settings for stress estimation ###
 ######################################
 # For estimating stress
-PARAMS['element_type'] = np.array(["beam2d","beam2d","beam2d","beam2d","beam2d","beam2d","beam2d"])     #Element types
-PARAMS['elements'] = np.array([3,4,5,6,7,8,9])                                                          #Elements picked out
-PARAMS['y'] = np.array([1e-3/2,1e-3/2,1e-3/2,1e-3/2,1e-3/2,1e-3/2,1e-3/2])                              #y-coordinate for moment of inertia of each element
-PARAMS["dofs_extract"] = np.array([[8,3],[8,2],[8,1],[7,3],[7,2],[7,1],[6,3],[6,2],[6,1],[5,3],[5,2],[5,1],[4,3],[4,2],[4,1],[3,3],[2,3],[1,3],[1,2],[1,1]]) # Degrees of freedom to extract
-PARAMS['s'] = 2         #Stress to use, s = [1,2,3] in the case of a 2D beam: axial, curvature/bending at 1. node (bottom), curvature/bending at 2. node (top)
+PARAMS['elements'] = np.array([3,4,5,6,7,8,9])                                                          #Elements picked out of the Yafem elements in the model
+PARAMS['element_type'] = np.array(["beam2d","beam2d","beam2d","beam2d","beam2d","beam2d","beam2d"])     #What type is the picked 'elements'
+PARAMS['y'] = np.array([1e-3/2,1e-3/2,1e-3/2,1e-3/2,1e-3/2,1e-3/2,1e-3/2])                              #Cross sectional y-coordinate for moment of inertia of each element
+PARAMS["dofs_extract"] = np.array([[8,3],[8,2],[8,1],[7,3],[7,2],[7,1],[6,3],[6,2],[6,1],[5,3],[5,2],[5,1],[4,3],[4,2],[4,1],[3,3],[2,3],[1,3],[1,2],[1,1]]) # Degrees of freedom to extract stress from
+PARAMS['s'] = 2         #Stress type to use, s = [1,2,3] in the case of a 2D beam: axial stress, curvature/bending at 1. node (bottom), curvature/bending at 2. node (top)
 
-PARAMS['ElementsToPlot'] = [0, 1, 2, 3, 4, 5, 6]        #Elements to plot stress data from.
+PARAMS['ElementsToPlot'] = [0, 1, 2, 3, 4, 5, 6]        #Elements to plot stress data from. Only used for ploting stress function.
 
 
 #####################################
@@ -91,7 +91,7 @@ from methods.fatigue_functions.IIW import iiw_sn #Import fatigue curve
 
 SaftyFactor = 1          # Use a safety factor from the norm.
 MEAN_STRESS = 0          # Apply a mean stress in [MPa] if necessary.
-SN_CURVE = iiw_sn(140, "sigma", SF = SaftyFactor, signal_type = "VA") #Fatigue SN curve
+SN_CURVE = iiw_sn(140, "sigma", SF = SaftyFactor, signal_type = "VA") #Fatigue SN curve, detail value, type of stress (sigma (normal) or tau (shear)), Safety factor, stress sequence type (Variable amplite or constant amplitude)
 FATIGUE_DOF = [3, PARAMS['s']] #  [element, s] = What element to look at, what stress element to use (Look at description for PARAMS['s']).
 DAMAGE_SUM = 0.5           # Palmgreen-Miner damage limit
 BIN_WIDTH = 0.25           # Bin width for histogram plots

@@ -37,7 +37,6 @@ def alignment(cluster_dict: Dict[str,dict], params: Dict[str,Any]) -> Dict[str,d
 
     deleted_cluster_id = []
     for ii, m_f in enumerate(median_f): #Go through all medians
-        cluster = cluster_dict[str(ii)]
         if ii in deleted_cluster_id: #If cluster is deleted pass on
             continue
         # Calculate absolute difference of selected median and all medians

@@ -282,7 +282,7 @@ def MSD_align_tracked_clusters(tracked_clusters, params):
                                         id_to_match = ii
                                         phi_all = t_cluster[-1]['mode_shapes']
                                         t_key_second = str(id_to_match)
-                                        t_ids_second = set(t_ids_list[id_to_match])
+                                        # t_ids_second = set(t_ids_list[id_to_match])
                                         t_cluster_second = prev_tracked_clusters[t_key_second]
                                         phi_t_all = t_cluster_second[-1]['mode_shapes']
                                         MAC_max = 0
@@ -305,12 +305,12 @@ def MSD_align_tracked_clusters(tracked_clusters, params):
                         max_MAC = 0
                         for ii, kk in enumerate(id_to_match_list): #Align only clusters with the best MAC criteria
                             t_key_second = str(kk)
-                            t_cluster_second = prev_tracked_clusters[t_key_second]
+                            # t_cluster_second = prev_tracked_clusters[t_key_second]
                             if max_MAC_list[ii] > max_MAC:
                                 id_to_match = kk
                         t_key_second = str(id_to_match)
                         t_ids_second = set(t_ids_list[id_to_match])
-                        t_cluster_second = prev_tracked_clusters[t_key_second]
+                        # t_cluster_second = prev_tracked_clusters[t_key_second]
                         union_set = t_ids_main | t_ids_second
                         union_set = sorted(union_set)
                         merged = []

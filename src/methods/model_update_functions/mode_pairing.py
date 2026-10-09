@@ -27,8 +27,6 @@ def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[floa
     mode_count = model_mode_shapes.shape[1]  # Number of modes in PhiM
     model_mode_shapes = model_mode_shapes.T
     search_limit = 4
-    # Initialize matrix to store MAC values
-    MAX_MAC_model = np.zeros((len(cluster_dict),mode_count))
 
     skip_c_mode = []
     skip_m_mode = []
@@ -41,6 +39,7 @@ def pair_modes(model_freq: np.ndarray[float], model_mode_shapes: np.ndarray[floa
 
     while True:
         for ii, key in enumerate(cluster_dict):
+            # Initialize matrix to store MAC values
             MAX_MAC_model = np.zeros((len(cluster_dict[key]['mode_shapes']),mode_count))
             cluster = cluster_dict[key]
             mode_shape = cluster['mode_shapes']  # Mode shapes in current dictionary

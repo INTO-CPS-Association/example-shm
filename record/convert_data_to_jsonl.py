@@ -103,7 +103,6 @@ def file_to_jsonl() -> None:
         if not os.path.exists(RECORDINGS_DIR):
             # Ensure output directory exists
             Path(RECORDINGS_DIR).mkdir(parents=True, exist_ok=True)
-        path  = os.path.join(RECORDINGS_DIR, JSONL_FILE_NAME)
     except Exception as e:
         print(f"[Error] {e}")
     path  = Path(RECORDINGS_DIR)/JSONL_FILE_NAME

@@ -73,7 +73,7 @@ def remove_highly_uncertain_points(sysid_output: Dict[str, Any], sysid_params: D
         damp_below_cutoff = damping_ratios < damp_cutoff[0]
         damp_above_cutoff = damping_ratios > damp_cutoff[1]
         combined_indices = np.logical_or(damp_below_cutoff,damp_above_cutoff)
-        damping_ratios[damp_above_cutoff] = np.nan
+        damping_ratios[combined_indices] = np.nan
     frequency_coefficient_variation = std_freq/frequencies
     damping_coefficient_variation = std_damping/damping_ratios
     indices_frequency = frequency_coefficient_variation > freq_coeff_variance_treshold
