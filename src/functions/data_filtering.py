@@ -28,8 +28,7 @@ def signal_filter(data: np.ndarray[float], params: Dict[str,Any]) -> np.ndarray[
 
     print("Shape of data:",data.shape)
     # Band-pass filtering of data
-    # try:
-    if True:
+    try:
         filter_order = params.get('filter_order', 4)
         filter_type = params.get('filter_type', 'bandpass')
         filter_cut_off = params.get('filter_cut-off', np.array([0,10**6]))
@@ -38,8 +37,8 @@ def signal_filter(data: np.ndarray[float], params: Dict[str,Any]) -> np.ndarray[
                                 analog=False, fs = params['Fs'], output='sos')
             y = signal.sosfilt(sos, y)
 
-    # except Exception as exc:
-    #     raise RuntimeError("Unexpected error in signal filtering") from exc
+    except Exception as exc:
+        raise RuntimeError("Unexpected error in signal filtering") from exc
 
     if N < ms:
         y = y.T
