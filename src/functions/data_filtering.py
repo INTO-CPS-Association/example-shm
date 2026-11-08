@@ -26,6 +26,7 @@ def signal_filter(data: np.ndarray[float], params: Dict[str,Any]) -> np.ndarray[
     if N < ms:
         y = y.T
 
+    print("Shape of data:",data.shape)
     # Band-pass filtering of data
     try:
         filter_order = params.get('filter_order', 4)

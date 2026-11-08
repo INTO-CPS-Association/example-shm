@@ -6,7 +6,7 @@ import struct
 import numpy as np
 
 from data.accel.hbk.aligner import Aligner
-from constants import DESCRIPTOR_LENGTH, METADATA_VERSION, SECONDS, NANOSECONDS, BATCH_SIZE
+from tests.integration.data.accel.hbk.constants import DESCRIPTOR_LENGTH, METADATA_VERSION, SECONDS, NANOSECONDS, BATCH_SIZE
 from data.comm.mqtt import setup_mqtt_client, load_config
 import uuid
 
@@ -19,7 +19,7 @@ def mqtt_client_and_config():
     mqtt_config = config["MQTT"].copy()
     mqtt_config["ClientID"] = f"test_{uuid.uuid4().hex[:6]}"
 
-    client = setup_mqtt_client(mqtt_config, mqtt_config["TopicsToSubscribe"][0])
+    client = setup_mqtt_client(mqtt_config, mqtt_config["TopicsToSubscribe"])
     client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     client.loop_start()
     time.sleep(connect_delay)
@@ -37,7 +37,7 @@ def mqtt_setup():
     mqtt_config["ClientID"] = f"test_{uuid.uuid4().hex[:6]}"
 
     # Setup MQTT client once
-    client = setup_mqtt_client(mqtt_config, mqtt_config["TopicsToSubscribe"][0])
+    client = setup_mqtt_client(mqtt_config, mqtt_config["TopicsToSubscribe"])
     client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     client.loop_start()
     time.sleep(connect_delay)

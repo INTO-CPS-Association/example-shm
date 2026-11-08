@@ -87,13 +87,13 @@ def create_on_publish_callback():
     return on_publish
 
 
-def setup_mqtt_client(config: Dict[str,Any], topic_to_subscribe: str):
+def setup_mqtt_client(config: Dict[str,Any], topics_to_subscribe: List[str]):
     """
     Initializes an MQTT client using a specific topic index from the subscription list.
 
     Args:
         config (Dict[str,Any]): MQTT client configuration.
-        topic_to_subscribe (str): Topic to subscribe to.
+        topics_to_subscribe (str): Topic to subscribe to.
 
     Returns:
         tuple: (MQTTClient, selected_topic)
@@ -108,10 +108,11 @@ def setup_mqtt_client(config: Dict[str,Any], topic_to_subscribe: str):
         mqttc.username_pw_set(config["userId"], config["password"])
 
     mqttc.on_connect = create_on_connect_callback(
-        [topic_to_subscribe], config["QoS"])
+        topics_to_subscribe, config["QoS"])
     mqttc.on_subscribe = create_on_subscribe_callback()
     mqttc.on_message = create_on_message_callback()
     mqttc.on_publish = create_on_publish_callback()
+    mqttc.tls_set()
 
     return mqttc
 
@@ -132,6 +133,7 @@ def setup_publish_client(config: Dict[str,Any], verbose: bool = True) -> MQTTCli
         publish_client.username_pw_set(config["userId"], config["password"])
     if verbose:
         publish_client.on_publish = create_on_publish_callback()
+    publish_client.tls_set()
     publish_client.connect(config["host"], config["port"], keepalive=60)
     publish_client.loop_start()
     publish_topics = config["TopicsToPublish"]
@@ -149,9 +151,7 @@ def start_mqtt(config: Dict[str,Any], _on_connect: Callable, _on_message: Callab
         subcribe_topics (List[str]): Topics to subscribe to
         publish_topics (List[str]): Topics to publish
     """
-    mqtt_client = setup_mqtt_client(config,config["TopicsToSubscribe"][0])
-    mqtt_client.connect(config["host"], config["port"], 60)
-    mqtt_client.loop_start()
+    mqtt_client = setup_mqtt_client(config,config["TopicsToSubscribe"])
     mqtt_client.user_data_set({"topic": config["TopicsToSubscribe"][0], "qos": 1})
     mqtt_client.on_connect = _on_connect
     if _on_message is not None:
@@ -197,7 +197,7 @@ def publish_to_mqtt(publish_client: MQTTClient, publish_topics: List[str],
 
         message = json.dumps(payload)
 
-        _ = reconnect_client(publish_client)
+        # _ = reconnect_client(publish_client)
 
         for topic in publish_topics:
             result, mid = publish_client.publish(topic, message, qos=1)

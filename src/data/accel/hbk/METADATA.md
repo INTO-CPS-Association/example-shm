@@ -31,7 +31,7 @@ This represents metadata coming from an accelerometer (`acc`), processed as raw 
 
 #### Example METADATA Topic Payload
 
-```json
+```jsonl
 {
   "Descriptor": {
     "Descriptor length": "uint16",
@@ -96,7 +96,12 @@ This topic contains data for the raw data from the same device, module, and chan
 The **data topic** payload consists of two parts:
 
 1. **Descriptor**: Contains dynamic metadata related to the data.
-1. **Data**: Contains the actual sensor readings (typically as binary data).
+    a. **descriptor_length**: (Unsigned short 2 bytes) Is the number of bytes the descriptor contains. For now this is 28, Unsigned short (2     bytes), Unsigned short (2 bytes), Unsigned long long (8 bytes), Unsigned long long (8 bytes), Unsigned long long (8 bytes) = 2 + 2 + 8 + 8 + 8 = 28 bytes.
+    b. **metadata_version**: (Unsigned short 2 bytes) States the version of the metadata
+    c. **seconds_since_epoch**: (Unsigned long long 8 bytes) States the seconds since start. Not currently used.
+    d. **nanoseconds**: (Unsigned long long 8 bytes) States the nanoseconds since start. Not currently used.
+    e. **samples_from_daq_start**: (Unsigned long long 8 bytes) States the number of samples since start.
+2. **Data**: Contains the actual sensor readings (typically as binary data). This must be formatted to a byte string of n number of sensor readings each with a size 4 bytes. e.g. float32 is 4 bytes.
 
 #### Example Data Topic Payload
 

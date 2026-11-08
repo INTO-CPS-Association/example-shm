@@ -21,7 +21,7 @@ def mqtt_client():
     config = load_config("config/test.json")
     mqtt_config = config["MQTT"].copy()
     mqtt_config["ClientID"] = f"test_{uuid.uuid4().hex[:6]}"
-    client = setup_mqtt_client(mqtt_config,mqtt_config["TopicsToSubscribe"][0])
+    client = setup_mqtt_client(mqtt_config,mqtt_config["TopicsToSubscribe"])
     client.connect(mqtt_config["host"], mqtt_config["port"], 60)
     client.loop_start()
     time.sleep(1.0)
